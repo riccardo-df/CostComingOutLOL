@@ -9,7 +9,7 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("LOLpaper")
+pkgs <- c("CostComingOutLOL")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Pull data ----------------------------------------------------------

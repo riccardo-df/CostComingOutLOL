@@ -2,49 +2,29 @@
 % Please edit documentation in R/clean-construct-data.R
 \name{construct_lol_champion_pooled_data}
 \alias{construct_lol_champion_pooled_data}
-\title{Construct LoL Champion Pooled Data Set}
+\title{Construct LoL Champion Data Set (Pooled)}
 \usage{
 construct_lol_champion_pooled_data(dta)
 }
 \arguments{
-\item{dta}{Data set as constructed by the \code{\link{clean_lol_data}} function.}
+\item{dta}{Data set as constructed by the \code{\link{construct_lol_champion_data}} function. You can also find this data set bundled in the package under the name \code{\link{lol_champ_dta}}.}
 }
 \description{
-Constructs the LoL champion data by pooling observations over regions.
+Constructs the LoL champion data set by aggregating observations over regions.
 }
 \details{
-\code{construct_lol_champion_pooled_data} performs the following operations on \code{dta}.\cr
-
-First, it keeps only data for the year 2022 and drops champions that have been released after June 1st, 2022.\cr
-
-Second, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
-\code{day} and \code{region}. These are replaced with zeroes.
+\code{construct_lol_champion_pooled_data} generates new variables by aggregating the observations (i.e., the champions) over the regions.\cr
 \describe{
- \item{\code{pick_level}}{For each pair \code{region} and \code{day}, count how many times a particular \code{champion} is picked by players.}
- \item{\code{ban_level}}{For each pair \code{region} and \code{day}, count how many times a particular \code{champion} is banned by players.}
- \item{\code{win_level}}{For each triple \code{region}, \code{day}, and \code{champion}, count how many times a match is won.}
- \item{\code{gold_avg}}{For each triple \code{region}, \code{day}, and \code{champion}, compute the average gold earned in matches.}
- \item{\code{kills_avg}}{For each triple \code{region}, \code{day}, and \code{champion}, compute the average number of kills achieved in matches.}
- \item{\code{assists_avg}}{For each triple \code{region}, \code{day}, and \code{champion}, compute the average number of assists achieved in matches.}
- \item{\code{deaths_avg}}{For each triple \code{region}, \code{day}, and \code{champion}, compute the average number of deaths achieved in matches.}
+ \item{\code{pick_level_sum}, \code{ban_level_sum}, \code{win_level_sum}}{Sum the corresponding variables over regions. For instance, \code{pick_level_sum} is constructed by summing \code{pick_level} over Europe, Latin America, North America, and Korea, and tells us how many times \code{champion} has been picked on a given \code{day} overall.}
+ \item{\code{n_matches_sum}}{Sum \code{n_matches} over regions. It tells us the total number of matches played in a given \code{day}.}
+ \item{\code{pick_rate_pooled}, \code{ban_rate_pooled}, \code{win_rate_pooled}}{Divide the corresponding variables by \code{n_matches_sum}. Exception is \code{win_rate_pooled}, which is divided by \code{pick_level_sum}.}
+ \item{\code{gold_pooled}, code{kills_avg}, \code{assists_avg}, \code{deaths_avg}}{Average the corresponding variables over regions. We consider only days where \code{champion} has a non-zero \code{pick_level}.}
  \item{\code{main_role}}{For each \code{champion}, extract its main position.}
  \item{\code{aux_role}}{For each \code{champion}, extract its auxiliary position.}
 }
-
-Third, it balances the panel by imputing the zeroes for champions that have not been picked in a particular pair \code{region} and \code{day}. This part
-of the function works in parallel using all but one processors of your computer.\cr
-
-Fourth, it generates additional variables. As before, NAs may be produced and are replaced with zeroes.\cr
-\describe{
- \item{\code{n_matches}}{For each pair \code{region} and \code{day}, count how many matches have been played.}
- \item{\code{pick_rate}}{Divide \code{pick_level} by \code{n_matches}.}
- \item{\code{ban_rate}}{Divide \code{ban_level} by \code{n_matches}.}
- \item{\code{win_rate}}{Divide \code{win_level} by \code{pick_level}.}
- \item{\code{day_no}}{Numeric version of the \code{day} variable, useful when the data set is loaded in other sessions to get the time right.}
-}
 }
 \seealso{
-\code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}
+\code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_player_data}}
 }
 \author{
 Riccardo Di Francesco

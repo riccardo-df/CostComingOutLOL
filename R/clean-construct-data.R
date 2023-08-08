@@ -24,7 +24,7 @@
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{pull_lol_data}}
+#' @seealso \code{\link{pull_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{\code{\link{construct_lol_player_data}}}}
 #'
 #' @export
 clean_lol_data <- function(dta) {
@@ -272,9 +272,9 @@ clean_lol_data <- function(dta) {
 }
 
 
-#' Construct LoL Champion Pooled Data Set
+#' Construct LoL Champion Data Set
 #'
-#' Constructs the LoL champion data by pooling observations over regions.
+#' Constructs the LoL champion data set by pooling observations over regions.
 #'
 #' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
 #'
@@ -315,10 +315,10 @@ clean_lol_data <- function(dta) {
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}
+#' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{construct_lol_player_data}}
 #'
 #' @export
-construct_lol_champion_pooled_data <- function(dta) {
+construct_lol_champion_data <- function(dta) {
   ## Keep only 2022 data and drop champions released after treatment.
   cat("Keeping only 2022 data and dropping champions released after treatment. \n")
   new_champions <- c("KSante", "Nilah", "Belveth")
@@ -463,5 +463,169 @@ construct_lol_champion_pooled_data <- function(dta) {
 
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
+  data.table::fwrite(panel, file = "lol_champ_dta.csv", row.names = FALSE)
+}
+
+
+#' Construct LoL Champion Data Set (Pooled)
+#'
+#' Constructs the LoL champion data set by aggregating observations over regions.
+#'
+#' @param dta Data set as constructed by the \code{\link{construct_lol_champion_data}} function. You can also find this data set bundled in the package under the name \code{\link{lol_champ_dta}}.
+#'
+#' @details
+#' \code{construct_lol_champion_pooled_data} generates new variables by aggregating the observations (i.e., the champions) over the regions.\cr
+#' \describe{
+#'  \item{\code{pick_level_sum}, \code{ban_level_sum}, \code{win_level_sum}}{Sum the corresponding variables over regions. For instance, \code{pick_level_sum} is constructed by summing \code{pick_level} over Europe, Latin America, North America, and Korea, and tells us how many times \code{champion} has been picked on a given \code{day} overall.}
+#'  \item{\code{n_matches_sum}}{Sum \code{n_matches} over regions. It tells us the total number of matches played in a given \code{day}.}
+#'  \item{\code{pick_rate_pooled}, \code{ban_rate_pooled}, \code{win_rate_pooled}}{Divide the corresponding variables by \code{n_matches_sum}. Exception is \code{win_rate_pooled}, which is divided by \code{pick_level_sum}.}
+#'  \item{\code{gold_pooled}, code{kills_avg}, \code{assists_avg}, \code{deaths_avg}}{Average the corresponding variables over regions. We consider only days where \code{champion} has a non-zero \code{pick_level}.}
+#'  \item{\code{main_role}}{For each \code{champion}, extract its main position.}
+#'  \item{\code{aux_role}}{For each \code{champion}, extract its auxiliary position.}
+#' }
+#'
+#' @import dplyr plm
+#'
+#' @importFrom data.table fwrite
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_player_data}}
+#'
+#' @export
+construct_lol_champion_pooled_data <- function(dta) {
+  ## Generate pooled variables.
+  cat("Generating pooled variables. \n")
+
+  pooled <- dta %>%
+    dplyr::group_by(day, champion) %>%
+    dplyr::mutate(pick_level_sum = sum(pick_level),
+           ban_level_sum = sum(ban_level),
+           win_level_sum = sum(win_level),
+           n_matches_sum = sum(n_matches),
+           pick_rate_pooled = pick_level_sum / n_matches_sum,
+           ban_rate_pooled = ban_level_sum / n_matches_sum,
+           win_rate_pooled = win_level_sum / pick_level_sum,
+           gold_pooled = mean(gold_avg[pick_level != 0]),
+           kills_pooled = mean(kills_avg[pick_level != 0]),
+           assists_pooled = mean(assists_avg[pick_level != 0]),
+           deaths_pooled = mean(deaths_avg[pick_level != 0])) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(day, champion, .keep_all = TRUE) %>%
+    dplyr::select(day, day_no, n_matches_sum, champion, pick_level_sum, pick_rate_pooled, ban_level_sum, ban_rate_pooled, win_level_sum, win_rate_pooled, gold_pooled, kills_pooled, assists_pooled, deaths_pooled)
+
+    main_roles <- dta %>%
+      dplyr::select("champion", "main_role", "aux_role") %>%
+      dplyr::distinct(.keep_all = TRUE)
+
+    ## Final panel and checks.
+    panel <- dplyr::left_join(pooled, main_roles, by = "champion") %>%
+      replace(is.na(.), 0)
+
+    if (!plm::is.pbalanced(panel, index = c("champion", "day"))) warning("The panel is not balanced. You may want to double-check.")
+
+  ## Write csv.
+  cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
   data.table::fwrite(panel, file = "lol_champ_pool_dta.csv", row.names = FALSE)
+}
+
+
+#' Construct LoL Player Data Set
+#'
+#' Constructs the LoL player data set.
+#'
+#' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
+#'
+#' @details
+#' \code{construct_lol_player_data} performs the following operations on \code{dta}.\cr
+#'
+#' First, it keeps only data for the year 2022.\cr
+#'
+#' Second, it generates the variables of interest.
+#' \describe{
+#'  \item{\code{Graves}}{How often the player picked Graves in that \code{day}.}
+#'  \item{\code{Graves_ban}}{How often the player banned Graves in that \code{day}.}
+#'  \item{\code{win_sum}}{How many matches the player won in that \code{day}.}
+#'  \item{\code{n_matches}}{How many matches the player has played in that \code{day}.}
+#'  \item{\code{Graves_rate}}{Equals \code{Graves} divided by \code{n_matches}.}
+#'  \item{\code{Graves_ban_rate}}{Equals \code{Graves_ban} divided by \code{n_matches}.}
+#'  \item{\code{win_rate}}{Equals \code{win_sum} divided by \code{n_matches}.}
+#'  \item{\code{gold_avg}}{Average gold earned by the player in that \code{day}.}
+#'  \item{\code{kills_avg}}{Average number of kills achieved by the player in that \code{day}.}
+#'  \item{\code{assists_avg}}{Average number of assists achieved by the player in that \code{day}.}
+#'  \item{\code{deaths_avg}}{Average number of deaths achieved by the player in that \code{day}.}
+#'  \item{\code{day_no}}{Numeric version of the \code{day} variable, useful when the data set is loaded in other sessions to get the time right.}
+#' }
+#'
+#' @import dplyr plm lubridate
+#'
+#' @importFrom data.table fwrite
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_data}} \code{\link{construct_lol_champion_pooled_data}}
+#'
+#' @export
+construct_lol_player_data <- function(dta) {
+  ## Keep only 2022 data.
+  cat("Keeping only 2022 data. \n")
+    dta <- dta %>%
+      dplyr::filter(lubridate::year(day) == 2022)
+
+  ## Generate variables.
+  cat("Generating variables. \n")
+  cat("    Interest for Graves (picks and bans). \n")
+  picks_bans <- dta %>%
+    group_by(player_puiid, day) %>%
+    mutate(Graves = sum(champion == 'Graves'),
+           Graves_ban = sum(ban == 'Graves')) %>%
+    select(player_puiid, day, Graves, Graves_ban) %>%
+    distinct(player_puiid, day, .keep_all = TRUE) %>%
+    ungroup()
+
+  cat("    Number of matches. \n")
+  n_matches <- dta %>%
+    group_by(player_puiid, day) %>%
+    summarise(n_matches = n_distinct(match_id)) %>%
+    ungroup()
+
+  cat("    Total gold, kills, assists, and deaths. \n")
+  numeric_covariates <- dta %>%
+    group_by(player_puiid, day) %>%
+    mutate(gold_sum = sum(gold),
+           kills_sum = sum(kills),
+           assists_sum = sum(assists),
+           deaths_sum = sum(deaths),
+           win_sum = sum(win)) %>%
+    select(player_puiid, day, gold_sum, kills_sum, assists_sum, deaths_sum, win_sum) %>%
+    distinct(player_puiid, day, .keep_all = TRUE) %>%
+    ungroup()
+
+  daily_panel <- picks_bans %>%
+    left_join(n_matches, by = c("player_puiid", "day")) %>%
+    left_join(numeric_covariates, by = c("player_puiid", "day")) %>%
+    select(player_puiid, day, Graves, Graves_ban, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
+
+  cat("    Variables in rates. \n")
+  extended_daily_panel <- daily_panel %>%
+    mutate(Graves_rate = Graves / n_matches,
+           Graves_ban_rate = Graves_ban / n_matches,
+           win_rate = win_sum / n_matches,
+           gold_avg = gold_sum / n_matches,
+           kills_avg = kills_sum / n_matches,
+           assists_avg = assists_sum / n_matches,
+           deaths_avg = deaths_sum / n_matches) %>%
+    select(day, player_puiid, n_matches, Graves_rate, Graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+
+  ## Final operations.
+  panel <- extended_daily_panel
+  panel$day_no <- as.numeric(panel$day)
+
+  panel <- panel %>%
+    select(day, day_no, player_puiid, n_matches, Graves_rate, Graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+  colnames(panel)[3] <- c("id")
+
+  ## Write csv.
+  cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
+  data.table::fwrite(panel, file = "lol_player_dta.csv", row.names = FALSE)
 }
