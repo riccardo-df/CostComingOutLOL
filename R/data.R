@@ -11,12 +11,12 @@
 #'   \item{\code{day_no}}{Numeric version of \code{day}.}
 #'   \item{\code{n_matches}}{How many matches where played in that \code{region} and \code{day}.}
 #'   \item{\code{champion}}{Champion (unit of observation).}
-#'   \item{\code{pick_level}}{How often \code{champion} was picked in that \code{region} and \code{day}.}
-#'   \item{\code{pick_rate}}{Equals \code{pick_level} divided by \code{n_matches}.}
-#'   \item{\code{ban_level}}{How often \code{champion} was banned in that \code{region} and \code{day}.}
-#'   \item{\code{ban_rate}}{Equals \code{ban_level} divided by \code{n_matches}.}
-#'   \item{\code{win_level}}{How matches \code{champion} has won in that \code{region} and \code{day}.}
-#'   \item{\code{win_rate}}{Equals \code{win_level} divided by \code{pick_level}.}
+#'   \item{\code{pick_level}}{How many times \code{champion} was picked in that \code{region} and \code{day}.}
+#'   \item{\code{pick_rate}}{Proportion of times \code{champion} was picked in that \code{region} and \code{day} (equals \code{pick_level} divided by \code{n_matches}).}
+#'   \item{\code{ban_level}}{How many times \code{champion} was banned in that \code{region} and \code{day}.}
+#'   \item{\code{ban_rate}}{Proportion of times \code{champion} was banned in that \code{region} and \code{day} (equals \code{ban_level} divided by \code{n_matches}).}
+#'   \item{\code{win_level}}{How many matches \code{champion} has won in that \code{region} and \code{day}.}
+#'   \item{\code{win_rate}}{Proportion of matches won by \code{champion} in that \code{region} and \code{day} (equals \code{win_level} divided by \code{pick_level}).}
 #'   \item{\code{gold_avg}}{Average gold earned by \code{champion} in that \code{region} and \code{day}.}
 #'   \item{\code{kills_avg}}{Average number of kills achieved by \code{champion} in that \code{region} and \code{day}.}
 #'   \item{\code{assists_avg}}{Average number of assists achieved by \code{champion} in that \code{region} and \code{day}.}
@@ -39,16 +39,16 @@
 #'   \item{\code{day_no}}{Numeric version of \code{day}.}
 #'   \item{\code{n_matches}}{How many matches where played in that \code{day}.}
 #'   \item{\code{champion}}{Champion (unit of observation).}
-#'   \item{\code{pick_level_sum}}{How often \code{champion} was picked in that \code{day}.}
-#'   \item{\code{pick_rate_pooled}}{Equals \code{pick_level_sum} divided by \code{n_matches_sum}.}
-#'   \item{\code{ban_level_sum}}{How often \code{champion} was banned in that \code{day}.}
-#'   \item{\code{ban_rate_pooled}}{Equals \code{ban_level_sum} divided by \code{n_matches_sum}.}
-#'   \item{\code{win_level_sum}}{How matches \code{champion} has won in that \code{day}.}
-#'   \item{\code{win_rate_pooled}}{Equals \code{win_level_sum} divided by \code{pick_level_sum}.}
+#'   \item{\code{pick_level_sum}}{How many times \code{champion} was picked in that \code{day}.}
+#'   \item{\code{pick_rate_pooled}}{Proportion of times \code{champion} was picked in that \code{day} (equals \code{pick_level_sum} divided by \code{n_matches_sum}).}
+#'   \item{\code{ban_level_sum}}{How many times \code{champion} was banned in that \code{day}.}
+#'   \item{\code{ban_rate_pooled}}{Proportion of times \code{champion} was banned in that \code{day} (equals \code{ban_level_sum} divided by \code{n_matches_sum}).}
+#'   \item{\code{win_level_sum}}{How many matches \code{champion} has won in that \code{day}.}
+#'   \item{\code{win_rate_pooled}}{Proportion of matches won by \code{champion} in that \code{day} (equals \code{win_level_sum} divided by \code{pick_level_sum}).}
 #'   \item{\code{gold_pooled}}{Average gold earned by \code{champion} in that \code{day} among the matches it participated.}
-#'   \item{\code{kills_pooled}}{Average number of kills achieved by \code{champion} in that \code{day} among the matches it participated.}
-#'   \item{\code{assists_pooled}}{Average number of assists achieved by \code{champion} in that \code{day} among the matches it participated.}
-#'   \item{\code{deaths_pooled}}{Average number of deaths achieved by \code{champion} in that \code{day} among the matches it participated.}
+#'   \item{\code{kills_pooled}}{Average number of kills achieved by \code{champion} in that \code{day} (zeroes, i.e., days where \code{champion} was never picked, are not included in the computation).}
+#'   \item{\code{assists_pooled}}{Average number of assists achieved by \code{champion} in that \code{day} (zeroes, i.e., days where \code{champion} was never picked, are not included in the computation).}
+#'   \item{\code{deaths_pooled}}{Average number of deaths achieved by \code{champion} in that \code{day} (zeroes, i.e., days where \code{champion} was never picked, are not included in the computation).}
 #'   \item{\code{main_role}}{Main role of \code{champion}.}
 #'   \item{\code{aux_role}}{Auxiliary role of \code{champion}.}
 #' }
@@ -75,4 +75,4 @@
 #'  \item{\code{assists_avg}}{Average number of assists achieved by the player in that \code{day}.}
 #'  \item{\code{deaths_avg}}{Average number of deaths achieved by the player in that \code{day}.}
 #' }
-"lol_champ_pool_dta"
+"lol_player_dta"

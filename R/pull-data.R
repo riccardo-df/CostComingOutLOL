@@ -25,7 +25,7 @@
 #'
 #' @seealso \code{\link{pull_lol_match_ids}}, \code{\link{pull_lol_match_info}}, \code{\link{pull_lol_data}}
 #'
-#' @export
+#' @noRd
 pull_lol_players <- function(server, queue, rank, division, api_key) {
   ## 0.) Checks.
   if (!(server %in% c("br1", "eun1", "euw1", "jp1", "kr", "la1", "la2", "na1", "oc1", "ru", "tr1"))) stop("Invalid 'server'. Check the documentation for valid values.", call. = FALSE)
@@ -92,7 +92,7 @@ pull_lol_players <- function(server, queue, rank, division, api_key) {
 #'
 #' @seealso \code{\link{pull_lol_players}}, \code{\link{pull_lol_match_info}}, \code{\link{pull_lol_data}}
 #'
-#' @export
+#' @noRd
 pull_lol_match_ids <- function(server, player_name, api_key) {
   ## 0.) Handling inputs and checks.
   if (!(server %in% c("br1", "eun1", "euw1", "jp1", "kr", "la1", "la2", "na1", "oc1", "ru", "tr1"))) stop("Invalid 'server'. Check the documentation for valid values.", call. = FALSE)
@@ -202,7 +202,7 @@ pull_lol_match_ids <- function(server, player_name, api_key) {
 #'
 #' @seealso \code{\link{pull_lol_players}}, \code{\link{pull_lol_match_ids}}, \code{\link{pull_lol_data}}
 #'
-#' @export
+#' @noRd
 pull_lol_match_info <- function(server, match_id, api_key,
                                 min_sec = 0, max_sec = 0) {
   ## 0.) Handling inputs and checks.
@@ -298,6 +298,31 @@ pull_lol_match_info <- function(server, match_id, api_key,
 #' \href{https://developer.riotgames.com/apis#summoner-v4/GET_getBySummonerName}{https://developer.riotgames.com/apis#summoner-v4/GET_getBySummonerName},
 #' \href{https://developer.riotgames.com/apis#match-v5/GET_getMatchIdsByPUUID}{https://developer.riotgames.com/apis#match-v5/GET_getMatchIdsByPUUID}, and
 #' \href{https://developer.riotgames.com/apis#match-v5/GET_getMatch}{https://developer.riotgames.com/apis#match-v5/GET_getMatch}.
+#'
+#' @return
+#' Prints a csv file storing a data set with the following columns:
+#' \describe{
+#'   \item{\code{match_id}}{Match ID.}
+#'   \item{\code{day}}{Time and date of the beginning of the match.}
+#'   \item{\code{duration}}{Duration of the match in minutes.}
+#'   \item{\code{queue_id}}{Queue ID. See \href{https://static.developer.riotgames.com/docs/lol/queues.json}{here}. Currently, only 5v5 Ranked Solo games are returned.}
+#'   \item{\code{game_mode}}{Game mode. See \href{https://static.developer.riotgames.com/docs/lol/gameModes.json}{here}. Currently, only \code{"CLASSIC"} matches are returned.}
+#'   \item{\code{game_type}}{Game type. See \href{https://static.developer.riotgames.com/docs/lol/gameTypes.json}{here}. Currently, only \code{"MATCHED_GAME"} matches are returned.}
+#'   \item{\code{player_name}}{Name of each player in the match.}
+#'   \item{\code{player_id}}{ID of each player in the match.}
+#'   \item{\code{player_puuid}}{PUIID of each player in the match.}
+#'   \item{\code{player_level}}{Level of each player in the match.}
+#'   \item{\code{champion}}{Champion picked by each player in the match.}
+#'   \item{\code{position}}{Position played by each player in the match.}
+#'   \item{\code{kills}}{Number of kills of each player in the match.}
+#'   \item{\code{assists}}{Number of assists of each player in the match.}
+#'   \item{\code{deaths}}{Number of deaths of each player in the match.}
+#'   \item{\code{gold}}{Gold earned by each player in the match.}
+#'   \item{\code{early_surrender}}{Whether the match ended by early surrender.}
+#'   \item{\code{surrender}}{Whether the match ended by surrender.}
+#'   \item{\code{win}}{Whether the player belongs to the winning team.}
+#'   \item{\code{ban}}{Champions banned for a given game.}
+#' }
 #'
 #' @import dplyr httr jsonlite utils
 #'

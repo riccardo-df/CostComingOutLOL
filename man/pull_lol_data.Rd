@@ -21,6 +21,31 @@ pull_lol_data(server, queue, rank, division, api_key, min_sec, max_sec)
 
 \item{max_sec}{Wait for a random amount of seconds bounded from above by \code{max_sec} before pulling next item.}
 }
+\value{
+Prints a csv file storing a data set with the following columns:
+\describe{
+  \item{\code{match_id}}{Match ID.}
+  \item{\code{day}}{Time and date of the beginning of the match.}
+  \item{\code{duration}}{Duration of the match in minutes.}
+  \item{\code{queue_id}}{Queue ID. See \href{https://static.developer.riotgames.com/docs/lol/queues.json}{here}. Currently, only 5v5 Ranked Solo games are returned.}
+  \item{\code{game_mode}}{Game mode. See \href{https://static.developer.riotgames.com/docs/lol/gameModes.json}{here}. Currently, only \code{"CLASSIC"} matches are returned.}
+  \item{\code{game_type}}{Game type. See \href{https://static.developer.riotgames.com/docs/lol/gameTypes.json}{here}. Currently, only \code{"MATCHED_GAME"} matches are returned.}
+  \item{\code{player_name}}{Name of each player in the match.}
+  \item{\code{player_id}}{ID of each player in the match.}
+  \item{\code{player_puuid}}{PUIID of each player in the match.}
+  \item{\code{player_level}}{Level of each player in the match.}
+  \item{\code{champion}}{Champion picked by each player in the match.}
+  \item{\code{position}}{Position played by each player in the match.}
+  \item{\code{kills}}{Number of kills of each player in the match.}
+  \item{\code{assists}}{Number of assists of each player in the match.}
+  \item{\code{deaths}}{Number of deaths of each player in the match.}
+  \item{\code{gold}}{Gold earned by each player in the match.}
+  \item{\code{early_surrender}}{Whether the match ended by early surrender.}
+  \item{\code{surrender}}{Whether the match ended by surrender.}
+  \item{\code{win}}{Whether the player belongs to the winning team.}
+  \item{\code{ban}}{Champions banned for a given game.}
+}
+}
 \description{
 Pulls raw data from Riot API.
 }

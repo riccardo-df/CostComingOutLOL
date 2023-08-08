@@ -7,7 +7,7 @@
 outcome_plots_lol_lgb(lol_champ_pool_dta, max_date = as.POSIXct("2022-07-15"))
 }
 \arguments{
-\item{lol_champ_pool_dta}{Data set as constructed by the \code{\link{construct_lol_champion_pooled_data}} function (you can find this datas et already bundled in the package).}
+\item{lol_champ_pool_dta}{Data set as constructed by the \code{\link{construct_lol_champion_pooled_data}} function (you can find this data set already bundled in the package).}
 
 \item{max_date}{Object of class \code{POSIXct}. Where to cut the series.}
 }

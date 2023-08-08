@@ -12,12 +12,12 @@ A data frame with the following variables:
   \item{\code{day_no}}{Numeric version of \code{day}.}
   \item{\code{n_matches}}{How many matches where played in that \code{region} and \code{day}.}
   \item{\code{champion}}{Champion (unit of observation).}
-  \item{\code{pick_level}}{How often \code{champion} was picked in that \code{region} and \code{day}.}
-  \item{\code{pick_rate}}{Equals \code{pick_level} divided by \code{n_matches}.}
-  \item{\code{ban_level}}{How often \code{champion} was banned in that \code{region} and \code{day}.}
-  \item{\code{ban_rate}}{Equals \code{ban_level} divided by \code{n_matches}.}
-  \item{\code{win_level}}{How matches \code{champion} has won in that \code{region} and \code{day}.}
-  \item{\code{win_rate}}{Equals \code{win_level} divided by \code{pick_level}.}
+  \item{\code{pick_level}}{How many times \code{champion} was picked in that \code{region} and \code{day}.}
+  \item{\code{pick_rate}}{Proportion of times \code{champion} was picked in that \code{region} and \code{day} (equals \code{pick_level} divided by \code{n_matches}).}
+  \item{\code{ban_level}}{How many times \code{champion} was banned in that \code{region} and \code{day}.}
+  \item{\code{ban_rate}}{Proportion of times \code{champion} was banned in that \code{region} and \code{day} (equals \code{ban_level} divided by \code{n_matches}).}
+  \item{\code{win_level}}{How many matches \code{champion} has won in that \code{region} and \code{day}.}
+  \item{\code{win_rate}}{Proportion of matches won by \code{champion} in that \code{region} and \code{day} (equals \code{win_level} divided by \code{pick_level}).}
   \item{\code{gold_avg}}{Average gold earned by \code{champion} in that \code{region} and \code{day}.}
   \item{\code{kills_avg}}{Average number of kills achieved by \code{champion} in that \code{region} and \code{day}.}
   \item{\code{assists_avg}}{Average number of assists achieved by \code{champion} in that \code{region} and \code{day}.}

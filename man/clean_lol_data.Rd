@@ -27,7 +27,7 @@ Fourth, it identifies the main and the auxiliary positions of each champion base
 played in a different position.\cr
 }
 \seealso{
-\code{\link{pull_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{\code{\link{construct_lol_player_data}}}}
+\code{\link{pull_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{construct_lol_player_data}}
 }
 \author{
 Riccardo Di Francesco

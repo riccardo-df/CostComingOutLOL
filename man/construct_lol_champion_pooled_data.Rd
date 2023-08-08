@@ -7,7 +7,7 @@
 construct_lol_champion_pooled_data(dta)
 }
 \arguments{
-\item{dta}{Data set as constructed by the \code{\link{construct_lol_champion_data}} function. You can also find this data set bundled in the package under the name \code{\link{lol_champ_dta}}.}
+\item{dta}{Data set as constructed by the \code{\link{construct_lol_champion_data}} function (you can find this data set already bundled in the package).}
 }
 \description{
 Constructs the LoL champion data set by aggregating observations over regions.
@@ -18,7 +18,7 @@ Constructs the LoL champion data set by aggregating observations over regions.
  \item{\code{pick_level_sum}, \code{ban_level_sum}, \code{win_level_sum}}{Sum the corresponding variables over regions. For instance, \code{pick_level_sum} is constructed by summing \code{pick_level} over Europe, Latin America, North America, and Korea, and tells us how many times \code{champion} has been picked on a given \code{day} overall.}
  \item{\code{n_matches_sum}}{Sum \code{n_matches} over regions. It tells us the total number of matches played in a given \code{day}.}
  \item{\code{pick_rate_pooled}, \code{ban_rate_pooled}, \code{win_rate_pooled}}{Divide the corresponding variables by \code{n_matches_sum}. Exception is \code{win_rate_pooled}, which is divided by \code{pick_level_sum}.}
- \item{\code{gold_pooled}, code{kills_avg}, \code{assists_avg}, \code{deaths_avg}}{Average the corresponding variables over regions. We consider only days where \code{champion} has a non-zero \code{pick_level}.}
+ \item{\code{gold_pooled}, \code{kills_avg}, \code{assists_avg}, \code{deaths_avg}}{Average the corresponding variables over regions. We consider only days where \code{champion} has a non-zero \code{pick_level}.}
  \item{\code{main_role}}{For each \code{champion}, extract its main position.}
  \item{\code{aux_role}}{For each \code{champion}, extract its auxiliary position.}
 }
