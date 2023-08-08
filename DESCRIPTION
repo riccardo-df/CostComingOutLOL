@@ -1,10 +1,10 @@
-Package: LOLpaper
+Package: CostComingOutLOL
 Type: Package
-Title: Code for The Cost of Coming Out
+Title: Code for The Cost of Coming Out Paper
 Version: 0.1.0
 Authors@R: person("Riccardo", "Di Francesco", email = "difrancesco.riccardo96@gmail.com", role = c("aut", "cre"))
 Description: This package bundles and documents the code used
-    in the LOL paper.
+    in the paper titled The Cost of Coming Out.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
