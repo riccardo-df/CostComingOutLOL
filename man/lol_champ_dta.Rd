@@ -7,8 +7,8 @@
 \format{
 A data frame with the following variables:
 \describe{
-  \item{\code{region}}{Geographical macro area where server hosting the match is located.}
-  \item{\code{day}}{Day when the match wad played.}
+  \item{\code{region}}{Geographical macro area of observation.}
+  \item{\code{day}}{Day of observation.}
   \item{\code{day_no}}{Numeric version of \code{day}.}
   \item{\code{n_matches}}{How many matches where played in that \code{region} and \code{day}.}
   \item{\code{champion}}{Champion (unit of observation).}

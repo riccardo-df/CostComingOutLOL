@@ -7,7 +7,7 @@
 \format{
 A data frame with the following variables:
 \describe{
-  \item{\code{day}}{Day when the match wad played.}
+  \item{\code{day}}{Day of observation.}
   \item{\code{day_no}}{Numeric version of \code{day}.}
   \item{\code{n_matches}}{How many matches where played in that \code{day}.}
   \item{\code{champion}}{Champion (unit of observation).}
@@ -24,12 +24,32 @@ A data frame with the following variables:
   \item{\code{main_role}}{Main role of \code{champion}.}
   \item{\code{aux_role}}{Auxiliary role of \code{champion}.}
 }
+
+A data frame with the following variables:
+\describe{
+  \item{\code{day}}{Day of obervation.}
+  \item{\code{day_no}}{Numeric version of \code{day}.}
+  \item{\code{id}}{Player PUIID (unit of observation).}
+  \item{\code{n_matches}}{How many matches the player played in that \code{day}.}
+  \item{\code{Graves_rate}}{How often the player picked Graves in that \code{day}.}
+  \item{\code{Graves_ban_rate}}{How often the player banned Graves in that \code{day}.}
+  \item{\code{win_rate}}{How often the player won a match in that \code{day}.}
+ \item{\code{gold_avg}}{Average gold earned by the player in that \code{day}.}
+ \item{\code{kills_avg}}{Average number of kills achieved by the player in that \code{day}.}
+ \item{\code{assists_avg}}{Average number of assists achieved by the player in that \code{day}.}
+ \item{\code{deaths_avg}}{Average number of deaths achieved by the player in that \code{day}.}
+}
 }
 \usage{
+lol_champ_pool_dta
+
 lol_champ_pool_dta
 }
 \description{
 LoL champion data set, obtained by calling the \code{\link{construct_lol_champion_pooled_data}} function on the output of the
 \code{\link{construct_lol_champion_data}} function.
+
+LoL champion data set, obtained by calling the \code{\link{construct_lol_player_data}} function on the output of the
+\code{\link{clean_lol_data}} function.
 }
 \keyword{datasets}

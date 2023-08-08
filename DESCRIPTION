@@ -21,6 +21,7 @@ Imports:
     lubridate,
     parallel,
     plm,
+    reshape2,
     stringr,
     utils
 Depends: 
