@@ -13,7 +13,7 @@ construct_lol_player_data(dta)
 Constructs the LoL player data set.
 }
 \details{
-\code{construct_lol_player_data} performs the following operations on \code{dta}.\cr
+\code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 
 First, it keeps only data for the year 2022.\cr
 

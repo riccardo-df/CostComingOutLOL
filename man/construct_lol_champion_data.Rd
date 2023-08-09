@@ -13,7 +13,7 @@ construct_lol_champion_data(dta)
 Constructs the LoL champion data set by pooling observations over regions.
 }
 \details{
-\code{construct_lol_champion_pooled_data} performs the following operations on \code{dta}.\cr
+\code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
 
 First, it keeps only data for the year 2022 and drops champions that have been released after June 1st, 2022.\cr
 

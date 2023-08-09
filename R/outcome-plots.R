@@ -3,8 +3,8 @@
 #' Produces plots for the pick, ban, and win variables of the champions of interest.
 #'
 #' @param champions Character vector with the champions of interest.
-#' @param lol_champ_dta Data set as constructed by the \code{\link{construct_lol_champion_data}} function (you can find this datas et already bundled in the package).
-#' @param lol_champ_pool_dta Data set as constructed by the \code{\link{construct_lol_champion_pooled_data}} function (you can find this datas et already bundled in the package).
+#' @param lol_champ_dta Data set bundled in the package.
+#' @param lol_champ_pool_dta Data set bundled in the package.
 #' @param max_date Object of class \code{POSIXct}. Where to cut the series.
 #'
 #' @import dplyr ggplot2
@@ -217,7 +217,7 @@ outcome_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, max_
 #' Produces plots for the pick, ban, and win variables of the LGB aggregate, constructed by averaging variables for the LGB champions
 #' 'Nami', 'Leona', 'Diana', and 'Neeko'.
 #'
-#' @param lol_champ_pool_dta Data set as constructed by the \code{\link{construct_lol_champion_pooled_data}} function (you can find this data set already bundled in the package).
+#' @param lol_champ_pool_dta Data set bundled in the package.
 #' @param max_date Object of class \code{POSIXct}. Where to cut the series.
 #'
 #' @import dplyr ggplot2 reshape2

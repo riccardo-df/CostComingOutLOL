@@ -16,6 +16,8 @@ Imports:
     doParallel,
     dplyr,
     foreach,
+    ggsci,
+    gridExtra,
     httr,
     jsonlite,
     lubridate,
@@ -23,6 +25,7 @@ Imports:
     plm,
     reshape2,
     stringr,
+    synthdid,
     utils
 Depends: 
     R (>= 2.10)

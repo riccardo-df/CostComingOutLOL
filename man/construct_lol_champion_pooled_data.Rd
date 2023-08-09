@@ -13,7 +13,7 @@ construct_lol_champion_pooled_data(dta)
 Constructs the LoL champion data set by aggregating observations over regions.
 }
 \details{
-\code{construct_lol_champion_pooled_data} generates new variables by aggregating the observations (i.e., the champions) over the regions.\cr
+\code{\link{construct_lol_champion_pooled_data}} generates new variables by aggregating the observations (i.e., the champions) over the regions.\cr
 \describe{
  \item{\code{pick_level_sum}, \code{ban_level_sum}, \code{win_level_sum}}{Sum the corresponding variables over regions. For instance, \code{pick_level_sum} is constructed by summing \code{pick_level} over Europe, Latin America, North America, and Korea, and tells us how many times \code{champion} has been picked on a given \code{day} overall.}
  \item{\code{n_matches_sum}}{Sum \code{n_matches} over regions. It tells us the total number of matches played in a given \code{day}.}

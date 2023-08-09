@@ -13,7 +13,7 @@ clean_lol_data(dta)
 Cleans the raw LoL data as obtained from calling the \code{\link{pull_lol_data}} function.
 }
 \details{
-\code{clean_lol_data} performs the following operations on the raw data.\cr
+\code{\link{clean_lol_data}} performs the following operations on the raw data.\cr
 
 First, it merges the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr

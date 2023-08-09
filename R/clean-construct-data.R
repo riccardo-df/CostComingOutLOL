@@ -5,7 +5,7 @@
 #' @param dta Data set as constructed by the \code{\link{pull_lol_data}} function (you can rowbind more data sets and pass in the final one).
 #'
 #' @details
-#' \code{clean_lol_data} performs the following operations on the raw data.\cr
+#' \code{\link{clean_lol_data}} performs the following operations on the raw data.\cr
 #'
 #' First, it merges the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 #' and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
@@ -279,7 +279,7 @@ clean_lol_data <- function(dta) {
 #' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
 #'
 #' @details
-#' \code{construct_lol_champion_pooled_data} performs the following operations on \code{dta}.\cr
+#' \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
 #'
 #' First, it keeps only data for the year 2022 and drops champions that have been released after June 1st, 2022.\cr
 #'
@@ -474,7 +474,7 @@ construct_lol_champion_data <- function(dta) {
 #' @param dta Data set as constructed by the \code{\link{construct_lol_champion_data}} function (you can find this data set already bundled in the package).
 #'
 #' @details
-#' \code{construct_lol_champion_pooled_data} generates new variables by aggregating the observations (i.e., the champions) over the regions.\cr
+#' \code{\link{construct_lol_champion_pooled_data}} generates new variables by aggregating the observations (i.e., the champions) over the regions.\cr
 #' \describe{
 #'  \item{\code{pick_level_sum}, \code{ban_level_sum}, \code{win_level_sum}}{Sum the corresponding variables over regions. For instance, \code{pick_level_sum} is constructed by summing \code{pick_level} over Europe, Latin America, North America, and Korea, and tells us how many times \code{champion} has been picked on a given \code{day} overall.}
 #'  \item{\code{n_matches_sum}}{Sum \code{n_matches} over regions. It tells us the total number of matches played in a given \code{day}.}
@@ -537,7 +537,7 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
 #'
 #' @details
-#' \code{construct_lol_player_data} performs the following operations on \code{dta}.\cr
+#' \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 #'
 #' First, it keeps only data for the year 2022.\cr
 #'

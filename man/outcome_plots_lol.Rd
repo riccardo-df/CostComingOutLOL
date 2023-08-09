@@ -14,9 +14,9 @@ outcome_plots_lol(
 \arguments{
 \item{champions}{Character vector with the champions of interest.}
 
-\item{lol_champ_dta}{Data set as constructed by the \code{\link{construct_lol_champion_data}} function (you can find this datas et already bundled in the package).}
+\item{lol_champ_dta}{Data set bundled in the package.}
 
-\item{lol_champ_pool_dta}{Data set as constructed by the \code{\link{construct_lol_champion_pooled_data}} function (you can find this datas et already bundled in the package).}
+\item{lol_champ_pool_dta}{Data set bundled in the package.}
 
 \item{max_date}{Object of class \code{POSIXct}. Where to cut the series.}
 }
