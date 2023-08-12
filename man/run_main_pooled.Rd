@@ -25,7 +25,7 @@ run_main_pooled(
 
 \item{donor_pool}{Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.}
 
-\item{estimator}{Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc + a ridge penalty), "synthdid" (synthetic diff-in-diff).}
+\item{estimator}{Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).}
 
 \item{treatment_date}{When the treatment took place. Must be of class \code{as.POSIXct} with \code{tryFormats} set to "\%Y-\%m-\%d".}
 

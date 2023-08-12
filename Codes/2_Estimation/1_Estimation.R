@@ -21,11 +21,13 @@ pooled_panel <- lol_champ_pool_dta
 champions <- c("Graves", "LGB")
 
 pooled_results <- run_main_pooled(pooled_panel, champions, outcome_colname = "pick_level_sum", donor_pool = "non_lgb", estimator = "sc_reg",
-                                  treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), backdate = 10, covariate_colnames = c())
-regional_results <- run_main_regional(panel, champions, outcome, donor_pool, estimator, treatment_date, covariate_names = c(), max_date = as.POSIXct("2022-07-15"))
+                                  treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), backdate = 10)
+regional_results <- run_main_regional(panel, champions, outcome_colname  = "pick_level", donor_pool = "non_lgb", estimator  = "sc_reg",
+                                      treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"))
 
 # Plots -------------------------------------------------------------------
 produce_plots_pooled(pooled_results)
+produce_plots_regional(regional_results)
 
 # regional_fits <- construct_sc_lol_regional(panel, champions, outcome = "pick_level", donor_pool = "non_lgbtq", estimator = "sc_reg", covariate_names = c())
 # lgbtq_regional_fit <- construct_sc_lol_regional_lgbtq(panel, outcome = "pick_level", estimator = "sc_reg")

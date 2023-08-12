@@ -31,58 +31,6 @@ construct_donor_pool <- function(dta, donor_pool, my_champion) {
 }
 
 
-#' Call Synthdid Estimation Function
-#'
-#' Calls one of the \code{synthdid} estimation functions.
-#'
-#' @param dta One of the champion data sets bundled in the package (\code{\link{lol_champ_pool_dta}} or \code{\link{lol_champ_dta}}).
-#' @param outcome_colname Name of the column of \code{lol_champ_pool_dta} storing the outcome of interest.
-#' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc + a ridge penalty), "synthdid" (synthetic diff-in-diff).
-#' @param covariate_colnames Character vector with the names of the columns storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.
-#'
-#' @details
-#' Before calling the estimation function, \code{\link{call_synthdid}} processes \code{dta} to generate the required objects.\cr
-#'
-#' If \code{covariate_colnames} is non-empty, \code{\link{call_synthdid}} regresses the outcomes on the covariates, on time fixed effects, and unit fixed effects, with the regression estimated without
-#' using observations in which the treatment takes place. Then, \code{\link{call_synthdid}} uses the estimated coefficients to compute the residuals of the outcomes for all observations (also those in which
-#' the treatment takes place), and uses these residuals rather than the original outcomes for estimation.
-#'
-#' @import synthdid xsynthdid
-#'
-#' @author Riccardo Di Francesco
-#'
-#' @keywords internal
-call_synthdid <- function(dta, outcome_colname, estimator, covariate_colnames) {
-  ## 0.) Handling inputs and checks.
-  if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
-
-  unit <- which(colnames(dta) == "champion")
-  time <- which(colnames(dta) == "day_no")
-  outcome <- which(colnames(dta) == outcome_colname)
-  treatment <- which(colnames(dta) == "treatment")
-
-  ## 1.) If necessary, adjust the outcomes.
-  if (length(covariate_colnames) != 0) {
-    dta$y_adjusted <- xsynthdid::adjust.outcome.for.x(dta, unit = unit, time = time, outcome = outcome_colname, treatment = treatment, x = covariate_colnames)
-    outcome <- which(colnames(dta) == "y_adjusted")
-  }
-
-  ## 2.) Process data.
-  setup <- synthdid::panel.matrices(as.data.frame(dta), unit = unit, time = time, outcome = outcome_colname, treatment = treatment)
-
-  ## 3.) Run estimation.
-  if (estimator == "sc") {
-    tau_hat <- synthdid::sc_estimate(setup$Y, setup$N0, setup$T0)
-  } else if (estimator == "sc_reg") {
-    tau_hat <- sc_estimate_reg(setup$Y, setup$N0, setup$T0)
-  } else if (estimator == "sdid") {
-    tau_hat <- synthdid::synthdid_estimate(setup$Y, setup$N0, setup$T0)
-  }
-
-  return(tau_hat)
-}
-
-
 #' Cost of Coming Out - Main Analysis
 #'
 #' Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_pool_dta}}.
@@ -92,11 +40,11 @@ call_synthdid <- function(dta, outcome_colname, estimator, covariate_colnames) {
 #' @return
 #' Save some nice plots.
 #'
-#' @import dplyr ggplot2 ggsci gridExtra
+#' @import dplyr ggplot2 ggsci gridExtra grDevices stats
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{run_main_regional}}
+#' @seealso \code{\link{produce_plots_regional}}
 #'
 #' @export
 produce_plots_pooled <- function(pooled_results) {
@@ -109,7 +57,7 @@ produce_plots_pooled <- function(pooled_results) {
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
-  rainbow <- adjustcolor(matrix(hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) y_label <- "Pick rate" else y_label <- "Pick level"
 
@@ -162,7 +110,7 @@ produce_plots_pooled <- function(pooled_results) {
 
     # 2b.) Weights for the main fit.
     plot_weights <- synth_outcomes[[my_champion]]$weights %>%
-      ggplot2::ggplot(ggplot2::aes(x = reorder(champion, -sort(weight)), y = weight, fill = champion)) +
+      ggplot2::ggplot(ggplot2::aes(x = stats::reorder(champion, -sort(weight)), y = weight, fill = champion)) +
       ggplot2::geom_bar(position = "dodge", stat = "identity") +
       ggplot2::coord_flip() +
       ggsci::scale_fill_jco() +
@@ -214,6 +162,101 @@ produce_plots_pooled <- function(pooled_results) {
     }
 
     ggsave(paste0(tolower(my_champion), "_pooled_robustness.svg"), plot_robustness, device = "svg")
+  }
+
+  cat("Figures are saved at ", getwd(), "\n", sep = "")
+}
+
+
+#' Cost of Coming Out - Main Analysis
+#'
+#' Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_dta}}.
+#'
+#' @param regional_results Output of \code{\link{run_main_regional}}.
+#'
+#' @return
+#' Save some nice plots.
+#'
+#' @import dplyr ggplot2 ggsci gridExtra grDevices
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @seealso \code{\link{produce_plots_pooled}}
+#'
+#' @export
+produce_plots_regional <- function(regional_results) {
+  ## 0.) Handling inputs and checks.
+  outcome_colname <- regional_results$outcome_colname
+  dta <- regional_results$dta
+  treatment_date <- regional_results$treatment_date
+
+  regions <- unique(dta$region)
+  regional_panels <- sapply(regions, function(x) {reg_panel <- dta %>% dplyr::filter(region == x)}, simplify = FALSE)
+
+  pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+
+  if (outcome_colname %in% c("pick_rate", "pick_rate")) y_label <- "Pick rate" else y_label <- "Pick level"
+
+  ## 1.) Construct synthetic outcomes.
+  synth_outcomes <- lapply(regional_results[!(names(regional_results) %in% c("outcome_colname", "dta", "treatment_date"))], function(x) {
+    mapply(function(y, z) { construct_synth_outcome(y, z, "champion", outcome_colname, "day") }, y = x, z = regional_panels, SIMPLIFY = FALSE)
+  })
+
+  ## 2.) Plot.
+  champions <- names(regional_results)[!(names(regional_results) %in% c("outcome_colname", "dta", "treatment_date"))]
+
+  for (i in seq_len(length(champions))) {
+    my_champion <- champions[i]
+
+    if (my_champion == "LGB") {
+      lgb_avg_outcome <- lapply(regional_panels, function(x) {
+        x %>%
+          dplyr::filter(champion %in% c("Nami", "Leona", "Diana", "Neeko")) %>%
+          dplyr::group_by(day_no) %>%
+          dplyr::mutate(lgb_pick_level = mean(pick_level),
+                        lgb_pick_rate = mean(pick_rate)) %>%
+          dplyr::distinct(day, .keep_all = TRUE) %>%
+          select(region, day, day_no, lgb_pick_level, lgb_pick_rate)
+      })
+
+      lgb_avg_outcome <- lapply(lgb_avg_outcome, function(x) {
+        colnames(x) <- c("region", "day", "day_no", "pick_level", "pick_rate")
+        x$champion <- "LGB"
+        x
+      })
+
+      lgb_avg_outcome <- dplyr::bind_rows(lgb_avg_outcome)
+
+      dta <- dta %>%
+        dplyr::select(region, day, day_no, pick_level, pick_rate, champion) %>%
+        dplyr::bind_rows(lgb_avg_outcome)
+    }
+
+    plot_dta <- dta %>%
+      dplyr::filter(champion == my_champion)
+
+    plot_synth_outcomes <- lapply(synth_outcomes[[my_champion]], function(x) { x$synth_outcome }) %>%
+      dplyr::bind_rows(.id = "groups")
+    colnames(plot_synth_outcomes)[1] <- "region"
+
+    # 2a.) Main fit.
+    plot_main <- plot_dta %>%
+      ggplot2::ggplot(ggplot2::aes(x = day, y = .data[[outcome_colname]], color = "Actual")) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line() +
+      ggplot2::geom_line(data = plot_synth_outcomes, ggplot2::aes(y = synth_outcome, col = "Synthetic")) +
+      ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
+      ggplot2::facet_wrap(~region, ncol = 2) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(my_champion) +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
+      ggplot2::theme_bw() +
+      theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+            legend.position = c(0.11, 0.93), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+    ggsave(paste0(tolower(my_champion), "_regional_main.svg"), plot_main, device = "svg")
+
   }
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")

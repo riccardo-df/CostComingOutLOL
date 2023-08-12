@@ -16,7 +16,9 @@ Imports:
     doParallel,
     dplyr,
     foreach,
+    ggplot2,
     ggsci,
+    grDevices,
     gridExtra,
     httr,
     jsonlite,
@@ -26,6 +28,7 @@ Imports:
     reshape2,
     stringr,
     synthdid,
-    utils
+    utils,
+    xsynthdid
 Depends: 
     R (>= 2.10)

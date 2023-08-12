@@ -7,7 +7,7 @@
 #' @param lol_champ_pool_dta Data set bundled in the package.
 #' @param max_date Object of class \code{POSIXct}. Where to cut the series.
 #'
-#' @import dplyr ggplot2
+#' @import dplyr ggplot2 grDevices
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -22,7 +22,7 @@ outcome_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, max_
   treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
-  rainbow <- adjustcolor(matrix(hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   lol_champ_dta <- lol_champ_dta %>%
     dplyr::filter(day < max_date)
@@ -220,7 +220,7 @@ outcome_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, max_
 #' @param lol_champ_pool_dta Data set bundled in the package.
 #' @param max_date Object of class \code{POSIXct}. Where to cut the series.
 #'
-#' @import dplyr ggplot2 reshape2
+#' @import dplyr ggplot2 reshape2 grDevices
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -234,7 +234,7 @@ outcome_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct("202
   treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
-  rainbow <- adjustcolor(matrix(hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
 

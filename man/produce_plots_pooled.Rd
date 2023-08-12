@@ -16,7 +16,7 @@ Save some nice plots.
 Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_pool_dta}}.
 }
 \seealso{
-\code{\link{run_main_regional}}
+\code{\link{produce_plots_regional}}
 }
 \author{
 Riccardo Di Francesco
