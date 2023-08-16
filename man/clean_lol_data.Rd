@@ -15,7 +15,7 @@ Cleans the raw LoL data as obtained from calling the \code{\link{pull_lol_data}}
 \details{
 \code{\link{clean_lol_data}} performs the following operations on the raw data.\cr
 
-First, it merges the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
+First, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 
 Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than five minutes or more than two hours or

@@ -15,7 +15,7 @@ Constructs the LoL champion data set by pooling observations over regions.
 \details{
 \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
 
-First, it keeps only data for the year 2022 and drops champions that have been released after June 1st, 2022.\cr
+First, it keeps only data for the year 2022 up to July 15th and drops champions that have been released after June 1st, 2022 (KSante, Nilah, and Belveth).\cr
 
 Second, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
 \code{day} and \code{region}. These are replaced with zeroes.

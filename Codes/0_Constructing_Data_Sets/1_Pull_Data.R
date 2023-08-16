@@ -4,6 +4,8 @@
 
 ## The Cost of Coming Out - Pulling data from Riot API.
 
+## This script pulls raw data from Riot API. Run "help(pull_lol_data)" for details.
+
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
 set.seed(1986)

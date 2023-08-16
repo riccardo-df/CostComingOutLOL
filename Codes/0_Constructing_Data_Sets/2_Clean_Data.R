@@ -4,6 +4,8 @@
 
 ## The Cost of Coming Out - Cleaning the raw data.
 
+## This script cleans the raw data pulled from Riot API. Run "help(clean_lol_data)" for details.
+
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
 set.seed(1986)

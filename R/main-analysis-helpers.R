@@ -68,7 +68,6 @@ produce_plots_pooled <- function(pooled_results) {
 
   ## 2.) Plot.
   champions <- names(pooled_results)[!(names(pooled_results) %in% c("outcome_colname", "dta", "treatment_date"))]
-  plots <- list()
 
   for (i in seq_len(length(champions))) {
     my_champion <- champions[i]
@@ -97,15 +96,15 @@ produce_plots_pooled <- function(pooled_results) {
     plot_main <- plot_dta %>%
       ggplot2::ggplot(ggplot2::aes(x = day, y = .data[[outcome_colname]], color = "Actual")) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
-      ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic")) +
+      ggplot2::geom_line(linewidth = 1) +
+      ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
-      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(my_champion) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-            legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+            legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
     ggsave(paste0(tolower(my_champion), "_pooled_main.svg"), plot_main, device = "svg")
 
     # 2b.) Weights for the main fit.
@@ -114,7 +113,7 @@ produce_plots_pooled <- function(pooled_results) {
       ggplot2::geom_bar(position = "dodge", stat = "identity") +
       ggplot2::coord_flip() +
       ggsci::scale_fill_jco() +
-      ggplot2::xlab("") + ggplot2::ylab("Weight") + ggplot2::ggtitle(my_champion) +
+      ggplot2::xlab("") + ggplot2::ylab("Weight") + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
@@ -124,16 +123,16 @@ produce_plots_pooled <- function(pooled_results) {
     plot_back <- plot_dta %>%
       ggplot2::ggplot(ggplot2::aes(x = day, y = .data[[outcome_colname]], color = "Actual")) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
-      ggplot2::geom_line(data = synth_outcomes_back[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic")) +
+      ggplot2::geom_line(linewidth = 1) +
+      ggplot2::geom_line(data = synth_outcomes_back[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
-      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(my_champion) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-            legend.position = c(0.11, 0.85), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+            legend.position = c(0.11, 0.75), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
     # 2c.) Leave-one-out exercise.
     if (length(pooled_results[[my_champion]]$tau_hat_drop) != 0) {
@@ -145,16 +144,16 @@ produce_plots_pooled <- function(pooled_results) {
       plot_drop <- plot_dta %>%
         ggplot2::ggplot(ggplot2::aes(x = day, y = .data[[outcome_colname]], color = "Actual")) +
         ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-        ggplot2::geom_line() +
-        ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic")) +
+        ggplot2::geom_line(linewidth = 1) +
+        ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
         ggplot2::geom_line(data = temp_drop, ggplot2::aes(y = synth_outcome, group = champion, col = "Synthetic LOO"), linetype = "dashed", linewidth = 0.5) +
         ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
-        ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(my_champion) +
+        ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
         ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
         theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-              legend.position = c(0.15, 0.8), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+              legend.position = c(0.12, 0.72), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
       plot_robustness <- gridExtra::arrangeGrob(plot_back, plot_drop, ncol = 1)
     } else {
@@ -245,18 +244,17 @@ produce_plots_regional <- function(regional_results) {
     plot_main <- plot_dta %>%
       ggplot2::ggplot(ggplot2::aes(x = day, y = .data[[outcome_colname]], color = "Actual")) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
-      ggplot2::geom_line(data = plot_synth_outcomes, ggplot2::aes(y = synth_outcome, col = "Synthetic")) +
+      ggplot2::geom_line(linewidth = 0.6) +
+      ggplot2::geom_line(data = plot_synth_outcomes, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 0.6) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(~region, ncol = 2) +
-      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(my_champion) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-            legend.position = c(0.11, 0.93), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+            legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
     ggsave(paste0(tolower(my_champion), "_regional_main.svg"), plot_main, device = "svg")
-
   }
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")

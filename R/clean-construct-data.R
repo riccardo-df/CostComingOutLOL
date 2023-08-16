@@ -7,7 +7,7 @@
 #' @details
 #' \code{\link{clean_lol_data}} performs the following operations on the raw data.\cr
 #'
-#' First, it merges the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
+#' First, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 #' and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 #'
 #' Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than five minutes or more than two hours or
@@ -281,7 +281,7 @@ clean_lol_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the year 2022 and drops champions that have been released after June 1st, 2022.\cr
+#' First, it keeps only data for the year 2022 up to July 15th and drops champions that have been released after June 1st, 2022 (KSante, Nilah, and Belveth).\cr
 #'
 #' Second, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
 #' \code{day} and \code{region}. These are replaced with zeroes.
@@ -320,11 +320,12 @@ clean_lol_data <- function(dta) {
 #' @export
 construct_lol_champion_data <- function(dta) {
   ## Keep only 2022 data and drop champions released after treatment.
-  cat("Keeping only 2022 data and dropping champions released after treatment. \n")
+  cat("Keeping only 2022 data up to July 15th and dropping champions released after treatment. \n")
   new_champions <- c("KSante", "Nilah", "Belveth")
 
   dta <- dta %>%
     dplyr::filter(lubridate::year(day) == 2022) %>%
+    dplyr::filter(day < as.POSIXct("2022-07-15")) %>%
     dplyr::filter(!(champion %in% new_champions))
 
   ## Generate variables and merging.
@@ -446,19 +447,19 @@ construct_lol_champion_data <- function(dta) {
               dplyr::pull(`n_distinct(champion)`)) == length(champions_pool)) warning("Something is wrong. You may want to double-check.")
 
   if (!panel %>%
-      filter(region == "Europe") %>%
+      dplyr::filter(region == "Europe") %>%
       plm::is.pbalanced(index = c("champion", "day"))) warning("The panel is not balanced. You may want to double-check.")
 
   if (!panel %>%
-      filter(region == "Korea") %>%
+      dplyr::filter(region == "Korea") %>%
       plm::is.pbalanced(index = c("champion", "day"))) warning("The panel is not balanced. You may want to double-check.")
 
   if (!panel %>%
-      filter(region == "North_America") %>%
+      dplyr::filter(region == "North_America") %>%
       plm::is.pbalanced(index = c("champion", "day"))) warning("The panel is not balanced. You may want to double-check.")
 
   if (!panel %>%
-      filter(region == "Latin_America") %>%
+      dplyr::filter(region == "Latin_America") %>%
       plm::is.pbalanced(index = c("champion", "day"))) warning("The panel is not balanced. You may want to double-check.")
 
   ## Write csv.
@@ -539,7 +540,7 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the year 2022.\cr
+#' First, it keeps only data for the year 2022 up to July 15th.\cr
 #'
 #' Second, it generates the variables of interest.
 #' \describe{
@@ -568,9 +569,10 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @export
 construct_lol_player_data <- function(dta) {
   ## Keep only 2022 data.
-  cat("Keeping only 2022 data. \n")
+  cat("Keeping only 2022 data up to July 15th. \n")
     dta <- dta %>%
-      dplyr::filter(lubridate::year(day) == 2022)
+      dplyr::filter(lubridate::year(day) == 2022) %>%
+      dplyr::filter(day < as.POSIXct("2022-07-15"))
 
   ## Generate variables.
   cat("Generating variables. \n")

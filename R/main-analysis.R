@@ -44,7 +44,7 @@
 #' @seealso \code{\link{run_main_regional}}
 #'
 #' @export
-run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, backdate, covariate_colnames = c(), max_date = as.POSIXct("2022-07-15")) {
+run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, backdate, covariate_colnames = c(), max_date = as.POSIXct("2022-07-13")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled"))) stop("Invalid 'outcome'. This must be either 'pick_level_sum' or 'pick_rate_pooled'.", call. = FALSE)
   if (!(donor_pool %in% c("all", "non_lgb"))) stop("Invalid 'donor_pool'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
@@ -186,7 +186,7 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
 #' @seealso \code{\link{run_main_pooled}}
 #'
 #' @export
-run_main_regional <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, covariate_colnames = c(), max_date = as.POSIXct("2022-07-15")) {
+run_main_regional <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, covariate_colnames = c(), max_date = as.POSIXct("2022-07-13")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must be either 'pick_level' or 'pick_rate'.", call. = FALSE)
   if (!(donor_pool %in% c("all", "non_lgb"))) stop("Invalid 'donor_pool'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
