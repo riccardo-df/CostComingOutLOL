@@ -15,8 +15,6 @@ pkgs <- c("CostComingOutLOL", "dplyr", "ggplot2", "gridExtra")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Define time events.
-treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-
 pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
 
@@ -40,7 +38,6 @@ plot_pooled <- player_panel %>%
   geom_line(aes(y = total_matches, color = "Matches"), linewidth = 1) +
   geom_line(aes(y = total_players / trans_coef, color = "Players"), linewidth = 1) +
   annotation_raster(rainbow, xmin = pride_month_2022_begin, xmax = pride_month_2022_end, ymin = -Inf, ymax = Inf) +
-  geom_vline(xintercept = treatment_date, linetype = 4) +
   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
   scale_y_continuous(name = "N. daily matches", sec.axis = sec_axis(~ . * trans_coef, name = "N. daily players")) +
   scale_color_manual(name = "Colors", values = c("Matches" = matches_color, "Players" = players_color)) +
