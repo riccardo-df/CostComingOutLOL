@@ -12,6 +12,7 @@ LazyDataCompression: xz
 RoxygenNote: 7.2.3
 Imports: 
     anytime,
+    Cairo,
     data.table,
     doParallel,
     dplyr,

@@ -11,7 +11,7 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL", "dplyr", "ggplot2", "grid", "gridExtra")
+pkgs <- c("CostComingOutLOL", "dplyr", "ggplot2", "grid", "gridExtra", "Cairo")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Define time events.
@@ -30,7 +30,7 @@ p_kd <- pooled_panel %>%
   replace(is.na(.), 0) %>%
   ggplot(aes(x = as.POSIXct(day), y = kd_ratio, group = champion, color = champion)) +
   annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-  geom_line(color = "tomato", linewidth = 1) +
+  geom_line(color = "tomato", linewidth = 0.6) +
   xlab("") + ylab("Kills/deaths") +
   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
   theme_bw() +
@@ -41,7 +41,7 @@ p_assists <- pooled_panel %>%
   filter(champion == "Graves") %>%
   ggplot(aes(x = as.POSIXct(day), y = assists_pooled, group = champion, color = champion)) +
   annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-  geom_line(color = "tomato", linewidth = 1) +
+  geom_line(color = "tomato", linewidth = 0.6) +
   xlab("") + ylab("Assists") +
   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
   theme_bw() +
@@ -52,7 +52,7 @@ p_gold <- pooled_panel %>%
   filter(champion == "Graves") %>%
   ggplot(aes(x = as.POSIXct(day), y = gold_pooled, group = champion, color = champion)) +
   annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-  geom_line(color = "tomato", linewidth = 1) +
+  geom_line(color = "tomato", linewidth = 0.6) +
   xlab("") + ylab("Gold earned") +
   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
   theme_bw() +
@@ -63,11 +63,11 @@ p_win <- pooled_panel %>%
   filter(champion == "Graves") %>%
   ggplot(aes(x = as.POSIXct(day), y = win_rate_pooled, group = champion, color = champion)) +
   annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-  geom_line(color = "tomato", linewidth = 1) +
+  geom_line(color = "tomato", linewidth = 0.6) +
   xlab("") + ylab(paste0("Win rate")) +
   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
 
 ## 5.) Grid.
-ggsave("graves_performance_pooled.svg", plot = grid.arrange(p_kd, p_assists, p_gold, p_win, top = textGrob("Graves")), device = "svg")
+ggsave("graves_performance_pooled.svg", plot = grid.arrange(p_kd, p_assists, p_gold, p_win, top = textGrob("Graves")), device = CairoSVG)

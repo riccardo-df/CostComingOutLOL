@@ -40,7 +40,7 @@ construct_donor_pool <- function(dta, donor_pool, my_champion) {
 #' @return
 #' Save some nice plots.
 #'
-#' @import dplyr ggplot2 ggsci gridExtra grDevices stats
+#' @import dplyr ggplot2 ggsci gridExtra grDevices stats Cairo
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -54,6 +54,7 @@ produce_plots_pooled <- function(pooled_results) {
   treatment_date <- pooled_results$treatment_date
   n_back_days <- as.numeric(summary(pooled_results[[1]]$tau_hat)$dimensions["T0"] - summary(pooled_results[[1]]$tau_hat_back)$dimensions["T0"] - 1)
   treatment_date_back <- as.Date(treatment_date) - n_back_days
+  champions <- names(pooled_results)[!(names(pooled_results) %in% c("outcome_colname", "dta", "treatment_date"))]
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
@@ -66,9 +67,7 @@ produce_plots_pooled <- function(pooled_results) {
   synth_outcomes_back <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "dta", "treatment_date"))], function(x) { construct_synth_outcome(x$tau_hat_back, dta, "champion", outcome_colname, "day") })
   synth_outcomes_drop <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "dta", "treatment_date"))], function(x) { lapply(x$tau_hat_drop, function(z) { construct_synth_outcome(z, dta, "champion", outcome_colname, "day") }) } )
 
-  ## 2.) Plot.
-  champions <- names(pooled_results)[!(names(pooled_results) %in% c("outcome_colname", "dta", "treatment_date"))]
-
+  ## 2.) Champions' plots.
   for (i in seq_len(length(champions))) {
     my_champion <- champions[i]
 
@@ -105,7 +104,7 @@ produce_plots_pooled <- function(pooled_results) {
       ggplot2::theme_bw() +
       theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
             legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggsave(paste0(tolower(my_champion), "_pooled_main.svg"), plot_main, device = "svg")
+    ggplot2::ggsave(paste0(tolower(my_champion), "_pooled_main.svg"), plot_main, device = Cairo::CairoSVG)
 
     # 2b.) Weights for the main fit.
     plot_weights <- synth_outcomes[[my_champion]]$weights %>%
@@ -117,7 +116,7 @@ produce_plots_pooled <- function(pooled_results) {
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-    ggsave(paste0(tolower(my_champion), "_pooled_main_weights.svg"), plot_weights, device = "svg")
+    ggplot2::ggsave(paste0(tolower(my_champion), "_pooled_main_weights.svg"), plot_weights, device = Cairo::CairoSVG)
 
     # 2c.) Backdate exercise.
     plot_back <- plot_dta %>%
@@ -132,7 +131,7 @@ produce_plots_pooled <- function(pooled_results) {
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-            legend.position = c(0.11, 0.75), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+            legend.position = c(0.11, 0.79), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
     # 2c.) Leave-one-out exercise.
     if (length(pooled_results[[my_champion]]$tau_hat_drop) != 0) {
@@ -153,14 +152,59 @@ produce_plots_pooled <- function(pooled_results) {
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
         theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-              legend.position = c(0.12, 0.72), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+              legend.position = c(0.12, 0.77), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
       plot_robustness <- gridExtra::arrangeGrob(plot_back, plot_drop, ncol = 1)
     } else {
       plot_robustness <- plot_back
     }
 
-    ggsave(paste0(tolower(my_champion), "_pooled_robustness.svg"), plot_robustness, device = "svg")
+    ggplot2::ggsave(paste0(tolower(my_champion), "_pooled_robustness.svg"), plot_robustness, device = Cairo::CairoSVG)
+  }
+
+  ## 4.) If Graves and LGB are present, plot also the difference in their effects.
+  ## Notice that, if the condition below is true, the routine already computed the average outcome of LGB champions.
+  if (all(c("Graves", "LGB") %in% champions)) {
+    graves_actual_outcome <- dta %>%
+      dplyr::filter(champion == "Graves") %>%
+      dplyr::select(day, all_of(outcome_colname))
+    colnames(graves_actual_outcome)[2] <- "graves_actual_outcome"
+
+    graves_synth_outcome <- synth_outcomes$Graves$synth_outcome
+    colnames(graves_synth_outcome)[2] <- "graves_synth_outcome"
+
+    graves_diff_dta <- graves_actual_outcome %>%
+      dplyr::left_join(graves_synth_outcome, by = "day") %>%
+      dplyr::mutate(graves_diff = graves_actual_outcome - graves_synth_outcome)
+
+    lgb_actual_outcome <- dta %>%
+      dplyr::filter(champion == "LGB") %>%
+      dplyr::select(day, all_of(outcome_colname))
+    colnames(lgb_actual_outcome)[2] <- "lgb_actual_outcome"
+
+    lgb_synth_outcome <- synth_outcomes$LGB$synth_outcome
+    colnames(lgb_synth_outcome)[2] <- "lgb_synth_outcome"
+
+    lgb_diff_dta <- lgb_actual_outcome %>%
+      dplyr::left_join(lgb_synth_outcome, by = "day") %>%
+      dplyr::mutate(lgb_diff = lgb_actual_outcome - lgb_synth_outcome)
+
+    diff_dta <- graves_diff_dta %>%
+      dplyr::left_join(lgb_diff_dta, by = "day") %>%
+      dplyr::mutate(diff_diff = graves_diff - lgb_diff)
+
+    plot_diff <- diff_dta %>%
+      ggplot2::ggplot(ggplot2::aes(x = day, y = diff_diff, color = "Series")) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(linewidth = 1) +
+      ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
+      ggplot2::xlab("") + ggplot2::ylab(expression(hat(tau)[t]^L - hat(gamma)[t]^L)) + ggplot2::ggtitle("") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::scale_color_manual(name = "Colors", values = c("Series" = "#69b3a2")) +
+      ggplot2::theme_bw() +
+      theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+            legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+    ggplot2::ggsave("difference_graves_lgb.svg", plot_diff, device = Cairo::CairoSVG)
   }
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")
@@ -176,7 +220,7 @@ produce_plots_pooled <- function(pooled_results) {
 #' @return
 #' Save some nice plots.
 #'
-#' @import dplyr ggplot2 ggsci gridExtra grDevices
+#' @import dplyr ggplot2 ggsci gridExtra grDevices Cairo
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -188,6 +232,7 @@ produce_plots_regional <- function(regional_results) {
   outcome_colname <- regional_results$outcome_colname
   dta <- regional_results$dta
   treatment_date <- regional_results$treatment_date
+  champions <- names(regional_results)[!(names(regional_results) %in% c("outcome_colname", "dta", "treatment_date"))]
 
   regions <- unique(dta$region)
   regional_panels <- sapply(regions, function(x) {reg_panel <- dta %>% dplyr::filter(region == x)}, simplify = FALSE)
@@ -204,8 +249,6 @@ produce_plots_regional <- function(regional_results) {
   })
 
   ## 2.) Plot.
-  champions <- names(regional_results)[!(names(regional_results) %in% c("outcome_colname", "dta", "treatment_date"))]
-
   for (i in seq_len(length(champions))) {
     my_champion <- champions[i]
 
@@ -254,7 +297,7 @@ produce_plots_regional <- function(regional_results) {
       ggplot2::theme_bw() +
       theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
             legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggsave(paste0(tolower(my_champion), "_regional_main.svg"), plot_main, device = "svg")
+    ggplot2::ggsave(paste0(tolower(my_champion), "_regional_main.svg"), plot_main, device = Cairo::CairoSVG)
   }
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")

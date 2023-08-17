@@ -300,7 +300,7 @@ pull_lol_match_info <- function(server, match_id, api_key,
 #' \href{https://developer.riotgames.com/apis#match-v5/GET_getMatch}{https://developer.riotgames.com/apis#match-v5/GET_getMatch}.
 #'
 #' @return
-#' Prints a csv file storing a data set with the following columns:
+#' Saves a csv file storing a data set with the following columns:
 #' \describe{
 #'   \item{\code{match_id}}{Match ID.}
 #'   \item{\code{day}}{Time and date of the beginning of the match.}

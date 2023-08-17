@@ -11,7 +11,7 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("gtrendsR", "dplyr", "ggplot2", "gridExtra")
+pkgs <- c("gtrendsR", "dplyr", "ggplot2", "gridExtra", "Cairo")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Define time events.
@@ -23,10 +23,7 @@ wc_2022_begin <- as.POSIXct("2022-09-29", tryFormats = "%Y-%m-%d")
 wc_2022_end <- as.POSIXct("2022-11-05", tryFormats = "%Y-%m-%d")
 
 # Google trends -----------------------------------------------------------
-lgb_champions <- c("Nami", "Leona", "Neeko", "Diana")
-champions <- c("Graves", lgb_champions)
-
-search_interest <- gtrends(paste0("lol ", champions), time = "2022-01-01 2022-12-31", gprop = "web", geo = "", onlyInterest = TRUE)$interest_over_time
+search_interest <- gtrends("lol Graves", time = "2022-01-01 2022-12-31", gprop = "web", geo = "", onlyInterest = TRUE)$interest_over_time
 search_interest_gay <- gtrends("Graves gay", time = "2022-01-01 2022-12-31", gprop = "web", geo = "", onlyInterest = TRUE)$interest_over_time
 
 search_interest_graves <- search_interest %>%
@@ -48,7 +45,6 @@ plot_one <- search_interest_gay %>%
 plot_two <- search_interest_graves %>%
   ggplot(aes(x = date, y = hits)) +
   geom_line(color = "#69b3a2", linewidth = 1.2) +
-  # geom_line(data = search_interest_others, aes(y = hits, group = keyword), linetype = "dashed", linewidth = 0.6, color = "gray") +
   geom_vline(xintercept = as.POSIXct(treatment_week), linetype = 4) +
   annotate(geom = "rect", xmin = as.POSIXct(wc_2022_begin), xmax = as.POSIXct(wc_2022_end), ymin = -Inf, ymax = Inf, fill = "black", alpha = 0.2) +
   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
@@ -57,4 +53,4 @@ plot_two <- search_interest_graves %>%
   theme(plot.title = element_text(hjust = 0.5, face = "italic"), legend.position = "none",
         axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("google_trends_time_grid.svg", plot = grid.arrange(plot_one, plot_two), device = "svg")
+ggsave("google_trends_time_grid.svg", plot = grid.arrange(plot_one, plot_two), device = CairoSVG)
