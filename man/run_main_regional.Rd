@@ -12,7 +12,7 @@ run_main_regional(
   estimator,
   treatment_date,
   covariate_colnames = c(),
-  max_date = as.POSIXct("2022-07-15")
+  max_date = as.POSIXct("2022-07-13")
 )
 }
 \arguments{

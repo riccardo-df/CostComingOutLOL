@@ -2,11 +2,11 @@
 % Please edit documentation in R/descriptive-plots.R
 \name{descriptive_plots_lol_lgb}
 \alias{descriptive_plots_lol_lgb}
-\title{LoL Outcome Plots (LGB Aggregate)}
+\title{LoL Descriptive Plots (LGB Aggregate)}
 \usage{
 descriptive_plots_lol_lgb(
   lol_champ_pool_dta,
-  max_date = as.POSIXct("2022-07-15")
+  max_date = as.POSIXct("2022-07-11")
 )
 }
 \arguments{
@@ -19,7 +19,7 @@ Produces plots for the pick, ban, and win variables of the LGB aggregate, constr
 'Nami', 'Leona', 'Diana', and 'Neeko'.
 }
 \seealso{
-\code{\link{descriptive_plots_lol}}
+\code{\link{descriptive_plots_lol}} \code{\link{performance_plots_lol}}
 }
 \author{
 Riccardo Di Francesco

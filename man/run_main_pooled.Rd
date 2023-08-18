@@ -13,7 +13,7 @@ run_main_pooled(
   treatment_date,
   backdate,
   covariate_colnames = c(),
-  max_date = as.POSIXct("2022-07-15")
+  max_date = as.POSIXct("2022-07-13")
 )
 }
 \arguments{

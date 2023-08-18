@@ -22,7 +22,7 @@ pull_lol_data(server, queue, rank, division, api_key, min_sec, max_sec)
 \item{max_sec}{Wait for a random amount of seconds bounded from above by \code{max_sec} before pulling next item.}
 }
 \value{
-Prints a csv file storing a data set with the following columns:
+Saves a csv file storing a data set with the following columns:
 \describe{
   \item{\code{match_id}}{Match ID.}
   \item{\code{day}}{Time and date of the beginning of the match.}

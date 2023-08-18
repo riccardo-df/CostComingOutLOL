@@ -17,7 +17,7 @@
 #'
 #' @export
 sc_estimate_reg <- function(Y, N0, T0, X = array(dim = c(dim(Y), 0))) {
-  sc_estimate(Y, N0, T0, X = X, eta.omega = ((nrow(Y)-N0)*(ncol(Y)-T0))^(1/4))
+  sc_estimate(Y, N0, T0, X = X, eta.omega = ((nrow(Y) - N0) * (ncol(Y) - T0))^(1/4))
 }
 
 

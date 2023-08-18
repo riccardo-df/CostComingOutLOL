@@ -1,4 +1,4 @@
-#' LoL Outcome Plots
+#' LoL Descriptive Plots
 #'
 #' Produces plots for the pick, ban, and win variables of the champions of interest.
 #'
@@ -11,10 +11,10 @@
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{descriptive_plots_lol_lgb}}
+#' @seealso \code{\link{descriptive_plots_lol_lgb}} \code{\link{performance_plots_lol}}
 #'
 #' @export
-descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, max_date = as.POSIXct("2022-07-13")) {
+descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, max_date = as.POSIXct("2022-07-11")) {
   ## 0.) Handling inputs and checks.
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
   if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in one or both data sets.")
@@ -212,7 +212,7 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
 }
 
 
-#' LoL Outcome Plots (LGB Aggregate)
+#' LoL Descriptive Plots (LGB Aggregate)
 #'
 #' Produces plots for the pick, ban, and win variables of the LGB aggregate, constructed by averaging variables for the LGB champions
 #' 'Nami', 'Leona', 'Diana', and 'Neeko'.
@@ -224,10 +224,10 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{descriptive_plots_lol}}
+#' @seealso \code{\link{descriptive_plots_lol}} \code{\link{performance_plots_lol}}
 #'
 #' @export
-descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct("2022-07-13")) {
+descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct("2022-07-11")) {
   ## 0.) Handling inputs and checks.
   if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in one or both data sets.")
 
@@ -274,3 +274,83 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct(
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")
 }
+
+
+#' LoL Performance Plots
+#'
+#' Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
+#'
+#' @param champions Character vector with the champions of interest.
+#' @param lol_champ_pool_dta Data set bundled in the package.
+#' @param max_date Object of class \code{POSIXct}. Where to cut the series.
+#'
+#' @import dplyr ggplot2 grDevices Cairo grid
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @seealso \code{\link{descriptive_plots_lol}} \code{\link{descriptive_plots_lol_lgb}}
+#'
+#' @export
+performance_plots_lol <- function(champions, lol_champ_pool_dta, max_date = as.POSIXct("2022-07-11")) {
+  ## 0.) Handling inputs and checks.
+  if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
+  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in one or both data sets.")
+
+  pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+
+  lol_champ_pool_dta <- lol_champ_pool_dta %>%
+    dplyr::filter(day < max_date)
+
+  for (i in seq_len((length(champions)))) {
+    my_champion <- champions[i]
+
+    p_kd <- lol_champ_pool_dta %>%
+      dplyr::filter(champion == my_champion) %>%
+      dplyr::mutate(kd_ratio = kills_pooled / deaths_pooled) %>%
+      replace(is.na(.), 0) %>%
+      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = kd_ratio, group = champion, color = champion)) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+      ggplot2::xlab("") + ggplot2::ylab("Kills/deaths") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::theme_bw() +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+    p_assists <- lol_champ_pool_dta %>%
+      dplyr::filter(champion == my_champion) %>%
+      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = assists_pooled, group = champion, color = champion)) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+      ggplot2::xlab("") + ggplot2::ylab("Assists") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::theme_bw() +
+      theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+    p_gold <- lol_champ_pool_dta %>%
+      dplyr::filter(champion == my_champion) %>%
+      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = gold_pooled, group = champion, color = champion)) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+      ggplot2::xlab("") + ggplot2::ylab("Gold earned") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::theme_bw() +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+    p_win <- lol_champ_pool_dta %>%
+      dplyr::filter(champion == my_champion) %>%
+      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_rate_pooled, group = champion, color = champion)) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+      ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::theme_bw() +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+    ggsave(paste0(tolower(my_champion), "_performance_pooled.svg"), plot = grid.arrange(p_kd, p_assists, p_gold, p_win, top = grid::textGrob(my_champion)), device = Cairo::CairoSVG)
+  }
+
+  cat("Figures are saved at ", getwd(), "\n", sep = "")
+}
+
