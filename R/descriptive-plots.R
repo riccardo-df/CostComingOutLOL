@@ -284,7 +284,7 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct(
 #' @param lol_champ_pool_dta Data set bundled in the package.
 #' @param max_date Object of class \code{POSIXct}. Where to cut the series.
 #'
-#' @import dplyr ggplot2 grDevices Cairo grid
+#' @import dplyr ggplot2 grDevices Cairo reshape2
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -306,49 +306,25 @@ performance_plots_lol <- function(champions, lol_champ_pool_dta, max_date = as.P
   for (i in seq_len((length(champions)))) {
     my_champion <- champions[i]
 
-    p_kd <- lol_champ_pool_dta %>%
+    plot_dta <- lol_champ_pool_dta %>%
       dplyr::filter(champion == my_champion) %>%
       dplyr::mutate(kd_ratio = kills_pooled / deaths_pooled) %>%
       replace(is.na(.), 0) %>%
-      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = kd_ratio, group = champion, color = champion)) +
+      dplyr::select(day, kd_ratio, assists_pooled, gold_pooled, win_rate_pooled)
+    colnames(plot_dta) <- c("day", "Kills/Deaths", "Assists", "Gold", "Win Rate")
+
+    plot <- plot_dta %>%
+      reshape2::melt(id.vars = "day", measure.vars = c("Kills/Deaths", "Assists", "Gold", "Win Rate")) %>%
+      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = value)) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
       ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-      ggplot2::xlab("") + ggplot2::ylab("Kills/deaths") +
+      ggplot2::facet_grid(rows = vars(variable), scales = "free") +
+      ggplot2::xlab("") + ggplot2::ylab("") + ggplot2::ggtitle(my_champion) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
 
-    p_assists <- lol_champ_pool_dta %>%
-      dplyr::filter(champion == my_champion) %>%
-      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = assists_pooled, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-      ggplot2::xlab("") + ggplot2::ylab("Assists") +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
-      ggplot2::theme_bw() +
-      theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-    p_gold <- lol_champ_pool_dta %>%
-      dplyr::filter(champion == my_champion) %>%
-      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = gold_pooled, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-      ggplot2::xlab("") + ggplot2::ylab("Gold earned") +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-    p_win <- lol_champ_pool_dta %>%
-      dplyr::filter(champion == my_champion) %>%
-      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_rate_pooled, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-      ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-    ggsave(paste0(tolower(my_champion), "_performance_pooled.svg"), plot = grid.arrange(p_kd, p_assists, p_gold, p_win, top = grid::textGrob(my_champion)), device = Cairo::CairoSVG)
+    ggsave(paste0(tolower(my_champion), "_performance_pooled.svg"), plot = plot, device = Cairo::CairoSVG)
   }
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")

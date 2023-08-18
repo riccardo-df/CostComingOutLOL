@@ -11,7 +11,7 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL", "dplyr", "ggplot2", "grid", "gridExtra", "Cairo")
+pkgs <- c("CostComingOutLOL")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Loading data.
