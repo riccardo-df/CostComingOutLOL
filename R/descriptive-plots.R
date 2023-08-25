@@ -5,7 +5,8 @@
 #' @param champions Character vector with the champions of interest.
 #' @param lol_champ_dta Data set bundled in the package.
 #' @param lol_champ_pool_dta Data set bundled in the package.
-#' @param max_date Object of class \code{POSIXct}. Where to cut the series.
+#' @param min_date Object of class \code{POSIXct}. Where to start the series.
+#' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @import dplyr ggplot2 grDevices
 #'
@@ -14,10 +15,11 @@
 #' @seealso \code{\link{descriptive_plots_lol_lgb}} \code{\link{performance_plots_lol}}
 #'
 #' @export
-descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, max_date = as.POSIXct("2022-07-11")) {
+descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-11")) {
   ## 0.) Handling inputs and checks.
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in one or both data sets.")
+  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
@@ -25,10 +27,10 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   lol_champ_dta <- lol_champ_dta %>%
-    dplyr::filter(day < max_date)
+    dplyr::filter(min_date < day & day < max_date)
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::filter(day < max_date)
+    dplyr::filter(min_date < day & day < max_date)
 
   ## 1.) Plots for pooled variables.
   # 1a.) Picks.
@@ -218,7 +220,8 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
 #' 'Nami', 'Leona', 'Diana', and 'Neeko'.
 #'
 #' @param lol_champ_pool_dta Data set bundled in the package.
-#' @param max_date Object of class \code{POSIXct}. Where to cut the series.
+#' @param min_date Object of class \code{POSIXct}. Where to start the series.
+#' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @import dplyr ggplot2 reshape2 grDevices
 #'
@@ -227,9 +230,10 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
 #' @seealso \code{\link{descriptive_plots_lol}} \code{\link{performance_plots_lol}}
 #'
 #' @export
-descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct("2022-07-11")) {
+descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-11")) {
   ## 0.) Handling inputs and checks.
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in one or both data sets.")
+  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
@@ -239,7 +243,7 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct(
   lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::filter(day < max_date)
+    dplyr::filter(min_date < day & day < max_date)
 
   lgb_aggregate <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% lgb_champions) %>%
@@ -282,7 +286,8 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct(
 #'
 #' @param champions Character vector with the champions of interest.
 #' @param lol_champ_pool_dta Data set bundled in the package.
-#' @param max_date Object of class \code{POSIXct}. Where to cut the series.
+#' @param min_date Object of class \code{POSIXct}. Where to start the series.
+#' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @import dplyr ggplot2 grDevices Cairo reshape2
 #'
@@ -291,17 +296,18 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, max_date = as.POSIXct(
 #' @seealso \code{\link{descriptive_plots_lol}} \code{\link{descriptive_plots_lol_lgb}}
 #'
 #' @export
-performance_plots_lol <- function(champions, lol_champ_pool_dta, max_date = as.POSIXct("2022-07-11")) {
+performance_plots_lol <- function(champions, lol_champ_pool_dta, min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-11")) {
   ## 0.) Handling inputs and checks.
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in one or both data sets.")
+  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::filter(day < max_date)
+    dplyr::filter(min_date < day & day < max_date)
 
   for (i in seq_len((length(champions)))) {
     my_champion <- champions[i]
@@ -329,4 +335,3 @@ performance_plots_lol <- function(champions, lol_champ_pool_dta, max_date = as.P
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")
 }
-

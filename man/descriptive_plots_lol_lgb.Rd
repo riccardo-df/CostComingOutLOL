@@ -6,13 +6,16 @@
 \usage{
 descriptive_plots_lol_lgb(
   lol_champ_pool_dta,
+  min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2022-07-11")
 )
 }
 \arguments{
 \item{lol_champ_pool_dta}{Data set bundled in the package.}
 
-\item{max_date}{Object of class \code{POSIXct}. Where to cut the series.}
+\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
+
+\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
 }
 \description{
 Produces plots for the pick, ban, and win variables of the LGB aggregate, constructed by averaging variables for the LGB champions

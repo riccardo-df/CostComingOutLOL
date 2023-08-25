@@ -10,7 +10,8 @@
 #' @param treatment_date When the treatment took place. Must be of class \code{as.POSIXct} with \code{tryFormats} set to "\%Y-\%m-\%d".
 #' @param backdate How many periods to backdate the treatment for a robustness check.
 #' @param covariate_colnames Character vector with the names of the columns of \code{lol_champ_pool_dta} storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.
-#' @param max_date Object of class \code{POSIXct}. Where to cut the series.
+#' @param min_date Object of class \code{POSIXct}. Where to start the series.
+#' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @details
 #' For each champion in \code{champions}, \code{\link{run_main_pooled}} performs the following operations.
@@ -44,7 +45,7 @@
 #' @seealso \code{\link{run_main_regional}}
 #'
 #' @export
-run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, backdate, covariate_colnames = c(), max_date = as.POSIXct("2022-07-13")) {
+run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, backdate, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-13")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled"))) stop("Invalid 'outcome'. This must be either 'pick_level_sum' or 'pick_rate_pooled'.", call. = FALSE)
   if (!(donor_pool %in% c("all", "non_lgb"))) stop("Invalid 'donor_pool'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
@@ -52,10 +53,11 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (backdate < 0 | backdate %% 1 != 0) stop("Invalid 'backdate'. This must be a positive integer.", call. = FALSE)
   if (any(champions == "LGB") & donor_pool != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donor_pool' is set to 'non_lgb'.", call. = FALSE)
-  if (max_date > max(dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in the data set.")
+  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   dta <- dta %>%
-    dplyr::filter(day < max_date)
+    dplyr::filter(min_date < day & day < max_date)
 
   ## Construct synthdid object for each champion.
   output <- list()
@@ -156,7 +158,8 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).
 #' @param treatment_date When the treatment took place. Must be of class \code{as.POSIXct} with \code{tryFormats} set to "\%Y-\%m-\%d".
 #' @param covariate_colnames Character vector with the names of the columns of \code{lol_champ_pool_dta} storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.
-#' @param max_date Object of class \code{POSIXct}. Where to cut the series.
+#' @param min_date Object of class \code{POSIXct}. Where to start the series.
+#' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @details
 #' \code{\link{run_main_regional}} disaggregates \code{\link{lol_champ_dta}} by constructing four data sets, one for each region. Then, for each champion in \code{champions}, it performs
@@ -186,17 +189,18 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
 #' @seealso \code{\link{run_main_pooled}}
 #'
 #' @export
-run_main_regional <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, covariate_colnames = c(), max_date = as.POSIXct("2022-07-13")) {
+run_main_regional <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-13")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must be either 'pick_level' or 'pick_rate'.", call. = FALSE)
   if (!(donor_pool %in% c("all", "non_lgb"))) stop("Invalid 'donor_pool'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
   if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (any(champions == "LGB") & donor_pool != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donor_pool' is set to 'non_lgb'.", call. = FALSE)
-  if (max_date > max(dta$day)) stop("Invalid 'max_date'. It is larger than the most recent day in the data set.")
+  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   dta <- dta %>%
-    dplyr::filter(day < max_date)
+    dplyr::filter(min_date < day & day < max_date)
 
   ## Generate regional panels.
   regions <- unique(dta$region)

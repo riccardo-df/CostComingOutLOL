@@ -15,7 +15,7 @@ pkgs <- c("CostComingOutLOL", "data.table")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Loading data.
-raw_dta <- fread("C:/Users/difra/Dropbox/University/Data_Sets/LoL/lol_raw1.csv")
+raw_dta <- fread("C:/Users/difra/Dropbox/University/Data_Sets/LoL/Raw/lol_raw.csv")
 
 # Data cleaning -----------------------------------------------------------
 clean_lol_data(raw_dta)

@@ -7,6 +7,7 @@
 performance_plots_lol(
   champions,
   lol_champ_pool_dta,
+  min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2022-07-11")
 )
 }
@@ -15,7 +16,9 @@ performance_plots_lol(
 
 \item{lol_champ_pool_dta}{Data set bundled in the package.}
 
-\item{max_date}{Object of class \code{POSIXct}. Where to cut the series.}
+\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
+
+\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
 }
 \description{
 Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.

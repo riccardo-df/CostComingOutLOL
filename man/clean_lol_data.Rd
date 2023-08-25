@@ -18,7 +18,7 @@ Cleans the raw LoL data as obtained from calling the \code{\link{pull_lol_data}}
 First, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 
-Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than five minutes or more than two hours or
+Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than one minute or more than two hours or
 where the position of some player is not assigned).\cr
 
 Third, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr

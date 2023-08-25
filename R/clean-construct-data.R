@@ -10,7 +10,7 @@
 #' First, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 #' and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 #'
-#' Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than five minutes or more than two hours or
+#' Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than one minute or more than two hours or
 #' where the position of some player is not assigned).\cr
 #'
 #' Third, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
@@ -35,7 +35,6 @@ clean_lol_data <- function(dta) {
 
   dta_drop <- dta %>%
     dplyr::filter(!(region %in% c("Oceania", "Russia", "Japan", "Turkey")))
-  unique(dta_drop$region)
 
   ## Drop duplicate rows (match id/participant name) and corrupted matches.
   cat("Dropping duplicated and corrupted matches. \n")
@@ -43,180 +42,182 @@ clean_lol_data <- function(dta) {
     dplyr::distinct(match_id, player_puiid, .keep_all = TRUE) %>%
     dplyr::group_by(match_id) %>%
     dplyr::filter(n() == 10) %>%
-    dplyr::filter(5 <= duration & duration <= 120) %>%
-    filter(position != "") %>%
+    dplyr::filter(1 <= duration & duration <= 120) %>%
+    dplyr::filter(position != "") %>%
     dplyr::ungroup()
 
   ## Drop again matches with less than 10 players (double-check).
   dta_noduplicate <- dta_noduplicate %>%
-    group_by(match_id) %>%
-    filter(n() == 10) %>%
-    ungroup()
+    dplyr::group_by(match_id) %>%
+    dplyr::filter(n() == 10) %>%
+    dplyr::ungroup()
 
-  ## Hard-code ban variable.
+  ## Hard-code ban variable. Check https://darkintaqt.com/blog/champ-ids.
   cat("Hard-coding ban variable. \n")
-  dta_noduplicate$ban[dta_noduplicate$ban == 516] = "Ornn"
-  dta_noduplicate$ban[dta_noduplicate$ban == 112] = "Viktor"
-  dta_noduplicate$ban[dta_noduplicate$ban == 91] = "Talon"
-  dta_noduplicate$ban[dta_noduplicate$ban == 21] = "MissFortune"
-  dta_noduplicate$ban[dta_noduplicate$ban == 43] = "Karma"
-  dta_noduplicate$ban[dta_noduplicate$ban == 777] = "Yone"
-  dta_noduplicate$ban[dta_noduplicate$ban == 64] = "LeeSin"
-  dta_noduplicate$ban[dta_noduplicate$ban == 134] = "Syndra"
-  dta_noduplicate$ban[dta_noduplicate$ban == 22] = "Ashe"
-  dta_noduplicate$ban[dta_noduplicate$ban == 26] = "Zilean"
-  dta_noduplicate$ban[dta_noduplicate$ban == 875] = "Sett"
-  dta_noduplicate$ban[dta_noduplicate$ban == 59] = "JarvanIV"
-  dta_noduplicate$ban[dta_noduplicate$ban == 34] = "Anivia"
-  dta_noduplicate$ban[dta_noduplicate$ban == 202] = "Jhin"
-  dta_noduplicate$ban[dta_noduplicate$ban == 555] = "Pyke"
   dta_noduplicate$ban[dta_noduplicate$ban == 266] = "Aatrox"
-  dta_noduplicate$ban[dta_noduplicate$ban == 56] = "Nocturne"
-  dta_noduplicate$ban[dta_noduplicate$ban == 51] = "Caitlyn"
-  dta_noduplicate$ban[dta_noduplicate$ban == 99] = "Lux"
-  dta_noduplicate$ban[dta_noduplicate$ban == 1] = "Annie"
-  dta_noduplicate$ban[dta_noduplicate$ban == 245] = "Ekko"
-  dta_noduplicate$ban[dta_noduplicate$ban == 157] = "Yasuo"
-  dta_noduplicate$ban[dta_noduplicate$ban == 111] = "Nautilus"
-  dta_noduplicate$ban[dta_noduplicate$ban == 40] = "Janna"
-  dta_noduplicate$ban[dta_noduplicate$ban == 80] = "Pantheon"
-  dta_noduplicate$ban[dta_noduplicate$ban == 50] = "Swain"
-  dta_noduplicate$ban[dta_noduplicate$ban == 498] = "Xayah"
-  dta_noduplicate$ban[dta_noduplicate$ban == 497] = "Rakan"
-  dta_noduplicate$ban[dta_noduplicate$ban == 114] = "Fiora"
-  dta_noduplicate$ban[dta_noduplicate$ban == 711] = "Vex"
-  dta_noduplicate$ban[dta_noduplicate$ban == 119] = "Draven"
-  dta_noduplicate$ban[dta_noduplicate$ban == 57] = "Maokai"
-  dta_noduplicate$ban[dta_noduplicate$ban == 74] = "Heimerdinger"
-  dta_noduplicate$ban[dta_noduplicate$ban == 200] = "Belveth"
-  dta_noduplicate$ban[dta_noduplicate$ban == 517] = "Sylas"
-  dta_noduplicate$ban[dta_noduplicate$ban == 235] = "Senna"
-  dta_noduplicate$ban[dta_noduplicate$ban == 164] = "Camille"
-  dta_noduplicate$ban[dta_noduplicate$ban == 142] = "Zoe"
-  dta_noduplicate$ban[dta_noduplicate$ban == 526] = "Rell"
-  dta_noduplicate$ban[dta_noduplicate$ban == 82] = "Mordekaiser"
-  dta_noduplicate$ban[dta_noduplicate$ban == 412] = "Thresh"
-  dta_noduplicate$ban[dta_noduplicate$ban == 69] = "Cassiopeia"
-  dta_noduplicate$ban[dta_noduplicate$ban == 8] = "Vladimir"
-  dta_noduplicate$ban[dta_noduplicate$ban == 523] = "Aphelios"
-  dta_noduplicate$ban[dta_noduplicate$ban == 147] = "Seraphine"
-  dta_noduplicate$ban[dta_noduplicate$ban == 39] = "Irelia"
-  dta_noduplicate$ban[dta_noduplicate$ban == 30] = "Karthus"
-  dta_noduplicate$ban[dta_noduplicate$ban == 246] = "Qiyana"
-  dta_noduplicate$ban[dta_noduplicate$ban == 141] = "Kayn"
-  dta_noduplicate$ban[dta_noduplicate$ban == 18] = "Tristana"
-  dta_noduplicate$ban[dta_noduplicate$ban == 888] = "Renata"
-  dta_noduplicate$ban[dta_noduplicate$ban == 122] = "Darius"
-  dta_noduplicate$ban[dta_noduplicate$ban == 429] = "Kalista"
-  dta_noduplicate$ban[dta_noduplicate$ban == 234] = "Viego"
-  dta_noduplicate$ban[dta_noduplicate$ban == 29] = "Twitch"
-  dta_noduplicate$ban[dta_noduplicate$ban == 117] = "Lulu"
-  dta_noduplicate$ban[dta_noduplicate$ban == 110] = "Varus"
-  dta_noduplicate$ban[dta_noduplicate$ban == 201] = "Braum"
-  dta_noduplicate$ban[dta_noduplicate$ban == 145] = "Kaisa"
-  dta_noduplicate$ban[dta_noduplicate$ban == 121] = "Khazix"
-  dta_noduplicate$ban[dta_noduplicate$ban == 14] = "Sion"
-  dta_noduplicate$ban[dta_noduplicate$ban == 161] = "Velkoz"
-  dta_noduplicate$ban[dta_noduplicate$ban == 85] = "Kennen"
-  dta_noduplicate$ban[dta_noduplicate$ban == 421] = "RekSai"
-  dta_noduplicate$ban[dta_noduplicate$ban == 37] = "Sona"
-  dta_noduplicate$ban[dta_noduplicate$ban == 58] = "Renekton"
-  dta_noduplicate$ban[dta_noduplicate$ban == 77] = "Udyr"
-  dta_noduplicate$ban[dta_noduplicate$ban == 76] = "Nidalee"
-  dta_noduplicate$ban[dta_noduplicate$ban == 127] = "Lissandra"
-  dta_noduplicate$ban[dta_noduplicate$ban == 27] = "Singed"
-  dta_noduplicate$ban[dta_noduplicate$ban == 101] = "Xerath"
-  dta_noduplicate$ban[dta_noduplicate$ban == 150] = "Gnar"
-  dta_noduplicate$ban[dta_noduplicate$ban == 131] = "Diana"
-  dta_noduplicate$ban[dta_noduplicate$ban == 2] = "Olaf"
-  dta_noduplicate$ban[dta_noduplicate$ban == 17] = "Teemo"
-  dta_noduplicate$ban[dta_noduplicate$ban == 107] = "Rengar"
-  dta_noduplicate$ban[dta_noduplicate$ban == 81] = "Ezreal"
-  dta_noduplicate$ban[dta_noduplicate$ban == 350] = "Yuumi"
-  dta_noduplicate$ban[dta_noduplicate$ban == 45] = "Veigar"
-  dta_noduplicate$ban[dta_noduplicate$ban == 15] = "Sivir"
-  dta_noduplicate$ban[dta_noduplicate$ban == 33] = "Rammus"
-  dta_noduplicate$ban[dta_noduplicate$ban == 154] = "Zac"
-  dta_noduplicate$ban[dta_noduplicate$ban == 86] = "Garen"
-  dta_noduplicate$ban[dta_noduplicate$ban == 113] = "Sejuani"
-  dta_noduplicate$ban[dta_noduplicate$ban == 63] = "Brand"
-  dta_noduplicate$ban[dta_noduplicate$ban == 11] = "MasterYi"
-  dta_noduplicate$ban[dta_noduplicate$ban == 68] = "Rumble"
-  dta_noduplicate$ban[dta_noduplicate$ban == 120] = "Hecarim"
-  dta_noduplicate$ban[dta_noduplicate$ban == 84] = "Akali"
-  dta_noduplicate$ban[dta_noduplicate$ban == 104] = "Graves"
-  dta_noduplicate$ban[dta_noduplicate$ban == 223] = "TahmKench"
-  dta_noduplicate$ban[dta_noduplicate$ban == 268] = "Azir"
-  dta_noduplicate$ban[dta_noduplicate$ban == 10] = "Kayle"
-  dta_noduplicate$ban[dta_noduplicate$ban == 41] = "Gangplank"
-  dta_noduplicate$ban[dta_noduplicate$ban == 887] = "Gwen"
-  dta_noduplicate$ban[dta_noduplicate$ban == 96] = "KogMaw"
-  dta_noduplicate$ban[dta_noduplicate$ban == 98] = "Shen"
-  dta_noduplicate$ban[dta_noduplicate$ban == 4] = "TwistedFate"
-  dta_noduplicate$ban[dta_noduplicate$ban == 222] = "Jinx"
-  dta_noduplicate$ban[dta_noduplicate$ban == 163] = "Taliyah"
-  dta_noduplicate$ban[dta_noduplicate$ban == 360] = "Samira"
-  dta_noduplicate$ban[dta_noduplicate$ban == 9] = "FiddleSticks"
   dta_noduplicate$ban[dta_noduplicate$ban == 103] = "Ahri"
-  dta_noduplicate$ban[dta_noduplicate$ban == 23] = "Tryndamere"
-  dta_noduplicate$ban[dta_noduplicate$ban == 16] = "Soraka"
-  dta_noduplicate$ban[dta_noduplicate$ban == 7] = "Leblanc"
-  dta_noduplicate$ban[dta_noduplicate$ban == 54] = "Malphite"
-  dta_noduplicate$ban[dta_noduplicate$ban == 92] = "Riven"
-  dta_noduplicate$ban[dta_noduplicate$ban == 32] = "Amumu"
-  dta_noduplicate$ban[dta_noduplicate$ban == 89] = "Leona"
-  dta_noduplicate$ban[dta_noduplicate$ban == 106] = "Volibear"
-  dta_noduplicate$ban[dta_noduplicate$ban == 20] = "Nunu"
-  dta_noduplicate$ban[dta_noduplicate$ban == 24] = "Jax"
-  dta_noduplicate$ban[dta_noduplicate$ban == 55] = "Katarina"
-  dta_noduplicate$ban[dta_noduplicate$ban == 19] = "Warwick"
-  dta_noduplicate$ban[dta_noduplicate$ban == 48] = "Trundle"
-  dta_noduplicate$ban[dta_noduplicate$ban == 238] = "Zed"
-  dta_noduplicate$ban[dta_noduplicate$ban == 254] = "Vi"
-  dta_noduplicate$ban[dta_noduplicate$ban == 78] = "Poppy"
-  dta_noduplicate$ban[dta_noduplicate$ban == 38] = "Kassadin"
-  dta_noduplicate$ban[dta_noduplicate$ban == 36] = "DrMundo"
-  dta_noduplicate$ban[dta_noduplicate$ban == 79] = "Gragas"
-  dta_noduplicate$ban[dta_noduplicate$ban == 67] = "Vayne"
-  dta_noduplicate$ban[dta_noduplicate$ban == 267] = "Nami"
-  dta_noduplicate$ban[dta_noduplicate$ban == 3] = "Galio"
-  dta_noduplicate$ban[dta_noduplicate$ban == 53] = "Blitzcrank"
-  dta_noduplicate$ban[dta_noduplicate$ban == 432] = "Bard"
-  dta_noduplicate$ban[dta_noduplicate$ban == 115] = "Ziggs"
-  dta_noduplicate$ban[dta_noduplicate$ban == 203] = "Kindred"
-  dta_noduplicate$ban[dta_noduplicate$ban == 6] = "Urgot"
-  dta_noduplicate$ban[dta_noduplicate$ban == 12] = "Alistar"
-  dta_noduplicate$ban[dta_noduplicate$ban == 518] = "Neeko"
-  dta_noduplicate$ban[dta_noduplicate$ban == 420] = "Illaoi"
-  dta_noduplicate$ban[dta_noduplicate$ban == 61] = "Orianna"
-  dta_noduplicate$ban[dta_noduplicate$ban == 895] = "Nilah"
-  dta_noduplicate$ban[dta_noduplicate$ban == 221] = "Zeri"
-  dta_noduplicate$ban[dta_noduplicate$ban == 62] = "MonkeyKing"
+  dta_noduplicate$ban[dta_noduplicate$ban == 84] = "Akali"
   dta_noduplicate$ban[dta_noduplicate$ban == 166] = "Akshan"
-  dta_noduplicate$ban[dta_noduplicate$ban == 236] = "Lucian"
-  dta_noduplicate$ban[dta_noduplicate$ban == 876] = "Lillia"
-  dta_noduplicate$ban[dta_noduplicate$ban == 75] = "Nasus"
-  dta_noduplicate$ban[dta_noduplicate$ban == 427] = "Ivern"
-  dta_noduplicate$ban[dta_noduplicate$ban == 83] = "Yorick"
-  dta_noduplicate$ban[dta_noduplicate$ban == 133] = "Quinn"
-  dta_noduplicate$ban[dta_noduplicate$ban == 31] = "Chogath"
-  dta_noduplicate$ban[dta_noduplicate$ban == 240] = "Kled"
-  dta_noduplicate$ban[dta_noduplicate$ban == 28] = "Evelynn"
-  dta_noduplicate$ban[dta_noduplicate$ban == 126] = "Jayce"
-  dta_noduplicate$ban[dta_noduplicate$ban == 5] = "XinZhao"
-  dta_noduplicate$ban[dta_noduplicate$ban == 90] = "Malzahar"
-  dta_noduplicate$ban[dta_noduplicate$ban == 105] = "Fizz"
-  dta_noduplicate$ban[dta_noduplicate$ban == 60] = "Elise"
-  dta_noduplicate$ban[dta_noduplicate$ban == 13] = "Ryze"
-  dta_noduplicate$ban[dta_noduplicate$ban == 143] = "Zyra"
-  dta_noduplicate$ban[dta_noduplicate$ban == 44] = "Taric"
-  dta_noduplicate$ban[dta_noduplicate$ban == 25] = "Morgana"
-  dta_noduplicate$ban[dta_noduplicate$ban == 72] = "Skarner"
-  dta_noduplicate$ban[dta_noduplicate$ban == 35] = "Shaco"
-  dta_noduplicate$ban[dta_noduplicate$ban == 102] = "Shyvana"
-  dta_noduplicate$ban[dta_noduplicate$ban == 42] = "Corki"
+  dta_noduplicate$ban[dta_noduplicate$ban == 12] = "Alistar"
+  dta_noduplicate$ban[dta_noduplicate$ban == 32] = "Amumu"
+  dta_noduplicate$ban[dta_noduplicate$ban == 34] = "Anivia"
+  dta_noduplicate$ban[dta_noduplicate$ban == 1] = "Annie"
+  dta_noduplicate$ban[dta_noduplicate$ban == 523] = "Aphelios"
+  dta_noduplicate$ban[dta_noduplicate$ban == 22] = "Ashe"
   dta_noduplicate$ban[dta_noduplicate$ban == 136] = "AurelionSol"
+  dta_noduplicate$ban[dta_noduplicate$ban == 268] = "Azir"
+  dta_noduplicate$ban[dta_noduplicate$ban == 432] = "Bard"
+  dta_noduplicate$ban[dta_noduplicate$ban == 200] = "Belveth"
+  dta_noduplicate$ban[dta_noduplicate$ban == 53] = "Blitzcrank"
+  dta_noduplicate$ban[dta_noduplicate$ban == 63] = "Brand"
+  dta_noduplicate$ban[dta_noduplicate$ban == 201] = "Braum"
+  dta_noduplicate$ban[dta_noduplicate$ban == 51] = "Caitlyn"
+  dta_noduplicate$ban[dta_noduplicate$ban == 164] = "Camille"
+  dta_noduplicate$ban[dta_noduplicate$ban == 69] = "Cassiopeia"
+  dta_noduplicate$ban[dta_noduplicate$ban == 31] = "Chogath"
+  dta_noduplicate$ban[dta_noduplicate$ban == 42] = "Corki"
+  dta_noduplicate$ban[dta_noduplicate$ban == 122] = "Darius"
+  dta_noduplicate$ban[dta_noduplicate$ban == 131] = "Diana"
+  dta_noduplicate$ban[dta_noduplicate$ban == 119] = "Draven"
+  dta_noduplicate$ban[dta_noduplicate$ban == 36] = "DrMundo"
+  dta_noduplicate$ban[dta_noduplicate$ban == 245] = "Ekko"
+  dta_noduplicate$ban[dta_noduplicate$ban == 60] = "Elise"
+  dta_noduplicate$ban[dta_noduplicate$ban == 28] = "Evelynn"
+  dta_noduplicate$ban[dta_noduplicate$ban == 81] = "Ezreal"
+  dta_noduplicate$ban[dta_noduplicate$ban == 9] = "FiddleSticks"
+  dta_noduplicate$ban[dta_noduplicate$ban == 114] = "Fiora"
+  dta_noduplicate$ban[dta_noduplicate$ban == 105] = "Fizz"
+  dta_noduplicate$ban[dta_noduplicate$ban == 3] = "Galio"
+  dta_noduplicate$ban[dta_noduplicate$ban == 41] = "Gangplank"
+  dta_noduplicate$ban[dta_noduplicate$ban == 86] = "Garen"
+  dta_noduplicate$ban[dta_noduplicate$ban == 150] = "Gnar"
+  dta_noduplicate$ban[dta_noduplicate$ban == 79] = "Gragas"
+  dta_noduplicate$ban[dta_noduplicate$ban == 104] = "Graves"
+  dta_noduplicate$ban[dta_noduplicate$ban == 887] = "Gwen"
+  dta_noduplicate$ban[dta_noduplicate$ban == 120] = "Hecarim"
+  dta_noduplicate$ban[dta_noduplicate$ban == 74] = "Heimerdinger"
+  dta_noduplicate$ban[dta_noduplicate$ban == 420] = "Illaoi"
+  dta_noduplicate$ban[dta_noduplicate$ban == 39] = "Irelia"
+  dta_noduplicate$ban[dta_noduplicate$ban == 427] = "Ivern"
+  dta_noduplicate$ban[dta_noduplicate$ban == 40] = "Janna"
+  dta_noduplicate$ban[dta_noduplicate$ban == 59] = "JarvanIV"
+  dta_noduplicate$ban[dta_noduplicate$ban == 24] = "Jax"
+  dta_noduplicate$ban[dta_noduplicate$ban == 126] = "Jayce"
+  dta_noduplicate$ban[dta_noduplicate$ban == 202] = "Jhin"
+  dta_noduplicate$ban[dta_noduplicate$ban == 222] = "Jinx"
+  dta_noduplicate$ban[dta_noduplicate$ban == 145] = "Kaisa"
+  dta_noduplicate$ban[dta_noduplicate$ban == 429] = "Kalista"
+  dta_noduplicate$ban[dta_noduplicate$ban == 43] = "Karma"
+  dta_noduplicate$ban[dta_noduplicate$ban == 30] = "Karthus"
+  dta_noduplicate$ban[dta_noduplicate$ban == 38] = "Kassadin"
+  dta_noduplicate$ban[dta_noduplicate$ban == 55] = "Katarina"
+  dta_noduplicate$ban[dta_noduplicate$ban == 10] = "Kayle"
+  dta_noduplicate$ban[dta_noduplicate$ban == 141] = "Kayn"
+  dta_noduplicate$ban[dta_noduplicate$ban == 85] = "Kennen"
+  dta_noduplicate$ban[dta_noduplicate$ban == 121] = "Khazix"
+  dta_noduplicate$ban[dta_noduplicate$ban == 203] = "Kindred"
+  dta_noduplicate$ban[dta_noduplicate$ban == 240] = "Kled"
+  dta_noduplicate$ban[dta_noduplicate$ban == 96] = "KogMaw"
   dta_noduplicate$ban[dta_noduplicate$ban == 897] = "KSante"
+  dta_noduplicate$ban[dta_noduplicate$ban == 7] = "Leblanc"
+  dta_noduplicate$ban[dta_noduplicate$ban == 64] = "LeeSin"
+  dta_noduplicate$ban[dta_noduplicate$ban == 89] = "Leona"
+  dta_noduplicate$ban[dta_noduplicate$ban == 876] = "Lillia"
+  dta_noduplicate$ban[dta_noduplicate$ban == 127] = "Lissandra"
+  dta_noduplicate$ban[dta_noduplicate$ban == 236] = "Lucian"
+  dta_noduplicate$ban[dta_noduplicate$ban == 117] = "Lulu"
+  dta_noduplicate$ban[dta_noduplicate$ban == 99] = "Lux"
+  dta_noduplicate$ban[dta_noduplicate$ban == 54] = "Malphite"
+  dta_noduplicate$ban[dta_noduplicate$ban == 90] = "Malzahar"
+  dta_noduplicate$ban[dta_noduplicate$ban == 57] = "Maokai"
+  dta_noduplicate$ban[dta_noduplicate$ban == 11] = "MasterYi"
+  dta_noduplicate$ban[dta_noduplicate$ban == 902] = "Milio"
+  dta_noduplicate$ban[dta_noduplicate$ban == 21] = "MissFortune"
+  dta_noduplicate$ban[dta_noduplicate$ban == 62] = "MonkeyKing"
+  dta_noduplicate$ban[dta_noduplicate$ban == 82] = "Mordekaiser"
+  dta_noduplicate$ban[dta_noduplicate$ban == 25] = "Morgana"
+  dta_noduplicate$ban[dta_noduplicate$ban == 950] = "Naafiri"
+  dta_noduplicate$ban[dta_noduplicate$ban == 267] = "Nami"
+  dta_noduplicate$ban[dta_noduplicate$ban == 75] = "Nasus"
+  dta_noduplicate$ban[dta_noduplicate$ban == 111] = "Nautilus"
+  dta_noduplicate$ban[dta_noduplicate$ban == 518] = "Neeko"
+  dta_noduplicate$ban[dta_noduplicate$ban == 76] = "Nidalee"
+  dta_noduplicate$ban[dta_noduplicate$ban == 895] = "Nilah"
+  dta_noduplicate$ban[dta_noduplicate$ban == 56] = "Nocturne"
+  dta_noduplicate$ban[dta_noduplicate$ban == 20] = "Nunu"
+  dta_noduplicate$ban[dta_noduplicate$ban == 2] = "Olaf"
+  dta_noduplicate$ban[dta_noduplicate$ban == 61] = "Orianna"
+  dta_noduplicate$ban[dta_noduplicate$ban == 516] = "Ornn"
+  dta_noduplicate$ban[dta_noduplicate$ban == 80] = "Pantheon"
+  dta_noduplicate$ban[dta_noduplicate$ban == 78] = "Poppy"
+  dta_noduplicate$ban[dta_noduplicate$ban == 555] = "Pyke"
+  dta_noduplicate$ban[dta_noduplicate$ban == 246] = "Qiyana"
+  dta_noduplicate$ban[dta_noduplicate$ban == 133] = "Quinn"
+  dta_noduplicate$ban[dta_noduplicate$ban == 497] = "Rakan"
+  dta_noduplicate$ban[dta_noduplicate$ban == 33] = "Rammus"
+  dta_noduplicate$ban[dta_noduplicate$ban == 421] = "RekSai"
+  dta_noduplicate$ban[dta_noduplicate$ban == 526] = "Rell"
+  dta_noduplicate$ban[dta_noduplicate$ban == 888] = "Renata"
+  dta_noduplicate$ban[dta_noduplicate$ban == 58] = "Renekton"
+  dta_noduplicate$ban[dta_noduplicate$ban == 107] = "Rengar"
+  dta_noduplicate$ban[dta_noduplicate$ban == 92] = "Riven"
+  dta_noduplicate$ban[dta_noduplicate$ban == 68] = "Rumble"
+  dta_noduplicate$ban[dta_noduplicate$ban == 13] = "Ryze"
+  dta_noduplicate$ban[dta_noduplicate$ban == 360] = "Samira"
+  dta_noduplicate$ban[dta_noduplicate$ban == 113] = "Sejuani"
+  dta_noduplicate$ban[dta_noduplicate$ban == 235] = "Senna"
+  dta_noduplicate$ban[dta_noduplicate$ban == 147] = "Seraphine"
+  dta_noduplicate$ban[dta_noduplicate$ban == 875] = "Sett"
+  dta_noduplicate$ban[dta_noduplicate$ban == 35] = "Shaco"
+  dta_noduplicate$ban[dta_noduplicate$ban == 98] = "Shen"
+  dta_noduplicate$ban[dta_noduplicate$ban == 102] = "Shyvana"
+  dta_noduplicate$ban[dta_noduplicate$ban == 27] = "Singed"
+  dta_noduplicate$ban[dta_noduplicate$ban == 14] = "Sion"
+  dta_noduplicate$ban[dta_noduplicate$ban == 15] = "Sivir"
+  dta_noduplicate$ban[dta_noduplicate$ban == 72] = "Skarner"
+  dta_noduplicate$ban[dta_noduplicate$ban == 37] = "Sona"
+  dta_noduplicate$ban[dta_noduplicate$ban == 16] = "Soraka"
+  dta_noduplicate$ban[dta_noduplicate$ban == 50] = "Swain"
+  dta_noduplicate$ban[dta_noduplicate$ban == 517] = "Sylas"
+  dta_noduplicate$ban[dta_noduplicate$ban == 134] = "Syndra"
+  dta_noduplicate$ban[dta_noduplicate$ban == 223] = "TahmKench"
+  dta_noduplicate$ban[dta_noduplicate$ban == 163] = "Taliyah"
+  dta_noduplicate$ban[dta_noduplicate$ban == 91] = "Talon"
+  dta_noduplicate$ban[dta_noduplicate$ban == 44] = "Taric"
+  dta_noduplicate$ban[dta_noduplicate$ban == 17] = "Teemo"
+  dta_noduplicate$ban[dta_noduplicate$ban == 412] = "Thresh"
+  dta_noduplicate$ban[dta_noduplicate$ban == 18] = "Tristana"
+  dta_noduplicate$ban[dta_noduplicate$ban == 48] = "Trundle"
+  dta_noduplicate$ban[dta_noduplicate$ban == 23] = "Tryndamere"
+  dta_noduplicate$ban[dta_noduplicate$ban == 4] = "TwistedFate"
+  dta_noduplicate$ban[dta_noduplicate$ban == 29] = "Twitch"
+  dta_noduplicate$ban[dta_noduplicate$ban == 77] = "Udyr"
+  dta_noduplicate$ban[dta_noduplicate$ban == 6] = "Urgot"
+  dta_noduplicate$ban[dta_noduplicate$ban == 110] = "Varus"
+  dta_noduplicate$ban[dta_noduplicate$ban == 67] = "Vayne"
+  dta_noduplicate$ban[dta_noduplicate$ban == 45] = "Veigar"
+  dta_noduplicate$ban[dta_noduplicate$ban == 161] = "Velkoz"
+  dta_noduplicate$ban[dta_noduplicate$ban == 711] = "Vex"
+  dta_noduplicate$ban[dta_noduplicate$ban == 254] = "Vi"
+  dta_noduplicate$ban[dta_noduplicate$ban == 234] = "Viego"
+  dta_noduplicate$ban[dta_noduplicate$ban == 112] = "Viktor"
+  dta_noduplicate$ban[dta_noduplicate$ban == 8] = "Vladimir"
+  dta_noduplicate$ban[dta_noduplicate$ban == 106] = "Volibear"
+  dta_noduplicate$ban[dta_noduplicate$ban == 19] = "Warwick"
+  dta_noduplicate$ban[dta_noduplicate$ban == 498] = "Xayah"
+  dta_noduplicate$ban[dta_noduplicate$ban == 101] = "Xerath"
+  dta_noduplicate$ban[dta_noduplicate$ban == 5] = "XinZhao"
+  dta_noduplicate$ban[dta_noduplicate$ban == 157] = "Yasuo"
+  dta_noduplicate$ban[dta_noduplicate$ban == 777] = "Yone"
+  dta_noduplicate$ban[dta_noduplicate$ban == 83] = "Yorick"
+  dta_noduplicate$ban[dta_noduplicate$ban == 350] = "Yuumi"
+  dta_noduplicate$ban[dta_noduplicate$ban == 154] = "Zac"
+  dta_noduplicate$ban[dta_noduplicate$ban == 238] = "Zed"
+  dta_noduplicate$ban[dta_noduplicate$ban == 221] = "Zeri"
+  dta_noduplicate$ban[dta_noduplicate$ban == 115] = "Ziggs"
+  dta_noduplicate$ban[dta_noduplicate$ban == 26] = "Zilean"
+  dta_noduplicate$ban[dta_noduplicate$ban == 142] = "Zoe"
+  dta_noduplicate$ban[dta_noduplicate$ban == 143] = "Zyra"
   dta_noduplicate$ban[dta_noduplicate$ban == -1] = "None"
 
   ## Format dates by dropping hours, minutes and seconds.
@@ -264,11 +265,11 @@ clean_lol_data <- function(dta) {
 
   ## Final checks.
   if (length(unique(table(dta_final$position))) != 1) warning("The number of played positions is not equal! You may want to double-check.")
-  if (sum(dta_final$win) != sum(1 - dta_final$win)) warning("The shares of won and lost matches are unequal! You may want to double-check.")
+  if (length(unique(table(dta_final$win))) != 1) warning("The shares of won and lost matches are unequal! You may want to double-check.")
 
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
-  data.table::fwrite(dta_final, file = "lol_cleaned_dta.csv", row.names = FALSE)
+  data.table::fwrite(dta_final, file = "lol_cleaned.csv", row.names = FALSE)
 }
 
 
@@ -281,7 +282,7 @@ clean_lol_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the year 2022 up to July 15th and drops champions that have been released after June 1st, 2022 (KSante, Nilah, and Belveth).\cr
+#' First, it keeps only data for the years 2022 and 2023.\cr
 #'
 #' Second, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
 #' \code{day} and \code{region}. These are replaced with zeroes.
@@ -320,13 +321,10 @@ clean_lol_data <- function(dta) {
 #' @export
 construct_lol_champion_data <- function(dta) {
   ## Keep only 2022 data and drop champions released after treatment.
-  cat("Keeping only 2022 data up to July 15th and dropping champions released after treatment. \n")
-  new_champions <- c("KSante", "Nilah", "Belveth")
+  cat("Keeping only 2022 and 2023 data. \n")
 
   dta <- dta %>%
-    dplyr::filter(lubridate::year(day) == 2022) %>%
-    dplyr::filter(day < as.POSIXct("2022-07-15")) %>%
-    dplyr::filter(!(champion %in% new_champions))
+    dplyr::filter(lubridate::year(day) %in% c(2022, 2023))
 
   ## Generate variables and merging.
   cat("Generating outcomes and covariates. \n")
@@ -540,7 +538,7 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the year 2022 up to July 15th.\cr
+#' First, it keeps only data for the years 2022 and 2023.\cr
 #'
 #' Second, it generates the variables of interest.
 #' \describe{
@@ -569,10 +567,9 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @export
 construct_lol_player_data <- function(dta) {
   ## Keep only 2022 data.
-  cat("Keeping only 2022 data up to July 15th. \n")
+  cat("Keeping only 2022 and 2023 data. \n")
     dta <- dta %>%
-      dplyr::filter(lubridate::year(day) == 2022) %>%
-      dplyr::filter(day < as.POSIXct("2022-07-15"))
+      dplyr::filter(lubridate::year(day) %in% c(2022, 2023))
 
   ## Generate variables.
   cat("Generating variables. \n")

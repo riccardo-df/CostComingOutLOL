@@ -12,6 +12,7 @@ run_main_regional(
   estimator,
   treatment_date,
   covariate_colnames = c(),
+  min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2022-07-13")
 )
 }
@@ -30,7 +31,9 @@ run_main_regional(
 
 \item{covariate_colnames}{Character vector with the names of the columns of \code{lol_champ_pool_dta} storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.}
 
-\item{max_date}{Object of class \code{POSIXct}. Where to cut the series.}
+\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
+
+\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
 }
 \value{
 A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
