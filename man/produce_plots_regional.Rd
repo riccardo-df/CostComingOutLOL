@@ -13,7 +13,7 @@ produce_plots_regional(regional_results)
 Save some nice plots.
 }
 \description{
-Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_dta}}.
+Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_regional}}.
 }
 \seealso{
 \code{\link{produce_plots_pooled}}

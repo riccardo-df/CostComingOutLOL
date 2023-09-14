@@ -14,9 +14,7 @@ set.seed(1986)
 pkgs <- c("CostComingOutLOL")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
-## Loading data.
-pooled_panel <- lol_champ_pool_dta
-
 # Performance measures -----------------------------------------------------------
 champions <- c("Graves", "Leona", "Diana", "Neeko", "Nami")
-performance_plots_lol(champions, pooled_panel)
+
+performance_plots_lol(champions)

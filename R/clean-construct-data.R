@@ -18,6 +18,8 @@
 #' Fourth, it identifies the main and the auxiliary positions of each champion based on where they are played the most and drops matches where champions are
 #' played in a different position.\cr
 #'
+#' The raw data are available on request.
+#'
 #' @import dplyr
 #'
 #' @importFrom data.table fwrite
@@ -251,7 +253,7 @@ clean_lol_data <- function(dta) {
     dplyr::filter(in_position) %>%
     dplyr::ungroup()
 
-  # Drop again matches with less than ten players (double-check).
+  ## Drop again matches with less than ten players (double-check).
   dta_noduplicate <- dta_noduplicate %>%
     dplyr::group_by(match_id) %>%
     dplyr::filter(n() == 10) %>%
@@ -310,9 +312,10 @@ clean_lol_data <- function(dta) {
 #'  \item{\code{day_no}}{Numeric version of the \code{day} variable, useful when the data set is loaded in other sessions to get the time right.}
 #' }
 #'
-#' @import dplyr lubridate parallel doParallel foreach plm
+#' @import dplyr lubridate parallel doParallel foreach
 #'
 #' @importFrom data.table fwrite
+#' @importFrom plm is.pbalanced
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -483,9 +486,10 @@ construct_lol_champion_data <- function(dta) {
 #'  \item{\code{aux_role}}{For each \code{champion}, extract its auxiliary position.}
 #' }
 #'
-#' @import dplyr plm
+#' @import dplyr
 #'
 #' @importFrom data.table fwrite
+#' @importFrom plm is.pbalanced
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -556,9 +560,10 @@ construct_lol_champion_pooled_data <- function(dta) {
 #'  \item{\code{day_no}}{Numeric version of the \code{day} variable, useful when the data set is loaded in other sessions to get the time right.}
 #' }
 #'
-#' @import dplyr plm lubridate
+#' @import dplyr lubridate
 #'
 #' @importFrom data.table fwrite
+#' @importFrom plm is.pbalanced
 #'
 #' @author Riccardo Di Francesco
 #'

@@ -6,18 +6,15 @@
 \usage{
 descriptive_plots_lol(
   champions,
-  lol_champ_dta,
-  lol_champ_pool_dta,
+  treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2022-07-11")
+  max_date = as.POSIXct("2023-09-12")
 )
 }
 \arguments{
 \item{champions}{Character vector with the champions of interest.}
 
-\item{lol_champ_dta}{Data set bundled in the package.}
-
-\item{lol_champ_pool_dta}{Data set bundled in the package.}
+\item{treatment_date}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
 
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
@@ -25,6 +22,11 @@ descriptive_plots_lol(
 }
 \description{
 Produces plots for the pick, ban, and win variables of the champions of interest.
+}
+\details{
+\code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+
+\code{min_date} and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD")}.
 }
 \seealso{
 \code{\link{descriptive_plots_lol_lgb}} \code{\link{performance_plots_lol}}

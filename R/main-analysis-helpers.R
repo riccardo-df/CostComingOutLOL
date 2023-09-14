@@ -33,7 +33,7 @@ construct_donor_pool <- function(dta, donor_pool, my_champion) {
 
 #' Cost of Coming Out - Main Analysis
 #'
-#' Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_pool_dta}}.
+#' Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_pooled}}.
 #'
 #' @param pooled_results Output of \code{\link{run_main_pooled}}.
 #'
@@ -67,8 +67,9 @@ produce_plots_pooled <- function(pooled_results) {
   synth_outcomes_back <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "dta", "treatment_date"))], function(x) { construct_synth_outcome(x$tau_hat_back, dta, "champion", outcome_colname, "day") })
   synth_outcomes_drop <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "dta", "treatment_date"))], function(x) { lapply(x$tau_hat_drop, function(z) { construct_synth_outcome(z, dta, "champion", outcome_colname, "day") }) } )
 
-  ## 2.) Champions' plots.
+  ## 2.) Champions' plots and RMSE.
   for (i in seq_len(length(champions))) {
+    # 2a.) Select champion and handle data accordingly.
     my_champion <- champions[i]
 
     if (my_champion == "LGB") {
@@ -91,7 +92,7 @@ produce_plots_pooled <- function(pooled_results) {
     plot_dta <- dta %>%
       dplyr::filter(champion == my_champion)
 
-    # 2a.) Main fit.
+    # 2b.) Main fit.
     plot_main <- plot_dta %>%
       ggplot2::ggplot(ggplot2::aes(x = day, y = .data[[outcome_colname]], color = "Actual")) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
@@ -118,7 +119,7 @@ produce_plots_pooled <- function(pooled_results) {
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
     ggplot2::ggsave(paste0(tolower(my_champion), "_pooled_main_weights.svg"), plot_weights, device = Cairo::CairoSVG)
 
-    # 2c.) Backdate exercise.
+    # 2d.) Backdate exercise.
     plot_back <- plot_dta %>%
       ggplot2::ggplot(ggplot2::aes(x = day, y = .data[[outcome_colname]], color = "Actual")) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
@@ -133,7 +134,7 @@ produce_plots_pooled <- function(pooled_results) {
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
             legend.position = c(0.11, 0.79), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
-    # 2c.) Leave-one-out exercise.
+    # 2e.) Leave-one-out exercise.
     if (length(pooled_results[[my_champion]]$tau_hat_drop) != 0) {
       temp_drop <- synth_outcomes_drop[[my_champion]] %>%
         lapply(function(x) { x$synth_outcome }) %>%
@@ -160,6 +161,18 @@ produce_plots_pooled <- function(pooled_results) {
     }
 
     ggplot2::ggsave(paste0(tolower(my_champion), "_pooled_robustness.svg"), plot_robustness, device = Cairo::CairoSVG)
+
+    # # 2f.) RMSE pre-treatment.
+    # actual_outcome <- plot_dta %>%
+    #   dplyr::select(day, all_of(outcome_colname)) %>%
+    #   filter(day < treatment_date + 1)
+    # colnames(actual_outcome)[2] <- "actual_outcome"
+    #
+    # synth_outcome <- synth_outcomes[[my_champion]]$synth_outcome %>%
+    #   filter(day < treatment_date + 1)
+    # colnames(synth_outcome)[2] <- "synth_outcome"
+    #
+    # rmse_pre <- sqrt(dim(synth_outcome)[1]^(-1) * sum((actual_outcome$actual_outcome - synth_outcome$synth_outcome)^2))
   }
 
   ## 4.) If Graves and LGB are present, plot also the difference in their effects.
@@ -213,7 +226,7 @@ produce_plots_pooled <- function(pooled_results) {
 
 #' Cost of Coming Out - Main Analysis
 #'
-#' Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_dta}}.
+#' Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_regional}}.
 #'
 #' @param regional_results Output of \code{\link{run_main_regional}}.
 #'
@@ -295,9 +308,9 @@ produce_plots_regional <- function(regional_results) {
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15),
             legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(tolower(my_champion), "_regional_main.svg"), plot_main, device = Cairo::CairoSVG)
+    ggplot2::ggsave(paste0(tolower(my_champion), "_regional_main.svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
   }
 
   cat("Figures are saved at ", getwd(), "\n", sep = "")

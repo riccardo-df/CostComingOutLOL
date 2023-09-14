@@ -29,3 +29,17 @@ regional_results <- run_main_regional(panel, champions, outcome_colname  = "pick
 # Plots -------------------------------------------------------------------
 produce_plots_pooled(pooled_results)
 produce_plots_regional(regional_results)
+
+# Some number -------------------------------------------------------------
+## Average effect.
+for (champion in names(pooled_results)[seq_len(length(champions))]) {
+  cat("Average difference post-treatment for ", champion, " measured in ", if (pooled_results$outcome_colname == "pick_level_sum") "pick levels" else "pick rates", " is:
+    Main fit         : ", round(summary(pooled_results[[champion]]$tau_hat)$estimate, 2), "
+    Backdated fit    : ", round(summary(pooled_results[[champion]]$tau_hat_back)$estimate, 2), "
+
+    Regions:
+       Europe        : ", round(summary(regional_results[[champion]]$Europe)$estimate, 2), "
+       Korea         : ", round(summary(regional_results[[champion]]$Korea)$estimate, 2), "
+       Latin America : ", round(summary(regional_results[[champion]]$Latin_America)$estimate, 2), "
+       North America : ", round(summary(regional_results[[champion]]$North_America)$estimate, 2), "\n\n", sep = "")
+}

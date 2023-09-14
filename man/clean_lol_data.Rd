@@ -25,6 +25,8 @@ Third, it hard-codes the 'ban' variable (it maps it from integer numbers to cham
 
 Fourth, it identifies the main and the auxiliary positions of each champion based on where they are played the most and drops matches where champions are
 played in a different position.\cr
+
+The raw data are available on request.
 }
 \seealso{
 \code{\link{pull_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{construct_lol_player_data}}

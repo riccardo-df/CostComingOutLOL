@@ -3,10 +3,14 @@
 #' Produces plots for the pick, ban, and win variables of the champions of interest.
 #'
 #' @param champions Character vector with the champions of interest.
-#' @param lol_champ_dta Data set bundled in the package.
-#' @param lol_champ_pool_dta Data set bundled in the package.
+#' @param treatment_date Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#'
+#' @details
+#' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#'
+#' \code{min_date} and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD")}.
 #'
 #' @import dplyr ggplot2 grDevices
 #'
@@ -15,15 +19,23 @@
 #' @seealso \code{\link{descriptive_plots_lol_lgb}} \code{\link{performance_plots_lol}}
 #'
 #' @export
-descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-11")) {
+descriptive_plots_lol <- function(champions,
+                                  treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
+                                  min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## 0.) Handling inputs and checks.
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
-  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
+  if (as.Date(min_date) + 1 < as.Date(min(lol_champ_dta$day)) | as.Date(min_date) + 1 < as.Date(min(lol_champ_pool_dta$day))) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (as.Date(max_date) + 1 > as.Date(max(lol_champ_dta$day)) | as.Date(max_date) + 1 > as.Date(max(lol_champ_pool_dta$day))) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
-  treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+
+  pride_month_2023_begin <- as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2023_end <- as.POSIXct("2023-06-30", tryFormats = "%Y-%m-%d")
+
+  plot_2022_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2022_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2022_end) + 1)
+  plot_2023_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2023_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2023_end) + 1)
+
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   lol_champ_dta <- lol_champ_dta %>%
@@ -37,7 +49,8 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
   plot_pick_level_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% champions) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_level_sum, group = champion, color = champion)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick level")) +
@@ -51,7 +64,8 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
   plot_pick_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% champions) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_rate_pooled, group = champion, color = champion)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick rate")) +
@@ -66,7 +80,8 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
   plot_ban_level_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% champions) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_level_sum, group = champion, color = champion)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban level")) +
@@ -80,7 +95,8 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
   plot_ban_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% champions) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_rate_pooled, group = champion, color = champion)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban rate")) +
@@ -95,7 +111,8 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
   plot_win_level_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% champions) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_level_sum, group = champion, color = champion)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win level")) +
@@ -109,7 +126,8 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
   plot_win_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% champions) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_rate_pooled, group = champion, color = champion)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
@@ -126,8 +144,9 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
     regional_plot_pick_level <- lol_champ_dta %>%
       dplyr::filter(champion == my_champion) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_level, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
+      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(vars(region), ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(paste0("Pick level")) + ggplot2::ggtitle(my_champion) +
@@ -140,8 +159,9 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
     regional_plot_pick_rate <- lol_champ_dta %>%
       dplyr::filter(champion == my_champion) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_rate, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
+      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(vars(region), ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(paste0("Pick rate")) + ggplot2::ggtitle(my_champion) +
@@ -155,8 +175,9 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
     regional_plot_ban_level <- lol_champ_dta %>%
       dplyr::filter(champion == my_champion) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_level, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
+      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(vars(region), ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(paste0("Ban level")) + ggplot2::ggtitle(my_champion) +
@@ -169,8 +190,9 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
     regional_plot_ban_rate <- lol_champ_dta %>%
       dplyr::filter(champion == my_champion) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_rate, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
+      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(vars(region), ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(paste0("Ban rate")) + ggplot2::ggtitle(my_champion) +
@@ -184,8 +206,9 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
     regional_plot_win_level <- lol_champ_dta %>%
       dplyr::filter(champion == my_champion) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_level, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
+      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(vars(region), ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(paste0("Win level")) + ggplot2::ggtitle(my_champion) +
@@ -198,8 +221,9 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
     regional_plot_win_rate <- lol_champ_dta %>%
       dplyr::filter(champion == my_champion) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_rate, group = champion, color = champion)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line() +
+      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(color = "tomato") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(vars(region), ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) + ggplot2::ggtitle(my_champion) +
@@ -217,9 +241,9 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
 #' LoL Descriptive Plots (LGB Aggregate)
 #'
 #' Produces plots for the pick, ban, and win variables of the LGB aggregate, constructed by averaging variables for the LGB champions
-#' 'Nami', 'Leona', 'Diana', and 'Neeko'.
+#' 'Nami', 'Leona', 'Diana', and 'Neeko'. LESS USEFUL NOW THAT WE HAVE 2023 YEAR.
 #'
-#' @param lol_champ_pool_dta Data set bundled in the package.
+#' @param treatment_date Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
@@ -230,14 +254,21 @@ descriptive_plots_lol <- function(champions, lol_champ_dta, lol_champ_pool_dta, 
 #' @seealso \code{\link{descriptive_plots_lol}} \code{\link{performance_plots_lol}}
 #'
 #' @export
-descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-11")) {
+descriptive_plots_lol_lgb <- function(treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
+                                      min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## 0.) Handling inputs and checks.
-  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
+  if (as.Date(min_date) + 1 < as.Date(min(lol_champ_dta$day)) | as.Date(min_date) + 1 < as.Date(min(lol_champ_pool_dta$day))) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (as.Date(max_date) + 1 > as.Date(max(lol_champ_dta$day)) | as.Date(max_date) + 1 > as.Date(max(lol_champ_pool_dta$day))) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
-  treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+
+  pride_month_2023_begin <- as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2023_end <- as.POSIXct("2023-06-30", tryFormats = "%Y-%m-%d")
+
+  plot_2022_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2022_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2022_end) + 1)
+  plot_2023_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2023_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2023_end) + 1)
+
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
@@ -265,7 +296,8 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, min_date = as.POSIXct(
   ## 1.) Plots.
   plot <- lgb_aggregate %>%
     ggplot2::ggplot(aes(x = as.POSIXct(day), y = value)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab("") +
@@ -285,7 +317,6 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, min_date = as.POSIXct(
 #' Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
 #'
 #' @param champions Character vector with the champions of interest.
-#' @param lol_champ_pool_dta Data set bundled in the package.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
@@ -296,14 +327,22 @@ descriptive_plots_lol_lgb <- function(lol_champ_pool_dta, min_date = as.POSIXct(
 #' @seealso \code{\link{descriptive_plots_lol}} \code{\link{descriptive_plots_lol_lgb}}
 #'
 #' @export
-performance_plots_lol <- function(champions, lol_champ_pool_dta, min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-11")) {
+performance_plots_lol <- function(champions,
+                                  min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## 0.) Handling inputs and checks.
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
-  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
+  if (as.Date(min_date) + 1 < as.Date(min(lol_champ_dta$day)) | as.Date(min_date) + 1 < as.Date(min(lol_champ_pool_dta$day))) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  if (as.Date(max_date) + 1 > as.Date(max(lol_champ_dta$day)) | as.Date(max_date) + 1 > as.Date(max(lol_champ_pool_dta$day))) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+
+  pride_month_2023_begin <- as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2023_end <- as.POSIXct("2023-06-30", tryFormats = "%Y-%m-%d")
+
+  plot_2022_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2022_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2022_end) + 1)
+  plot_2023_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2023_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2023_end) + 1)
+
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
@@ -322,7 +361,8 @@ performance_plots_lol <- function(champions, lol_champ_pool_dta, min_date = as.P
     plot <- plot_dta %>%
       reshape2::melt(id.vars = "day", measure.vars = c("Kills/Deaths", "Assists", "Gold", "Win Rate")) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = value)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
       ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
       ggplot2::facet_grid(rows = vars(variable), scales = "free") +
       ggplot2::xlab("") + ggplot2::ylab("") + ggplot2::ggtitle(my_champion) +

@@ -24,6 +24,7 @@ Imports:
     httr,
     jsonlite,
     lubridate,
+    magrittr,
     parallel,
     plm,
     reshape2,

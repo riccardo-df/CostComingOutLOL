@@ -15,14 +15,10 @@ set.seed(1986)
 pkgs <- c("CostComingOutLOL")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
-## Loading data.
-champ_panel <- lol_champ_dta
-champ_panel_pool <- lol_champ_pool_dta
-
 # Plots -------------------------------------------------------------------
 ## Settings.
 lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
 champions <- c("Graves", lgb_champions)
 
-descriptive_plots_lol(champions, champ_panel, champ_panel_pool)
-descriptive_plots_lol_lgb(champ_panel_pool)
+descriptive_plots_lol(champions, treatment_date = NULL)
+descriptive_plots_lol_lgb()

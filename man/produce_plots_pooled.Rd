@@ -13,7 +13,7 @@ produce_plots_pooled(pooled_results)
 Save some nice plots.
 }
 \description{
-Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_pool_dta}}.
+Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_pooled}}.
 }
 \seealso{
 \code{\link{produce_plots_regional}}

@@ -53,8 +53,8 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (backdate < 0 | backdate %% 1 != 0) stop("Invalid 'backdate'. This must be a positive integer.", call. = FALSE)
   if (any(champions == "LGB") & donor_pool != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donor_pool' is set to 'non_lgb'.", call. = FALSE)
-  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
+  # if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  # if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   dta <- dta %>%
     dplyr::filter(min_date < day & day < max_date)
@@ -196,8 +196,8 @@ run_main_regional <- function(dta, champions, outcome_colname, donor_pool, estim
   if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (any(champions == "LGB") & donor_pool != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donor_pool' is set to 'non_lgb'.", call. = FALSE)
-  if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
-  if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
+  # if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
+  # if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
 
   dta <- dta %>%
     dplyr::filter(min_date < day & day < max_date)
