@@ -1,3 +1,56 @@
+#' Construct Donor Pool
+#'
+#' Subsets the provided data to include only the champion under investigation and the desired units in the donor pool.
+#'
+#' @param dta One of the champion data sets bundled in the package (\code{\link{lol_champ_pool_dta}} or \code{\link{lol_champ_dta}}).
+#' @param donors Which units to include in the donor pool. Se the details section below.
+#' @param my_champion Champion under investigation. We need to include it as well.
+#'
+#' @return
+#' \code{dta} filtered to contain only the champion under investigation and the desired donors.
+#'
+#' @details
+#' \code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, two special strings can be used:
+#'
+#' \itemize{
+#'    \item{"all" }{This includes all champions.}
+#'    \item{"non_lgb" }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+#' }
+#'
+#' @import dplyr
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @keywords internal
+construct_donor_pool <- function(dta, donors, my_champion) {
+  ## 0.) Handling inputs and checks.
+  if (length(donors) == 1) {
+    if (!(donors %in% c("all", "non_lgb"))) stop("Invalid 'donors'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
+  } else {
+    if (sum(!(donors %in% unique(dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'dta'.", call. = FALSE)
+  }
+
+  ## 2.) Subset dta.
+  if (length(donors) == 1) {
+    if (donors == "all") {
+      my_subset <- dta
+    } else if (donors == "non_lgb") {
+      lgb_champions <- c("Graves", "Nami", "Leona", "Diana", "Neeko")
+      exclude_these <- lgb_champions[lgb_champions != my_champion]
+
+      my_subset <- dta %>%
+        dplyr::filter(!(champion %in% exclude_these))
+    }
+  } else {
+    my_subset <- dta %>%
+      dplyr::filter(champion %in% c(donors, my_champion))
+  }
+
+  ## 3.) Output.
+  return(my_subset)
+}
+
+
 #' Regularized Synthetic Control
 #'
 #' Synthetic control with a ridge penalty, as defined in Algorithm 1 of Arkhangelsky et al. (2021). Taken from
@@ -27,9 +80,9 @@ sc_estimate_reg <- function(Y, N0, T0, X = array(dim = c(dim(Y), 0))) {
 #' Calls one of the \code{synthdid} estimation functions.
 #'
 #' @param dta One of the champion data sets bundled in the package (\code{\link{lol_champ_pool_dta}} or \code{\link{lol_champ_dta}}).
-#' @param outcome_colname Name of the column of \code{lol_champ_pool_dta} storing the outcome of interest.
+#' @param outcome_colname Name of the column of \code{dta} storing the outcome of interest.
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc + a ridge penalty), "synthdid" (synthetic diff-in-diff).
-#' @param covariate_colnames Character vector with the names of the columns storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.
+#' @param covariate_colnames Character vector with the names of the columns storing the time-varying covariates for which we want to adjust for.
 #'
 #' @details
 #' Before calling the estimation function, \code{\link{call_synthdid}} processes \code{dta} to generate the required objects.\cr
@@ -96,6 +149,7 @@ call_synthdid <- function(dta, outcome_colname, estimator, covariate_colnames) {
 #' @seealso \code{\link{actual_controls}}, \code{\link{synth_outcome}}
 #'
 #' @import dplyr
+#' @importFrom stats weighted.mean
 #'
 #' @export
 construct_synth_outcome <- function(object, dta, unit_colname, outcome_colname, time_colname) {

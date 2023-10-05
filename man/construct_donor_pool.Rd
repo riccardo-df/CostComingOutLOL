@@ -4,12 +4,12 @@
 \alias{construct_donor_pool}
 \title{Construct Donor Pool}
 \usage{
-construct_donor_pool(dta, donor_pool, my_champion)
+construct_donor_pool(dta, donors, my_champion)
 }
 \arguments{
 \item{dta}{One of the champion data sets bundled in the package (\code{\link{lol_champ_pool_dta}} or \code{\link{lol_champ_dta}}).}
 
-\item{donor_pool}{Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Nami, Leona, Diana, and Neeko.}
+\item{donors}{Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Nami, Leona, Diana, and Neeko.}
 
 \item{my_champion}{Champion under investigation. We need to include it as well.}
 }

@@ -4,10 +4,12 @@
 \alias{produce_plots_pooled}
 \title{Cost of Coming Out - Main Analysis}
 \usage{
-produce_plots_pooled(pooled_results)
+produce_plots_pooled(pooled_results, save_here = getwd())
 }
 \arguments{
-\item{pooled_results}{Output of \code{\link{run_main_pooled}}.}
+\item{pooled_results}{Output of \code{\link{run_main_pooled}}}
+
+\item{save_here}{String denoting the path where to save the figures.}
 }
 \value{
 Save some nice plots.

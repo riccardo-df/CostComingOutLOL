@@ -5,31 +5,34 @@
 \title{Cost of Coming Out - Main Analysis by Region}
 \usage{
 run_main_regional(
-  dta,
   champions,
   outcome_colname,
-  donor_pool,
+  donors,
   estimator,
   treatment_date,
+  inference = FALSE,
+  bandwidth = 0.01,
   covariate_colnames = c(),
   min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2022-07-13")
+  max_date = as.POSIXct("2023-09-12")
 )
 }
 \arguments{
-\item{dta}{Data set \code{\link{lol_champ_dta}} bundled in the package.}
-
 \item{champions}{Character vector with the names of the champions of interest. The routine performs the analysis for all them separately.}
 
-\item{outcome_colname}{Name of the column of \code{lol_champ_pool_dta} storing the outcome of interest.}
+\item{outcome_colname}{Name of the column of \code{\link{lol_champ_dta}} storing the outcome of interest.}
 
-\item{donor_pool}{Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.}
+\item{donors}{Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.}
 
 \item{estimator}{Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).}
 
-\item{treatment_date}{When the treatment took place. Must be of class \code{as.POSIXct} with \code{tryFormats} set to "\%Y-\%m-\%d".}
+\item{treatment_date}{Object of class \code{POSIXct}. When the treatment took place.}
 
-\item{covariate_colnames}{Character vector with the names of the columns of \code{lol_champ_pool_dta} storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.}
+\item{inference}{Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.}
+
+\item{bandwidth}{Parameter controlling the amount of smoothing.}
+
+\item{covariate_colnames}{Character vector with the names of the columns of \code{\link{lol_champ_dta}} storing the time-varying covariates for which we want to adjust for.}
 
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
@@ -37,8 +40,8 @@ run_main_regional(
 }
 \value{
 A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
-Each inner list stores three elements, one for the results of main fit, one for the results of the backdating exercise, and one for the results of the leave-one-out exercise.
-The outer list stores an additional last element with \code{outcome_colname}.
+Each inner list stores two elements: a list with the results of the main fit for each region, and a list of regional data sets used for estimation.
+The outer list stores two additional elements: the name of the outcome and the treatment date.
 }
 \description{
 Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_dta}}.
@@ -47,16 +50,21 @@ Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_cha
 \code{\link{run_main_regional}} disaggregates \code{\link{lol_champ_dta}} by constructing four data sets, one for each region. Then, for each champion in \code{champions}, it performs
 the following operations separately for each data set.\cr
 
-First, it constructs the treatment variable, which equals one for the champion under investigation starting from \code{treatment_date}.\cr
+\itemize{
+ \item{First: }{constructs the treatment variable, which equals one for the champion under investigation starting from \code{treatment_date}.}
+ \item{Second: }{subsets each regional data set to include only the champion under investigation and the desired units in the donor pool (as controlled by \code{donors}).}
+ \item{Third: }{calls one of the \code{synthdid} estimation functions, as controlled by \code{estimator}. If \code{covariate_colnames} is non-empty, \code{\link{run_main_pooled}} regresses the outcomes
+                on the covariates, on time fixed effects, and unit fixed effects, with the regression estimated without using observations in which the treatment takes place. Then, \code{\link{run_main_pooled}} uses
+                the estimated coefficients to compute the residuals of the outcomes for all observations (also those in which the treatment takes place), and use these residuals rather than the original outcomes for
+                estimation.}
+}
 
-Second, it subsets each regional data set to include only the champion under investigation and the desired units in the donor pool (as controlled by \code{donor_pool}).\cr
+\code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
-Third, it calls one of the \code{synthdid} estimation functions, as controlled by \code{estimator}. If \code{covariate_colnames} is non-empty, \code{\link{run_main_pooled}} regresses the outcomes
-on the covariates, on time fixed effects, and unit fixed effects, with the regression estimated without using observations in which the treatment takes place. Then, \code{\link{run_main_pooled}} uses
-the estimated coefficients to compute the residuals of the outcomes for all observations (also those in which the treatment takes place), and use these residuals rather than the original outcomes for
-estimation.\cr
+The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
+An infinitesimal bandwidth amounts to no smoothing.\cr
 
-It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_regional}} constructs a new unit by averaging \code{outcome_colname} of Nami, Leona, Diana, and Neeko and
+It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
 runs the analysis detailed above on this new unit. This is compatible only with \code{donor_pool} set to \code{"non_lgb"}.
 }
 \seealso{

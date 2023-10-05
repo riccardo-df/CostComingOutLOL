@@ -2,41 +2,45 @@
 #'
 #' Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_pool_dta}}.
 #'
-#' @param dta Data set \code{\link{lol_champ_pool_dta}} bundled in the package.
 #' @param champions Character vector with the names of the champions of interest. The routine performs the analysis for all them separately.
-#' @param outcome_colname Name of the column of \code{lol_champ_pool_dta} storing the outcome of interest.
-#' @param donor_pool Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.
+#' @param outcome_colname Name of the column of \code{\link{lol_champ_pool_dta}} storing the outcome of interest.
+#' @param donors Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).
-#' @param treatment_date When the treatment took place. Must be of class \code{as.POSIXct} with \code{tryFormats} set to "\%Y-\%m-\%d".
+#' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
 #' @param backdate How many periods to backdate the treatment for a robustness check.
-#' @param covariate_colnames Character vector with the names of the columns of \code{lol_champ_pool_dta} storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.
+#' @param inference Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.
+#' @param bandwidth Parameter controlling the amount of smoothing.
+#' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_pool_dta}} storing the time-varying covariates for which we want to adjust for.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @details
 #' For each champion in \code{champions}, \code{\link{run_main_pooled}} performs the following operations.
 #'
-#' First, it constructs the treatment variable, which equals one for the champion under investigation starting from \code{treatment_date}.\cr
+#' \itemize{
+#'  \item{First: }{constructs the treatment variable, which equals one for the champion under investigation starting from \code{treatment_date}.}
+#'  \item{Second: }{subsets \code{\link{lol_champ_pool_dta}} to include only the champion under investigation and the desired units in the donor pool (as controlled by \code{donors}).}
+#'  \item{Third: }{calls one of the \code{synthdid} estimation functions, as controlled by \code{estimator}. If \code{covariate_colnames} is non-empty, \code{\link{run_main_pooled}} regresses the outcomes
+#'                on the covariates, on time fixed effects, and unit fixed effects, with the regression estimated without using observations in which the treatment takes place. Then, \code{\link{run_main_pooled}} uses
+#'                the estimated coefficients to compute the residuals of the outcomes for all observations (also those in which the treatment takes place), and use these residuals rather than the original outcomes for
+#'                estimation.}
+#'  \item{Fourth: }{calls again one of the \code{synthdid} estimation functions, this time using the backdated treatment.}
+#'  \item{Fifth: }{performs a leave-one-out exercise, where we repeatedly estimate the synthetic control series by excluding one champion with non-zero estimated weights at a time from the donor pool. This exercise
+#'                is carried out only if the number of non-zero contributions is less than 10 to avoid a large running time.}
+#' }
 #'
-#' Second, it subsets \code{\link{lol_champ_pool_dta}} to include only the champion under investigation and the desired units in the donor pool (as controlled by \code{donor_pool}).\cr
+#' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' Third, it calls one of the \code{synthdid} estimation functions, as controlled by \code{estimator}. If \code{covariate_colnames} is non-empty, \code{\link{run_main_pooled}} regresses the outcomes
-#' on the covariates, on time fixed effects, and unit fixed effects, with the regression estimated without using observations in which the treatment takes place. Then, \code{\link{run_main_pooled}} uses
-#' the estimated coefficients to compute the residuals of the outcomes for all observations (also those in which the treatment takes place), and use these residuals rather than the original outcomes for
-#' estimation.\cr
+#' The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
+#' An infinitesimal bandwidth amounts to no smoothing.\cr
 #'
-#' Fourth, it calls again one of the \code{synthdid} estimation functions, this time using the backdated treatment.\cr
-#'
-#' Fifth, it performs a leave-one-out exercise, where we repeatedly estimate the synthetic control series by excluding one champion with non-zero estimated weights at a time from the donor pool. This exercise
-#' is carried out only if the number of non-zero contributions is less than 10 to avoid a large running time.\cr
-#'
-#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging \code{outcome_colname} of Nami, Leona, Diana, and Neeko and
-#' runs the analysis detailed above on this new unit. This is compatible only with \code{donor_pool} set to \code{"non_lgb"}.
+#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
+#' runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.
 #'
 #' @return
 #' A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
-#' Each inner list stores three elements, one for the results of main fit, one for the results of the backdating exercise, and one for the results of the leave-one-out exercise.
-#' The outer list stores two additional last elements, one storing \code{outcome_colname} and one storing \code{dta} up to \code{max_date}.
+#' Each inner list stores four elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, and the data used for estimation.
+#' The outer list stores two additional elements: the name of the outcome and the treatment date.
 #'
 #' @import dplyr
 #'
@@ -45,19 +49,27 @@
 #' @seealso \code{\link{run_main_regional}}
 #'
 #' @export
-run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, backdate, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-13")) {
+run_main_pooled <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
+                            inference = FALSE, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled"))) stop("Invalid 'outcome'. This must be either 'pick_level_sum' or 'pick_rate_pooled'.", call. = FALSE)
-  if (!(donor_pool %in% c("all", "non_lgb"))) stop("Invalid 'donor_pool'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
+
+  if (length(donors) == 1) {
+    if (!(donors %in% c("all", "non_lgb"))) stop("Invalid 'donors'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
+    if (any(champions == "LGB") & donors != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donors' is set to 'non_lgb'.", call. = FALSE)
+  } else {
+    if (sum(!(donors %in% unique(lol_champ_pool_dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'lol_champ_pool_dta'.", call. = FALSE)
+  }
+
   if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (backdate < 0 | backdate %% 1 != 0) stop("Invalid 'backdate'. This must be a positive integer.", call. = FALSE)
-  if (any(champions == "LGB") & donor_pool != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donor_pool' is set to 'non_lgb'.", call. = FALSE)
-  # if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
-  # if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
+  if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
 
-  dta <- dta %>%
+  lol_champ_pool_dta <- lol_champ_pool_dta %>%
     dplyr::filter(min_date < day & day < max_date)
+
+  lol_champ_pool_dta$selected_outcome <- lol_champ_pool_dta[[outcome_colname]]
 
   ## Construct synthdid object for each champion.
   output <- list()
@@ -67,46 +79,61 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
     ## 0.) Keep track of the loop.
     cat("Constructing synthetic control for ", my_champion, ": \n", sep = "")
 
-    ## 1.) Generate treatment variable.
+    ## 1.) Generate treatment variable. Construct composite LGB if necessary. Smooth the series.
     cat("    1.) Generating treatment variable; \n")
 
     if (my_champion == "LGB") {
-      lgb_avg_outcome <- dta %>%
+      lgb_avg_outcome <- lol_champ_pool_dta %>%
         dplyr::filter(champion %in% c("Nami", "Leona", "Diana", "Neeko")) %>%
         dplyr::group_by(day_no) %>%
-        dplyr::mutate(lgb_pick_level_sum = mean(pick_level_sum),
-               lgb_pick_rate_pooled = mean(pick_rate_pooled)) %>%
+        dplyr::mutate(lgb_selected_outcome = mean(selected_outcome)) %>%
         dplyr::distinct(day, .keep_all = TRUE) %>%
-        dplyr::select(day, day_no, lgb_pick_level_sum, lgb_pick_rate_pooled)
+        dplyr::select(day, day_no, lgb_selected_outcome, all_of(covariate_colnames))
 
-      colnames(lgb_avg_outcome) <- c("day", "day_no", "pick_level_sum", "pick_rate_pooled")
+      colnames(lgb_avg_outcome)[3] <- "selected_outcome"
       lgb_avg_outcome$champion <- "LGB"
 
-      temp_panel <- dta %>%
-        dplyr::select(day, day_no, pick_level_sum, pick_rate_pooled, champion) %>%
+      temp_panel <- lol_champ_pool_dta %>%
+        dplyr::select(day, day_no, champion, selected_outcome, all_of(covariate_colnames)) %>%
         dplyr::bind_rows(lgb_avg_outcome)
     } else {
-      temp_panel <- dta
+      temp_panel <- lol_champ_pool_dta %>%
+        dplyr::select(day, day_no, champion, selected_outcome, all_of(covariate_colnames))
     }
 
     temp_panel$treatment <- as.logical(ifelse(temp_panel$champion == my_champion & temp_panel$day >= treatment_date + 1, 1, 0))
 
+    temp_panel <- temp_panel %>%
+      dplyr::group_by(champion) %>%
+      dplyr::mutate(smooth_outcome = ksmooth(time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>%
+      dplyr::select(day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames)) %>%
+      dplyr::ungroup()
+
     ## 2.) Subset according to donor pool. Do that again for backdate exercise and change treatment date.
     cat("    2.) Constructing donor pool; \n")
-    estimation_dta <- construct_donor_pool(temp_panel, donor_pool, my_champion)
+    estimation_dta <- construct_donor_pool(temp_panel, donors, my_champion)
     estimation_dta_back <- estimation_dta
     estimation_dta_back$treatment <- as.logical(ifelse(estimation_dta_back$champion == my_champion & estimation_dta_back$day >= as.Date(treatment_date) - backdate, 1, 0))
 
-    ## 3.) Process data and estimation.
+    ## 3.) Process data and estimation. Estimate standard errors if necessary.
     cat("    3.) Constructing weights; \n")
-    tau_hat <- call_synthdid(estimation_dta, outcome_colname, estimator, covariate_colnames)
+    tau_hat <- call_synthdid(estimation_dta, "smooth_outcome", estimator, covariate_colnames)
 
-    ## 4.) Backdate.
-    cat("    4.) Backdating exercise; \n")
-    tau_hat_back <- call_synthdid(estimation_dta_back, outcome_colname, estimator, covariate_colnames)
+    ## 4.) Estimate standard errors.
+    cat("    4.) Estimating standard error; \n")
+    if (inference) {
+      se <- as.numeric(sqrt(vcov(tau_hat, method = "placebo", replications = 100)))
+    } else {
+      cat("        Skipping. \n")
+      se <- NULL
+    }
 
-    ## 5.) Leave-one-out.
-    cat("    5.) Leave-one-out exercise. \n")
+    ## 5.) Backdate.
+    cat("    5.) Backdating exercise; \n")
+    tau_hat_back <- call_synthdid(estimation_dta_back, "smooth_outcome", estimator, covariate_colnames)
+
+    ## 6.) Leave-one-out.
+    cat("    6.) Leave-one-out exercise. \n")
     non_zero_champions <- rownames(summary(tau_hat)$controls)
     tau_hat_drop <- list()
 
@@ -119,7 +146,7 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
           dplyr::filter(champion != drop_champion)
 
         ## Construct synthetic control.
-        temp_tau_hat_drop <- call_synthdid(estimation_dta_drop, outcome_colname, estimator, covariate_colnames)
+        temp_tau_hat_drop <- call_synthdid(estimation_dta_drop, "smooth_outcome", estimator, covariate_colnames)
 
         ## Save.
         tau_hat_drop[[counter_drop]] <- temp_tau_hat_drop
@@ -133,16 +160,15 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
 
     cat("\n")
 
-    ## 6.) Save results.
-    output[[counter]] <- list("tau_hat" =  tau_hat, "tau_hat_back" = tau_hat_back, "tau_hat_drop" = tau_hat_drop)
+    ## 7.) Save results.
+    output[[counter]] <- list("tau_hat" =  tau_hat, "se_tau_hat" = se, "tau_hat_back" = tau_hat_back, "tau_hat_drop" = tau_hat_drop, "dta" = temp_panel)
     counter <- counter + 1
   }
 
   ## Output.
   output[[counter]] <- outcome_colname
-  output[[counter + 1]] <- dta
-  output[[counter + 2]] <- treatment_date
-  names(output) <- c(champions, "outcome_colname", "dta", "treatment_date")
+  output[[counter + 1]] <- treatment_date
+  names(output) <- c(champions, "outcome_colname", "treatment_date")
   return(output)
 }
 
@@ -151,13 +177,14 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
 #'
 #' Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_dta}}.
 #'
-#' @param dta Data set \code{\link{lol_champ_dta}} bundled in the package.
 #' @param champions Character vector with the names of the champions of interest. The routine performs the analysis for all them separately.
-#' @param outcome_colname Name of the column of \code{lol_champ_pool_dta} storing the outcome of interest.
-#' @param donor_pool Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.
+#' @param outcome_colname Name of the column of \code{\link{lol_champ_dta}} storing the outcome of interest.
+#' @param donors Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).
-#' @param treatment_date When the treatment took place. Must be of class \code{as.POSIXct} with \code{tryFormats} set to "\%Y-\%m-\%d".
-#' @param covariate_colnames Character vector with the names of the columns of \code{lol_champ_pool_dta} storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.
+#' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
+#' @param inference Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.
+#' @param bandwidth Parameter controlling the amount of smoothing.
+#' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_dta}} storing the time-varying covariates for which we want to adjust for.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
@@ -165,22 +192,27 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
 #' \code{\link{run_main_regional}} disaggregates \code{\link{lol_champ_dta}} by constructing four data sets, one for each region. Then, for each champion in \code{champions}, it performs
 #' the following operations separately for each data set.\cr
 #'
-#' First, it constructs the treatment variable, which equals one for the champion under investigation starting from \code{treatment_date}.\cr
+#' \itemize{
+#'  \item{First: }{constructs the treatment variable, which equals one for the champion under investigation starting from \code{treatment_date}.}
+#'  \item{Second: }{subsets each regional data set to include only the champion under investigation and the desired units in the donor pool (as controlled by \code{donors}).}
+#'  \item{Third: }{calls one of the \code{synthdid} estimation functions, as controlled by \code{estimator}. If \code{covariate_colnames} is non-empty, \code{\link{run_main_pooled}} regresses the outcomes
+#'                 on the covariates, on time fixed effects, and unit fixed effects, with the regression estimated without using observations in which the treatment takes place. Then, \code{\link{run_main_pooled}} uses
+#'                 the estimated coefficients to compute the residuals of the outcomes for all observations (also those in which the treatment takes place), and use these residuals rather than the original outcomes for
+#'                 estimation.}
+#' }
 #'
-#' Second, it subsets each regional data set to include only the champion under investigation and the desired units in the donor pool (as controlled by \code{donor_pool}).\cr
+#' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' Third, it calls one of the \code{synthdid} estimation functions, as controlled by \code{estimator}. If \code{covariate_colnames} is non-empty, \code{\link{run_main_pooled}} regresses the outcomes
-#' on the covariates, on time fixed effects, and unit fixed effects, with the regression estimated without using observations in which the treatment takes place. Then, \code{\link{run_main_pooled}} uses
-#' the estimated coefficients to compute the residuals of the outcomes for all observations (also those in which the treatment takes place), and use these residuals rather than the original outcomes for
-#' estimation.\cr
+#' The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
+#' An infinitesimal bandwidth amounts to no smoothing.\cr
 #'
-#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_regional}} constructs a new unit by averaging \code{outcome_colname} of Nami, Leona, Diana, and Neeko and
+#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
 #' runs the analysis detailed above on this new unit. This is compatible only with \code{donor_pool} set to \code{"non_lgb"}.
 #'
 #' @return
 #' A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
-#' Each inner list stores three elements, one for the results of main fit, one for the results of the backdating exercise, and one for the results of the leave-one-out exercise.
-#' The outer list stores an additional last element with \code{outcome_colname}.
+#' Each inner list stores two elements: a list with the results of the main fit for each region, and a list of regional data sets used for estimation.
+#' The outer list stores two additional elements: the name of the outcome and the treatment date.
 #'
 #' @import dplyr
 #'
@@ -189,22 +221,24 @@ run_main_pooled <- function(dta, champions, outcome_colname, donor_pool, estimat
 #' @seealso \code{\link{run_main_pooled}}
 #'
 #' @export
-run_main_regional <- function(dta, champions, outcome_colname, donor_pool, estimator, treatment_date, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2022-07-13")) {
+run_main_regional <- function(champions, outcome_colname, donors, estimator, treatment_date,
+                              inference = FALSE, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must be either 'pick_level' or 'pick_rate'.", call. = FALSE)
-  if (!(donor_pool %in% c("all", "non_lgb"))) stop("Invalid 'donor_pool'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
+  if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
+  if (!(donors %in% c("all", "non_lgb"))) stop("Invalid 'donors'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
   if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
-  if (any(champions == "LGB") & donor_pool != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donor_pool' is set to 'non_lgb'.", call. = FALSE)
-  # if (min_date < min(lol_champ_dta$day) | min_date < min(lol_champ_pool_dta$day)) stop("Invalid 'min_date'. It is less recent than the least recent day in one or both data sets.")
-  # if (max_date > max(lol_champ_dta$day) | max_date > max(lol_champ_pool_dta$day)) stop("Invalid 'max_date'. It is more recent than the most recent day in one or both data sets.")
+  if (any(champions == "LGB") & donors != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donors' is set to 'non_lgb'.", call. = FALSE)
 
-  dta <- dta %>%
+  lol_champ_dta <- lol_champ_dta %>%
     dplyr::filter(min_date < day & day < max_date)
 
+  lol_champ_dta$selected_outcome <- lol_champ_dta[[outcome_colname]]
+
   ## Generate regional panels.
-  regions <- unique(dta$region)
-  regional_panels <- sapply(regions, function(x) {reg_panel <- dta %>% dplyr::filter(region == x)}, simplify = FALSE)
+  regions <- unique(lol_champ_dta$region)
+  regional_panels <- sapply(regions, function(x) { reg_panel <- lol_champ_dta %>% dplyr::filter(region == x) }, simplify = FALSE)
 
   ## Construct synthdid object for each champion.
   output <- list()
@@ -214,53 +248,62 @@ run_main_regional <- function(dta, champions, outcome_colname, donor_pool, estim
     ## 0.) Keep track of the loop.
     cat("Constructing synthetic controls for ", my_champion, ": \n", sep = "")
 
-    ## 2.) Generate treatment variable.
+    ## 2.) Generate treatment variable. Smooth the outcome series.
     cat("    1.) Generating treatment variable; \n")
     if (my_champion == "LGB") {
       lgb_avg_outcome <- lapply(regional_panels, function(x) {
         x %>%
           dplyr::filter(champion %in% c("Nami", "Leona", "Diana", "Neeko")) %>%
           dplyr::group_by(day_no) %>%
-          dplyr::mutate(lgb_pick_level = mean(pick_level),
-                 lgb_pick_rate = mean(pick_rate)) %>%
+          dplyr::mutate(lgb_selected_outcome = mean(selected_outcome)) %>%
           dplyr::distinct(day, .keep_all = TRUE) %>%
-          select(region, day, day_no, lgb_pick_level, lgb_pick_rate)
+          dplyr::select(region, day, day_no, lgb_selected_outcome, all_of(covariate_colnames))
       })
 
       lgb_avg_outcome <- lapply(lgb_avg_outcome, function(x) {
-        colnames(x) <- c("region", "day", "day_no", "pick_level", "pick_rate")
+        colnames(x)[4] <- "selected_outcome"
         x$champion <- "LGB"
         x
       })
 
       temp_regional_panels <- lapply(regional_panels, function(x) {
         x %>%
-          select(region, day, day_no, pick_level, pick_rate, champion)
+          dplyr::select(region, day, day_no, champion, selected_outcome, all_of(covariate_colnames))
       })
 
-      temp_regional_panels <- mapply(function(x, y) {bind_rows(x, y)}, x = temp_regional_panels, y = lgb_avg_outcome, SIMPLIFY = FALSE)
-      temp_regional_panels <- lapply(temp_regional_panels, function(x) {x %>% mutate(treatment = as.logical(ifelse(champion == my_champion & day >= treatment_date + 1, 1, 0)))})
+      temp_regional_panels <- mapply(function(x, y) { bind_rows(x, y) }, x = temp_regional_panels, y = lgb_avg_outcome, SIMPLIFY = FALSE)
+      temp_regional_panels <- lapply(temp_regional_panels, function(x) { x %>% dplyr::mutate(treatment = as.logical(ifelse(champion == my_champion & day >= treatment_date + 1, 1, 0))) })
     } else {
-      temp_regional_panels <- lapply(regional_panels, function(x) {x %>% mutate(treatment = as.logical(ifelse(champion == my_champion & day >= treatment_date + 1, 1, 0)))})
+      temp_regional_panels <- lapply(regional_panels, function(x) { x %>% dplyr::mutate(treatment = as.logical(ifelse(champion == my_champion & day >= treatment_date + 1, 1, 0))) })
     }
+
+    temp_regional_panels <- lapply(temp_regional_panels, function(x) { x %>% dplyr::group_by(champion) %>% dplyr::mutate(smooth_outcome = ksmooth(time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>% dplyr::select(region, day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames)) %>% dplyr::ungroup()})
 
     ## 2.) Construct donor pools.
     cat("    2.) Constructing donor pools; \n")
-    regional_donor_pools <- lapply(temp_regional_panels, function(x) {construct_donor_pool(x, donor_pool, my_champion)})
+    regional_donor_pools <- lapply(temp_regional_panels, function(x) { construct_donor_pool(x, donors, my_champion) })
 
     ## 3.) Construct synthetic controls.
     cat("    3.) Constructing weights. \n\n")
-    tau_hat <- lapply(regional_donor_pools, function(x) {call_synthdid(x, outcome_colname, estimator, covariate_colnames)})
+    tau_hat <- lapply(regional_donor_pools, function(x) { call_synthdid(x, "smooth_outcome", estimator, covariate_colnames) })
 
-    ## 4.) Save synthdid object.
-    output[[counter]] <- tau_hat
+    ## 4.) Estimate standard errors.
+    cat("    4.) Estimating standard error; \n")
+    if (inference) {
+      ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(vcov(tau_hat, method = "placebo", replications = 100))) })
+    } else {
+      cat("        Skipping. \n")
+      ses <- list()
+    }
+
+    ## 5.) Save synthdid object.
+    output[[counter]] <- list("tau_hats" = tau_hat, "ses" = ses, "dtas" = temp_regional_panels)
     counter <- counter + 1
   }
 
   ## Output.
   output[[counter]] <- outcome_colname
-  output[[counter + 1]] <- dta
-  output[[counter + 2]] <- treatment_date
-  names(output) <- c(champions, "outcome_colname", "dta", "treatment_date")
+  output[[counter + 1]] <- treatment_date
+  names(output) <- c(champions, "outcome_colname", "treatment_date")
   return(output)
 }

@@ -4,10 +4,12 @@
 \alias{produce_plots_regional}
 \title{Cost of Coming Out - Main Analysis}
 \usage{
-produce_plots_regional(regional_results)
+produce_plots_regional(regional_results, save_here = getwd())
 }
 \arguments{
 \item{regional_results}{Output of \code{\link{run_main_regional}}.}
+
+\item{save_here}{String denoting the path where to save the figures.}
 }
 \value{
 Save some nice plots.
