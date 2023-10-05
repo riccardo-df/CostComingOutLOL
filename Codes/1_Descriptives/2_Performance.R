@@ -4,7 +4,8 @@
 
 ## The Cost of Coming Out - Graves Performance.
 
-## This script produces a figure displaying Graves performance over time.
+## This script produces a figure the performance over time of the champions of interest.
+## Users can select champions in line 19.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
@@ -15,6 +16,11 @@ pkgs <- c("CostComingOutLOL")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Performance measures -----------------------------------------------------------
-champions <- c("Graves", "Leona", "Diana", "Neeko", "Nami")
+## Settings.
+lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
+champions <- c("Graves", lgb_champions)
 
-performance_plots_lol(champions)
+save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives"
+
+## Produce plot.
+performance_plots_lol(champions, save_here = save_here)

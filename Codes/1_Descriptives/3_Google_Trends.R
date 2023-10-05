@@ -22,6 +22,9 @@ rainbow <- adjustcolor(matrix(hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nr
 wc_2022_begin <- as.POSIXct("2022-09-29", tryFormats = "%Y-%m-%d")
 wc_2022_end <- as.POSIXct("2022-11-05", tryFormats = "%Y-%m-%d")
 
+## Set path to save plot.
+save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives"
+
 # Google trends -----------------------------------------------------------
 search_interest <- gtrends("lol Graves", time = "2022-01-01 2022-12-31", gprop = "web", geo = "", onlyInterest = TRUE)$interest_over_time
 search_interest_gay <- gtrends("Graves gay", time = "2022-01-01 2022-12-31", gprop = "web", geo = "", onlyInterest = TRUE)$interest_over_time
@@ -53,4 +56,4 @@ plot_two <- search_interest_graves %>%
   theme(plot.title = element_text(hjust = 0.5, face = "italic"), legend.position = "none",
         axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("google_trends_time_grid.svg", plot = grid.arrange(plot_one, plot_two), device = CairoSVG)
+ggsave(paste0(save_here, "/", "google_trends_time_grid.svg"), plot = grid.arrange(plot_one, plot_two), device = CairoSVG)

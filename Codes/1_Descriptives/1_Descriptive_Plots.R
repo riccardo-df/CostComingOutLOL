@@ -20,5 +20,8 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
 champions <- c("Graves", lgb_champions)
 
-descriptive_plots_lol(champions, treatment_date = NULL)
-descriptive_plots_lol_lgb()
+save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives"
+
+## Produce plots.
+descriptive_plots_lol(champions, treatment_date1 = NULL, treatment_date2 = NULL, save_here = save_here)
+descriptive_plots_lol_lgb_composite(treatment_date1 = NULL, treatment_date2 = NULL, save_here = save_here)

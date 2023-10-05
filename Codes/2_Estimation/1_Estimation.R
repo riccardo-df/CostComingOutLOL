@@ -6,6 +6,8 @@
 
 ## This script runs the main analysis of the "The Cost of Coming Out" paper.
 
+## OPTION TO SMOOTH SERIES IN THE PACKAGE, AND TO SELECT THE TIME WINDOW.
+
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
 set.seed(1986)
