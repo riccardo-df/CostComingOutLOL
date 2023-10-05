@@ -29,7 +29,7 @@ bandwidth_regional <- 5
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 # Set SC estimator.
-donors <- c("Ahri", "Ezreal", "Nautilus", "Xayah")
+donors <- "all"
 estimator <- "sc_reg"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE

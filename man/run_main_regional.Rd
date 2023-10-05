@@ -22,7 +22,7 @@ run_main_regional(
 
 \item{outcome_colname}{Name of the column of \code{\link{lol_champ_dta}} storing the outcome of interest.}
 
-\item{donors}{Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.}
+\item{donors}{Which units to include in the donor pool. See the details section below.}
 
 \item{estimator}{Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).}
 
@@ -63,6 +63,13 @@ the following operations separately for each data set.\cr
 
 The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 An infinitesimal bandwidth amounts to no smoothing.\cr
+
+\code{donors} must be a character vector with one or more champions contained in \code{\link{lol_champ_dta}}. Alternatively, two special strings can be used:
+
+\itemize{
+   \item{"all": }{This includes all champions.}
+   \item{"non_lgb": }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+}
 
 It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
 runs the analysis detailed above on this new unit. This is compatible only with \code{donor_pool} set to \code{"non_lgb"}.

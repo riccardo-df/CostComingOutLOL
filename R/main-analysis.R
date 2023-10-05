@@ -4,7 +4,7 @@
 #'
 #' @param champions Character vector with the names of the champions of interest. The routine performs the analysis for all them separately.
 #' @param outcome_colname Name of the column of \code{\link{lol_champ_pool_dta}} storing the outcome of interest.
-#' @param donors Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.
+#' @param donors Which units to include in the donor pool. See the details section below.
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
 #' @param backdate How many periods to backdate the treatment for a robustness check.
@@ -34,6 +34,13 @@
 #' The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 #' An infinitesimal bandwidth amounts to no smoothing.\cr
 #'
+#' \code{donors} must be a character vector with one or more champions contained in \code{\link{lol_champ_pool_dta}}. Alternatively, two special strings can be used:
+#'
+#' \itemize{
+#'    \item{"all": }{This includes all champions.}
+#'    \item{"non_lgb": }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+#' }
+#'
 #' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
 #' runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.
 #'
@@ -43,6 +50,9 @@
 #' The outer list stores two additional elements: the name of the outcome and the treatment date.
 #'
 #' @import dplyr
+#' @importFrom stats ksmooth
+#' @importFrom stats time
+#' @importFrom stats vcov
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -105,7 +115,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 
     temp_panel <- temp_panel %>%
       dplyr::group_by(champion) %>%
-      dplyr::mutate(smooth_outcome = ksmooth(time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>%
+      dplyr::mutate(smooth_outcome = stats::ksmooth(stats::time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>%
       dplyr::select(day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames)) %>%
       dplyr::ungroup()
 
@@ -122,7 +132,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
     ## 4.) Estimate standard errors.
     cat("    4.) Estimating standard error; \n")
     if (inference) {
-      se <- as.numeric(sqrt(vcov(tau_hat, method = "placebo", replications = 100)))
+      se <- as.numeric(sqrt(stats::vcov(tau_hat, method = "placebo", replications = 100)))
     } else {
       cat("        Skipping. \n")
       se <- NULL
@@ -179,7 +189,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #'
 #' @param champions Character vector with the names of the champions of interest. The routine performs the analysis for all them separately.
 #' @param outcome_colname Name of the column of \code{\link{lol_champ_dta}} storing the outcome of interest.
-#' @param donors Which units to include in the donor pool. Must be either "all" or "non_lgb". The latter excludes Graves, Nami, Leona, Diana, and Neeko.
+#' @param donors Which units to include in the donor pool. See the details section below.
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
 #' @param inference Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.
@@ -205,6 +215,13 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #'
 #' The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 #' An infinitesimal bandwidth amounts to no smoothing.\cr
+#'
+#' \code{donors} must be a character vector with one or more champions contained in \code{\link{lol_champ_dta}}. Alternatively, two special strings can be used:
+#'
+#' \itemize{
+#'    \item{"all": }{This includes all champions.}
+#'    \item{"non_lgb": }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+#' }
 #'
 #' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
 #' runs the analysis detailed above on this new unit. This is compatible only with \code{donor_pool} set to \code{"non_lgb"}.
@@ -277,7 +294,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
       temp_regional_panels <- lapply(regional_panels, function(x) { x %>% dplyr::mutate(treatment = as.logical(ifelse(champion == my_champion & day >= treatment_date + 1, 1, 0))) })
     }
 
-    temp_regional_panels <- lapply(temp_regional_panels, function(x) { x %>% dplyr::group_by(champion) %>% dplyr::mutate(smooth_outcome = ksmooth(time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>% dplyr::select(region, day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames)) %>% dplyr::ungroup()})
+    temp_regional_panels <- lapply(temp_regional_panels, function(x) { x %>% dplyr::group_by(champion) %>% dplyr::mutate(smooth_outcome = stats::ksmooth(stats::time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>% dplyr::select(region, day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames)) %>% dplyr::ungroup()})
 
     ## 2.) Construct donor pools.
     cat("    2.) Constructing donor pools; \n")
@@ -290,7 +307,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
     ## 4.) Estimate standard errors.
     cat("    4.) Estimating standard error; \n")
     if (inference) {
-      ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(vcov(tau_hat, method = "placebo", replications = 100))) })
+      ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(stats::vcov(tau_hat, method = "placebo", replications = 100))) })
     } else {
       cat("        Skipping. \n")
       ses <- list()

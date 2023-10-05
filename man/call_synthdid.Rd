@@ -9,11 +9,11 @@ call_synthdid(dta, outcome_colname, estimator, covariate_colnames)
 \arguments{
 \item{dta}{One of the champion data sets bundled in the package (\code{\link{lol_champ_pool_dta}} or \code{\link{lol_champ_dta}}).}
 
-\item{outcome_colname}{Name of the column of \code{lol_champ_pool_dta} storing the outcome of interest.}
+\item{outcome_colname}{Name of the column of \code{dta} storing the outcome of interest.}
 
 \item{estimator}{Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc + a ridge penalty), "synthdid" (synthetic diff-in-diff).}
 
-\item{covariate_colnames}{Character vector with the names of the columns storing the time-varying covariates for which we want to adjust for. If empty, no adjustment is performed. If non-empty, we adjust the outcome using the \code{xsynthdid} package.}
+\item{covariate_colnames}{Character vector with the names of the columns storing the time-varying covariates for which we want to adjust for.}
 }
 \description{
 Calls one of the \code{synthdid} estimation functions.

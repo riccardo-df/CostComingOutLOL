@@ -3,7 +3,7 @@
 #' Subsets the provided data to include only the champion under investigation and the desired units in the donor pool.
 #'
 #' @param dta One of the champion data sets bundled in the package (\code{\link{lol_champ_pool_dta}} or \code{\link{lol_champ_dta}}).
-#' @param donors Which units to include in the donor pool. Se the details section below.
+#' @param donors Which units to include in the donor pool. See the details section below.
 #' @param my_champion Champion under investigation. We need to include it as well.
 #'
 #' @return
