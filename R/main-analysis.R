@@ -246,6 +246,9 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' The outer list stores three additional elements: the name of the outcome, the name of the donors, and the treatment date.
 #'
 #' @import dplyr
+#' @importFrom stats ksmooth
+#' @importFrom stats time
+#' @importFrom stats vcov
 #'
 #' @author Riccardo Di Francesco
 #'
