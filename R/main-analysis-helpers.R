@@ -11,6 +11,7 @@
 #' @import dplyr ggplot2 ggsci grDevices Cairo
 #' @importFrom stats reorder
 #' @importFrom gridExtra arrangeGrob
+#' @importFrom lubridate year
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -20,10 +21,12 @@
 produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   outcome_colname <- pooled_results$outcome_colname
+  donors <- pooled_results$donors
   treatment_date <- pooled_results$treatment_date
+  year <- lubridate::year(treatment_date)
   n_back_days <- as.numeric(summary(pooled_results[[1]]$tau_hat)$dimensions["T0"] - summary(pooled_results[[1]]$tau_hat_back)$dimensions["T0"] - 1)
   treatment_date_back <- as.Date(treatment_date) - n_back_days
-  champions <- names(pooled_results)[!(names(pooled_results) %in% c("outcome_colname", "treatment_date"))]
+  champions <- names(pooled_results)[!(names(pooled_results) %in% c("outcome_colname", "donors", "treatment_date"))]
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
@@ -36,9 +39,9 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
   if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) y_label <- "Pick rate" else y_label <- "Pick level"
 
   ## 1.) Construct synthetic outcomes.
-  synth_outcomes <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "treatment_date"))], function(x) { construct_synth_outcome(x$tau_hat, x$dta, "champion", "smooth_outcome", "day") })
-  synth_outcomes_back <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "treatment_date"))], function(x) { construct_synth_outcome(x$tau_hat_back, x$dta, "champion", "smooth_outcome", "day") })
-  synth_outcomes_drop <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "treatment_date"))], function(x) { lapply(x$tau_hat_drop, function(z) { construct_synth_outcome(z, x$dta, "champion", "smooth_outcome", "day") }) } )
+  synth_outcomes <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "donors", "treatment_date"))], function(x) { construct_synth_outcome(x$tau_hat, x$dta, "champion", "smooth_outcome", "day") })
+  synth_outcomes_back <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "donors", "treatment_date"))], function(x) { construct_synth_outcome(x$tau_hat_back, x$dta, "champion", "smooth_outcome", "day") })
+  synth_outcomes_drop <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "donors", "treatment_date"))], function(x) { lapply(x$tau_hat_drop, function(z) { construct_synth_outcome(z, x$dta, "champion", "smooth_outcome", "day") }) } )
 
   ## 2.) Champions' plots and RMSE.
   for (i in seq_len(length(champions))) {
@@ -83,7 +86,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
             legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_main.svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
 
     # 2b.) Weights for the main fit.
     plot_weights <- synth_outcomes[[my_champion]]$weights %>%
@@ -95,7 +98,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_main_weights.svg"), plot_weights, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_", donors, "_weights", year, ".svg"), plot_weights, device = Cairo::CairoSVG, width = 7, height = 7)
 
     # 2d.) Backdate exercise.
     plot_back <- plot_dta %>%
@@ -140,7 +143,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       plot_robustness <- plot_back
     }
 
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_robustness.svg"), plot_robustness, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_", donors, "_robustness", year, ".svg"), plot_robustness, device = Cairo::CairoSVG, width = 7, height = 7)
   }
 
   ## 4.) Talk to the user.
@@ -160,6 +163,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
 #' Save some nice plots.
 #'
 #' @import dplyr ggplot2 ggsci grDevices Cairo
+#' @importFrom lubridate year
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -169,8 +173,10 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
 produce_plots_regional <- function(regional_results, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   outcome_colname <- regional_results$outcome_colname
+  donors <- regional_results$donors
   treatment_date <- regional_results$treatment_date
-  champions <- names(regional_results)[!(names(regional_results) %in% c("outcome_colname", "dta", "treatment_date"))]
+  year <- lubridate::year(treatment_date)
+  champions <- names(regional_results)[!(names(regional_results) %in% c("outcome_colname", "donors", "treatment_date"))]
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
@@ -180,7 +186,7 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
   if (outcome_colname %in% c("pick_rate", "pick_rate")) y_label <- "Pick rate" else y_label <- "Pick level"
 
   ## 1.) Construct synthetic outcomes.
-  synth_outcomes <- lapply(regional_results[!(names(regional_results) %in% c("outcome_colname", "treatment_date"))], function(x) {
+  synth_outcomes <- lapply(regional_results[!(names(regional_results) %in% c("outcome_colname", "donors", "treatment_date"))], function(x) {
     mapply(function(y, z) { construct_synth_outcome(y, z, "champion", "smooth_outcome", "day") }, y = x$tau_hats, z = x$dtas, SIMPLIFY = FALSE)
   })
 
@@ -237,7 +243,7 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15),
             legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_regional_main.svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_regional_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
   }
 
   ## 3.) Talk to the user.

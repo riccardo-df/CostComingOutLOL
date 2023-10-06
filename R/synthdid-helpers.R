@@ -10,11 +10,16 @@
 #' \code{dta} filtered to contain only the champion under investigation and the desired donors.
 #'
 #' @details
-#' \code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, two special strings can be used:
+#' \code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, one of seven special strings can be used:
 #'
 #' \itemize{
 #'    \item{"all" }{This includes all champions.}
 #'    \item{"non_lgb" }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+#'    \item{"jungle" }{This includes all champions whose main role is Jungle.}
+#'    \item{"middle" }{This includes all champions whose main role is Middle.}
+#'    \item{"top" }{This includes all champions whose main role is Top.}
+#'    \item{"support" }{This includes all champions expect whose main role is Support.}
+#'    \item{"adc" }{This includes all champions expect whose main role is Adc.}
 #' }
 #'
 #' @import dplyr
@@ -25,7 +30,7 @@
 construct_donor_pool <- function(dta, donors, my_champion) {
   ## 0.) Handling inputs and checks.
   if (length(donors) == 1) {
-    if (!(donors %in% c("all", "non_lgb"))) stop("Invalid 'donors'. This must be either 'all' or 'non_lgb'.", call. = FALSE)
+    if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
   } else {
     if (sum(!(donors %in% unique(dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'dta'.", call. = FALSE)
   }
@@ -40,6 +45,21 @@ construct_donor_pool <- function(dta, donors, my_champion) {
 
       my_subset <- dta %>%
         dplyr::filter(!(champion %in% exclude_these))
+    } else if (donors == "jungle") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role == "JUNGLE" | champion == my_champion)
+    } else if (donors == "middle") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role == "MIDDLE" | champion == my_champion)
+    } else if (donors == "top") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role == "TOP" | champion == my_champion)
+    } else if (donors == "support") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role == "UTILITY" | champion == my_champion)
+    } else if (donors == "adc") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role == "BOTTOM" | champion == my_champion)
     }
   } else {
     my_subset <- dta %>%

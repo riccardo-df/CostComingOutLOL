@@ -41,7 +41,7 @@ run_main_regional(
 \value{
 A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
 Each inner list stores two elements: a list with the results of the main fit for each region, and a list of regional data sets used for estimation.
-The outer list stores two additional elements: the name of the outcome and the treatment date.
+The outer list stores three additional elements: the name of the outcome, the name of the donors, and the treatment date.
 }
 \description{
 Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_dta}}.
@@ -64,11 +64,16 @@ the following operations separately for each data set.\cr
 The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 An infinitesimal bandwidth amounts to no smoothing.\cr
 
-\code{donors} must be a character vector with one or more champions contained in \code{\link{lol_champ_dta}}. Alternatively, two special strings can be used:
+\code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, one of seven special strings can be used:
 
 \itemize{
-   \item{"all": }{This includes all champions.}
-   \item{"non_lgb": }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+   \item{"all" }{This includes all champions.}
+   \item{"non_lgb" }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+   \item{"jungle" }{This includes all champions whose main role is Jungle.}
+   \item{"middle" }{This includes all champions whose main role is Middle.}
+   \item{"top" }{This includes all champions whose main role is Top.}
+   \item{"support" }{This includes all champions expect whose main role is Support.}
+   \item{"adc" }{This includes all champions expect whose main role is Adc.}
 }
 
 It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
