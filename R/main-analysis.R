@@ -9,6 +9,7 @@
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
 #' @param backdate How many periods to backdate the treatment for a robustness check.
 #' @param inference Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.
+#' @param n_boot Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_pool_dta}} storing the time-varying covariates for which we want to adjust for.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
@@ -65,7 +66,7 @@
 #'
 #' @export
 run_main_pooled <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
-                            inference = FALSE, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
+                            inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled"))) stop("Invalid 'outcome'. This must be either 'pick_level_sum' or 'pick_rate_pooled'.", call. = FALSE)
 
@@ -80,6 +81,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (backdate < 0 | backdate %% 1 != 0) stop("Invalid 'backdate'. This must be a positive integer.", call. = FALSE)
   if (!is.logical(inference)) stop("Invalid 'inference'. This must be either 'TRUE' or 'FALSE.", call. = FALSE)
+  if (n_boot <= 1 | nboot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
@@ -138,7 +140,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
     ## 4.) Estimate standard errors.
     cat("    4.) Estimating standard error; \n")
     if (inference) {
-      se <- as.numeric(sqrt(stats::vcov(tau_hat, method = "placebo", replications = 100)))
+      se <- as.numeric(sqrt(stats::vcov(tau_hat, method = "placebo", replications = n_boot)))
     } else {
       cat("        Skipping. \n")
       se <- NULL
@@ -204,6 +206,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
 #' @param inference Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.
+#' @param n_boot Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_dta}} storing the time-varying covariates for which we want to adjust for.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
@@ -258,7 +261,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #'
 #' @export
 run_main_regional <- function(champions, outcome_colname, donors, estimator, treatment_date,
-                              inference = FALSE, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
+                              inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
   if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must be either 'pick_level' or 'pick_rate'.", call. = FALSE)
 
@@ -272,6 +275,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
   if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (!is.logical(inference)) stop("Invalid 'inference'. This must be either 'TRUE' or 'FALSE.", call. = FALSE)
+  if (n_boot <= 1 | nboot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
 
   lol_champ_dta <- lol_champ_dta %>%
@@ -333,7 +337,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
     ## 4.) Estimate standard errors.
     cat("    4.) Estimating standard error. \n")
     if (inference) {
-      ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(stats::vcov(x, method = "placebo", replications = 10))) })
+      ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(stats::vcov(x, method = "placebo", replications = n_boot))) })
     } else {
       cat("        Skipping. \n")
       ses <- list()
