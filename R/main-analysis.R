@@ -81,7 +81,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (backdate < 0 | backdate %% 1 != 0) stop("Invalid 'backdate'. This must be a positive integer.", call. = FALSE)
   if (!is.logical(inference)) stop("Invalid 'inference'. This must be either 'TRUE' or 'FALSE.", call. = FALSE)
-  if (n_boot <= 1 | nboot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
+  if (n_boot <= 1 | n_boot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
@@ -275,7 +275,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
   if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
   if (!is.logical(inference)) stop("Invalid 'inference'. This must be either 'TRUE' or 'FALSE.", call. = FALSE)
-  if (n_boot <= 1 | nboot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
+  if (n_boot <= 1 | n_boot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
 
   lol_champ_dta <- lol_champ_dta %>%

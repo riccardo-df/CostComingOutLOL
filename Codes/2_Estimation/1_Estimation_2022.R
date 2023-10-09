@@ -21,8 +21,8 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 champions <- c("Graves")
 
 ## Select outcome series.
-outcome_colname_pool <- "pick_level_sum"
-outcome_colname_regional <- "pick_level"
+outcome_colname_pool <- "pick_rate_pooled"
+outcome_colname_regional <- "pick_rate"
 
 bandwidth_pool <- 3
 bandwidth_regional <- 3
@@ -31,10 +31,11 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("all", "adc", "support", "jungle", "middle", "top")
-estimators <- c("sc_reg")
+donor_pools <- c("all", "adc", "support") # , "jungle", "middle", "top"
+estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
+n_boot <- 10
 backdate <- 10
 
 covariates_pool <- c()
@@ -55,8 +56,8 @@ for (estimator in estimators) {
     cat("Estimator: ", estimator, " donor pool: ", pool, "\n", sep = "")
     cat("\n")
 
-    pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
-    regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, inference = inference, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional, max_date = max_date)
+    pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
+    regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, inference = inference, n_boot = n_boot, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional, max_date = max_date)
 
     counter <- counter + 1
   }
@@ -71,5 +72,4 @@ for (i in seq_len(length(regional_result_list))) {
 }
 
 # LATEX -------------------------------------------------------------------
-produce_latex_pooled(pooled_result_list)
-produce_latex_regional(regional_result_list)
+produce_latex(pooled_result_list, regional_result_list)
