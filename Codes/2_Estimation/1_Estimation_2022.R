@@ -6,6 +6,8 @@
 
 ## This script runs the main analysis of the "The Cost of Coming Out" paper.
 
+## LATEX TABLE FOR DIFFERENT DONOR POOLS, THEN BARPLOTS FOR ASSOCIATION BTW DROP AND SKILLS/PERFORMANCE.
+
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
 set.seed(1986)
@@ -22,17 +24,17 @@ champions <- c("Graves")
 outcome_colname_pool <- "pick_level_sum"
 outcome_colname_regional <- "pick_level"
 
-bandwidth_pool <- 5
-bandwidth_regional <- 5
+bandwidth_pool <- 3
+bandwidth_regional <- 3
 
 min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("all", "non_lgb", "jungle", "middle", "top", "support", "adc")
-estimator <- "sc"
+donor_pools <- c("all", "adc", "support", "jungle", "middle", "top")
+estimators <- c("sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- FALSE
+inference <- TRUE
 backdate <- 10
 
 covariates_pool <- c()
@@ -47,35 +49,27 @@ regional_result_list <- list()
 
 counter <- 1
 
-for (pool in donor_pools) {
-  cat("\n")
-  cat("Donor pool set to ", pool, "\n", sep = "")
-  cat("\n")
+for (estimator in estimators) {
+  for (pool in donor_pools) {
+    cat("\n")
+    cat("Estimator: ", estimator, " donor pool: ", pool, "\n", sep = "")
+    cat("\n")
 
-  pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
-  regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional, max_date = max_date)
+    pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
+    regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, inference = inference, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional, max_date = max_date)
 
-  counter <- counter + 1
+    counter <- counter + 1
+  }
 }
 
 # Plots -------------------------------------------------------------------
 save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
-for (i in seq_len(length(pooled_result_list))) {
+for (i in seq_len(length(regional_result_list))) {
   produce_plots_pooled(pooled_result_list[[i]], save_here)
   produce_plots_regional(regional_result_list[[i]], save_here)
 }
 
-# # Some number -------------------------------------------------------------
-# ## Average effect.
-# for (champion in names(pooled_results)[seq_len(length(champions))]) {
-#   cat("Average difference post-treatment for ", champion, " measured in ", if (pooled_results$outcome_colname == "pick_level_sum") "pick levels" else "pick rates", " is:
-#     Main fit         : ", round(summary(pooled_results[[champion]]$tau_hat)$estimate, 2), "
-#     Backdated fit    : ", round(summary(pooled_results[[champion]]$tau_hat_back)$estimate, 2), "
-#
-#     Regions:
-#        Europe        : ", round(summary(regional_results[[champion]]$tau_hats$Europe)$estimate, 2), "
-#        Korea         : ", round(summary(regional_results[[champion]]$tau_hats$Korea)$estimate, 2), "
-#        Latin America : ", round(summary(regional_results[[champion]]$tau_hats$Latin_America)$estimate, 2), "
-#        North America : ", round(summary(regional_results[[champion]]$tau_hats$North_America)$estimate, 2), "\n\n", sep = "")
-# }
+# LATEX -------------------------------------------------------------------
+produce_latex_pooled(pooled_result_list)
+produce_latex_regional(regional_result_list)

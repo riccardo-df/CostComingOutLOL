@@ -80,13 +80,10 @@ construct_donor_pool <- function(dta, donors, my_champion) {
 #' @param N0 Number of control units (control units are in the rows 1-N0 of Y).
 #' @param T0 Number of pre-treatment periods (they correspond to columns 1-T0 of Y).
 #' @param X Optional 3D array of time-varying covariates. Shape should be N X T X C for C covariates.
-#' @param eta.omega Determines the level of ridge regularization. Default corresponds to the level used in the paper. Total regularization equals \code{eta.omega} times the standard deviation of the first differences of \code{Y}.
 #'
 #' @import dplyr ggplot2
 #'
 #' @author Riccardo Di Francesco
-#'
-#' @seealso \code{\link{pull_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{\code{\link{construct_lol_player_data}}}}
 #'
 #' @export
 sc_estimate_reg <- function(Y, N0, T0, X = array(dim = c(dim(Y), 0))) {
@@ -165,8 +162,6 @@ call_synthdid <- function(dta, outcome_colname, estimator, covariate_colnames) {
 #' }
 #'
 #' @author Riccardo Di Francesco
-#'
-#' @seealso \code{\link{actual_controls}}, \code{\link{synth_outcome}}
 #'
 #' @import dplyr
 #' @importFrom stats weighted.mean

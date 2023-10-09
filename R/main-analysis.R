@@ -52,7 +52,7 @@
 #' @return
 #' A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
 #' Each inner list stores four elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, and the data used for estimation.
-#' The outer list stores three additional elements: the name of the outcome, the name of the donors, and the treatment date.
+#' The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth the outcome series.
 #'
 #' @import dplyr
 #' @importFrom stats ksmooth
@@ -183,10 +183,12 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 
   ## Output.
   output[[counter]] <- outcome_colname
-  output[[counter + 1]] <- donors
-  output[[counter + 2]] <- treatment_date
+  output[[counter + 1]] <- estimator
+  output[[counter + 2]] <- donors
+  output[[counter + 3]] <- treatment_date
+  output[[counter + 4]] <- bandwidth
 
-  names(output) <- c(champions, "outcome_colname", "donors", "treatment_date")
+  names(output) <- c(champions, "outcome_colname", "estimator", "donors", "treatment_date", "bandwidth")
 
   return(output)
 }
@@ -243,7 +245,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' @return
 #' A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
 #' Each inner list stores two elements: a list with the results of the main fit for each region, and a list of regional data sets used for estimation.
-#' The outer list stores three additional elements: the name of the outcome, the name of the donors, and the treatment date.
+#' The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth the outcome series.
 #'
 #' @import dplyr
 #' @importFrom stats ksmooth
@@ -331,7 +333,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
     ## 4.) Estimate standard errors.
     cat("    4.) Estimating standard error. \n")
     if (inference) {
-      ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(stats::vcov(tau_hat, method = "placebo", replications = 100))) })
+      ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(stats::vcov(x, method = "placebo", replications = 10))) })
     } else {
       cat("        Skipping. \n")
       ses <- list()
@@ -346,10 +348,12 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
 
   ## Output.
   output[[counter]] <- outcome_colname
-  output[[counter + 1]] <- donors
-  output[[counter + 2]] <- treatment_date
+  output[[counter + 1]] <- estimator
+  output[[counter + 2]] <- donors
+  output[[counter + 3]] <- treatment_date
+  output[[counter + 4]] <- bandwidth
 
-  names(output) <- c(champions, "outcome_colname", "donors", "treatment_date")
+  names(output) <- c(champions, "outcome_colname", "estimator", "donors", "treatment_date", "bandwidth")
 
   return(output)
 }

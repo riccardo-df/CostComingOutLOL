@@ -18,7 +18,7 @@ Save some nice plots.
 Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_regional}}.
 }
 \seealso{
-\code{\link{produce_plots_pooled}}
+\code{\link{produce_plots_pooled}} \code{\link{produce_latex_pooled}} \code{\link{produce_latex_regional}}
 }
 \author{
 Riccardo Di Francesco

@@ -7,7 +7,7 @@
 champions_performance_plots_lol(
   champions,
   min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-09-12"),
+  max_date = as.POSIXct("2023-08-01"),
   bandwidth = 0.01,
   save_here = getwd()
 )

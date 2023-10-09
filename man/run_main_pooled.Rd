@@ -44,7 +44,7 @@ run_main_pooled(
 \value{
 A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
 Each inner list stores four elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, and the data used for estimation.
-The outer list stores three additional elements: the name of the outcome, the name of the donors, and the treatment date.
+The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth the outcome series.
 }
 \description{
 Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_pool_dta}}.

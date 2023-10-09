@@ -9,7 +9,7 @@ champions_descriptive_plots_lol(
   treatment_date1 = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   treatment_date2 = as.POSIXct("2023-06-01", tryFormats = "\%Y-\%m-\%d"),
   min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-09-12"),
+  max_date = as.POSIXct("2023-08-01"),
   bandwidth = 0.01,
   save_here = getwd()
 )

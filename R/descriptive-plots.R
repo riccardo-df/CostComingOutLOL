@@ -28,7 +28,7 @@
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{descriptive_plots_lol_lgb}} \code{\link{performance_plots_lol}}
+#' @seealso \code{\link{champions_performance_plots_lol}} \code{\link{players_descriptive_plots_lol}}
 #'
 #' @export
 champions_descriptive_plots_lol <- function(champions,
@@ -343,7 +343,7 @@ champions_descriptive_plots_lol <- function(champions,
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{descriptive_plots_lol}} \code{\link{descriptive_plots_lol_lgb}}
+#' @seealso \code{\link{champions_descriptive_plots_lol}} \code{\link{players_descriptive_plots_lol}}
 #'
 #' @export
 champions_performance_plots_lol <- function(champions,
@@ -407,7 +407,6 @@ champions_performance_plots_lol <- function(champions,
 #'
 #' Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
 #'
-#' @param champions Character vector with the champions of interest.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #' @param bandwidth Parameter controlling the amount of smoothing.
@@ -428,7 +427,7 @@ champions_performance_plots_lol <- function(champions,
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{descriptive_plots_lol}} \code{\link{descriptive_plots_lol_lgb}}
+#' @seealso \code{\link{descriptive_plots_lol}} \code{\link{champions_performance_plots_lol}}
 #'
 #' @export
 players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
