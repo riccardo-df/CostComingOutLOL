@@ -6,8 +6,6 @@
 
 ## This script runs the main analysis of the "The Cost of Coming Out" paper.
 
-## LATEX TABLE FOR DIFFERENT DONOR POOLS, THEN BARPLOTS FOR ASSOCIATION BTW DROP AND SKILLS/PERFORMANCE.
-
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
 set.seed(1986)
@@ -31,17 +29,17 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("all", "adc", "support") # , "jungle", "middle", "top"
+donor_pools <- c("jungle", "middle", "top")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
-n_boot <- 10
+n_boot <- 2
 backdate <- 10
 
-covariates_pool <- c()
-covariates_regional <- c()
-# covariates_pool <- c("ban_level_sum", "win_level_sum", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
-# covariates_regional <- c("ban_level", "win_level", "gold_avg", "kills_avg", "assists_avg", "deaths_avg")
+# covariates_pool <- c()
+# covariates_regional <- c()
+covariates_pool <- c("ban_level_sum", "win_level_sum", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
+covariates_regional <- c("ban_level", "win_level", "gold_avg", "kills_avg", "assists_avg", "deaths_avg")
 
 # Estimation --------------------------------------------------------------
 ## Loop over donor pools.

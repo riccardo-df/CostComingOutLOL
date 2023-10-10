@@ -1,6 +1,6 @@
 #' LoL Descriptive Plots
 #'
-#' Produces plots for the pick, ban, and win variables of the champions of interest.
+#' Produces plots for the pick, ban, and win variables of the champions of interest. It also produces plots to investigate the most common auxiliary role given the main role.
 #'
 #' @param champions Character vector with the champions of interest.
 #' @param treatment_date1 Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
@@ -72,12 +72,12 @@ champions_descriptive_plots_lol <- function(champions,
     dplyr::ungroup() %>%
     dplyr::mutate(champion = "Composite LGB") %>%
     dplyr::distinct(day, .keep_all = TRUE) %>%
-    dplyr::select(day, champion, lgb_pick_level, lgb_pick_rate, lgb_ban_level, lgb_ban_rate, lgb_win_level, lgb_win_rate)
+    dplyr::select(day, champion, lgb_pick_level, lgb_pick_rate, lgb_ban_level, lgb_ban_rate, lgb_win_level, lgb_win_rate, main_role, aux_role)
 
-  colnames(lgb_aggregate_pool) <- c("day", "champion", "pick_level_sum", "pick_rate_pooled", "ban_level_sum", "ban_rate_pooled", "win_level_sum", "win_rate_pooled")
+  colnames(lgb_aggregate_pool) <- c("day", "champion", "pick_level_sum", "pick_rate_pooled", "ban_level_sum", "ban_rate_pooled", "win_level_sum", "win_rate_pooled", "main_role", "aux_role")
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::select(day, champion, pick_level_sum, pick_rate_pooled, ban_level_sum, ban_rate_pooled, win_level_sum, win_rate_pooled) %>%
+    dplyr::select(day, champion, pick_level_sum, pick_rate_pooled, ban_level_sum, ban_rate_pooled, win_level_sum, win_rate_pooled, main_role, aux_role) %>%
     dplyr::bind_rows(lgb_aggregate_pool)
 
   lgb_aggregate_regional <- lol_champ_dta %>%
@@ -212,8 +212,8 @@ champions_descriptive_plots_lol <- function(champions,
           axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
   ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_pooled.svg"), plot_win_rate_pooled, device = Cairo::CairoSVG, width = 7, height = 7)
 
-  ## 3.) Regional plots.
-  # 3a.) Picks.
+  ## 4.) Regional plots.
+  # 4a.) Picks.
   plot_pick_level_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_level, group = champion, color = champion)) +
@@ -246,7 +246,7 @@ champions_descriptive_plots_lol <- function(champions,
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
   ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_regional.svg"), plot_pick_rate_regional, device = Cairo::CairoSVG, width = 7, height = 7)
 
-  # 3b.) Bans.
+  # 4b.) Bans.
   plot_ban_level_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_level, group = champion, color = champion)) +
@@ -279,7 +279,7 @@ champions_descriptive_plots_lol <- function(champions,
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
   ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_regional.svg"), plot_ban_rate_regional, device = Cairo::CairoSVG, width = 7, height = 7)
 
-  # 3c.) Wins.
+  # 4c.) Wins.
   plot_win_level_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_level, group = champion, color = champion)) +
@@ -312,7 +312,22 @@ champions_descriptive_plots_lol <- function(champions,
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
   ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_regional.svg"), plot_win_rate_regional, device = Cairo::CairoSVG, width = 7, height = 7)
 
-  ## 4.) Talk to the user.
+  ## 5.) Auxiliary role.
+  plot_aux_role <- lol_champ_pool_dta %>%
+    dplyr::distinct(champion, .keep_all = TRUE) %>%
+    dplyr::group_by(main_role, aux_role) %>%
+    dplyr::summarize(count = n()) %>%
+    dplyr::arrange(main_role, desc(count)) %>%
+    ggplot2::ggplot(ggplot2::aes(x = aux_role, y = count)) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::xlab("") + ggplot2::ylab(paste0("Count")) +
+    ggplot2::facet_grid(vars(main_role), scales = "fixed") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
+                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(paste0(save_here, "/", "plot_aux_role.svg"), plot_aux_role, device = Cairo::CairoSVG, width = 7, height = 7)
+
+  ## 6.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }

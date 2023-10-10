@@ -307,7 +307,6 @@ produce_latex_pooled <- function(pooled_result_list) {
 
   ## 1.) Print LATEX code.
   n_col <- length(pooled_result_list) + 1
-  estimators <- rename_latex(estimators)
   n_estimators <- length(unique(estimators))
   n_donor_pools <- length(unique(donor_pools))
 
@@ -317,6 +316,9 @@ produce_latex_pooled <- function(pooled_result_list) {
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
   donor_pools[donor_pools == "middle"] <- "Only Middle"
+
+  estimators[estimators == "sc"] <- "Synthetic Controls"
+  estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
 
   cmid_points_start <- seq(2, n_donor_pools * n_estimators, by = n_donor_pools)
   cmid_points_end <- seq(2+n_donor_pools-1, n_col, by = n_donor_pools)
@@ -422,7 +424,6 @@ produce_latex_regional <- function(regional_result_list) {
 
   ## 1.) Print LATEX code.
   n_col <- length(regional_result_list) + 1
-  estimators <- rename_latex(estimators)
   n_estimators <- length(unique(estimators))
   n_donor_pools <- length(unique(donor_pools))
 
@@ -432,6 +433,9 @@ produce_latex_regional <- function(regional_result_list) {
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
   donor_pools[donor_pools == "middle"] <- "Only Middle"
+
+  estimators[estimators == "sc"] <- "Synthetic Controls"
+  estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
 
   cmid_points_start <- seq(2, n_donor_pools * n_estimators, by = n_donor_pools)
   cmid_points_end <- seq(2+n_donor_pools-1, n_col, by = n_donor_pools)
@@ -623,7 +627,6 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
 
   ## 1.) Print LATEX code.
   n_col <- length(pooled_result_list) + 1
-  estimators <- rename_latex(estimators_pooled)
   n_estimators <- length(unique(estimators))
   donor_pools <- rename_latex(donor_pools_pooled)
   n_donor_pools <- length(unique(donor_pools))
@@ -635,6 +638,9 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
   donor_pools[donor_pools == "middle"] <- "Only Middle"
+
+  estimators[estimators == "sc"] <- "Synthetic Controls"
+  estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
 
   cmid_points_start <- seq(2, n_donor_pools * n_estimators, by = n_donor_pools)
   cmid_points_end <- seq(2+n_donor_pools-1, n_col, by = n_donor_pools)
@@ -740,7 +746,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
       \\end{tabular}
       \\end{adjustbox}
       \\caption{Point estimates and $95\\%$ confidence intervals for $\\hat{\\tau}$. Additionally, the number of donors receiving a non-zero weight and the pre-treatment root mean squared error are displayed. The first panel reports the results obtained using all the observed matches. The remaining four panels report the results obtained using only matches from a particular region. Each column corresponds to a different specification, with the specifications differing solely in the employed estimator and donor pool.}
-      \\label{table_estimation_results_regional}
+      \\label{table_estimation_results}
     \\end{table}
 \\endgroup")
 }
