@@ -19,8 +19,6 @@ players_descriptive_plots_lol(
 \item{bandwidth}{Parameter controlling the amount of smoothing.}
 
 \item{save_here}{String denoting the path where to save the figures.}
-
-\item{champions}{Character vector with the champions of interest.}
 }
 \value{
 Produces a nice plot.
@@ -35,7 +33,7 @@ The series are smoothed using a Nadaraya–Watson kernel regression. The user ca
 An infinitesimal bandwidth amounts to no smoothing.\cr
 }
 \seealso{
-\code{\link{descriptive_plots_lol}} \code{\link{descriptive_plots_lol_lgb}}
+\code{\link{champions_descriptive_plots_lol}} \code{\link{champions_performance_plots_lol}}
 }
 \author{
 Riccardo Di Francesco

@@ -442,7 +442,7 @@ champions_performance_plots_lol <- function(champions,
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{descriptive_plots_lol}} \code{\link{champions_performance_plots_lol}}
+#' @seealso \code{\link{champions_descriptive_plots_lol}} \code{\link{champions_performance_plots_lol}}
 #'
 #' @export
 players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),

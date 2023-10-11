@@ -11,6 +11,7 @@ run_main_regional(
   estimator,
   treatment_date,
   inference = FALSE,
+  n_boot = 100,
   bandwidth = 0.01,
   covariate_colnames = c(),
   min_date = as.POSIXct("2022-01-01"),
@@ -29,6 +30,8 @@ run_main_regional(
 \item{treatment_date}{Object of class \code{POSIXct}. When the treatment took place.}
 
 \item{inference}{Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.}
+
+\item{n_boot}{Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.}
 
 \item{bandwidth}{Parameter controlling the amount of smoothing.}
 

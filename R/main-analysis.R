@@ -55,7 +55,7 @@
 #' Each inner list stores four elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, and the data used for estimation.
 #' The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth the outcome series.
 #'
-#' @import dplyr
+#' @import dplyr fixest
 #' @importFrom stats ksmooth
 #' @importFrom stats time
 #' @importFrom stats vcov
@@ -68,7 +68,7 @@
 run_main_pooled <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
                             inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
-  if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled"))) stop("Invalid 'outcome'. This must be either 'pick_level_sum' or 'pick_rate_pooled'.", call. = FALSE)
+  if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled", "win_rate_pooled"))) stop("Invalid 'outcome'. This must be one of 'pick_level_sum', 'pick_rate_pooled', 'win_rate_pooled'.", call. = FALSE)
 
   if (length(donors) == 1) {
     if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
@@ -250,7 +250,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' Each inner list stores two elements: a list with the results of the main fit for each region, and a list of regional data sets used for estimation.
 #' The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth the outcome series.
 #'
-#' @import dplyr
+#' @import dplyr fixest
 #' @importFrom stats ksmooth
 #' @importFrom stats time
 #' @importFrom stats vcov

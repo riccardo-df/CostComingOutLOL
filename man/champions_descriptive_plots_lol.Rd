@@ -33,7 +33,7 @@ champions_descriptive_plots_lol(
 Produces nice plots.
 }
 \description{
-Produces plots for the pick, ban, and win variables of the champions of interest.
+Produces plots for the pick, ban, and win variables of the champions of interest. It also produces plots to investigate the most common auxiliary role given the main role.
 }
 \details{
 \code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
@@ -45,7 +45,7 @@ The series are smoothed using a Nadaraya–Watson kernel regression. The user ca
 An infinitesimal bandwidth amounts to no smoothing.\cr
 }
 \seealso{
-\code{\link{descriptive_plots_lol_lgb}} \code{\link{performance_plots_lol}}
+\code{\link{champions_performance_plots_lol}} \code{\link{players_descriptive_plots_lol}}
 }
 \author{
 Riccardo Di Francesco

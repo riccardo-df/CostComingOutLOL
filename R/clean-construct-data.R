@@ -429,9 +429,9 @@ construct_lol_champion_data <- function(dta) {
 
   cat("    Compute variables in rates. \n")
   final_daily_panel <- left_join(new_daily_panel, n_matches, by = c("region", "day")) %>%
-    dplyr::mutate(pick_rate = pick_level / n_matches,
-           ban_rate = ban_level / n_matches,
-           win_rate = win_level / pick_level) %>%
+    dplyr::mutate(pick_rate = pick_level / n_matches * 100,
+           ban_rate = ban_level / n_matches * 100,
+           win_rate = win_level / pick_level * 100) %>%
     dplyr::left_join(main_roles, by = c("champion")) %>%
     replace(is.na(.), 0)
 
@@ -506,9 +506,9 @@ construct_lol_champion_pooled_data <- function(dta) {
            ban_level_sum = sum(ban_level),
            win_level_sum = sum(win_level),
            n_matches_sum = sum(n_matches),
-           pick_rate_pooled = pick_level_sum / n_matches_sum,
-           ban_rate_pooled = ban_level_sum / n_matches_sum,
-           win_rate_pooled = win_level_sum / pick_level_sum,
+           pick_rate_pooled = pick_level_sum / n_matches_sum * 100,
+           ban_rate_pooled = ban_level_sum / n_matches_sum * 100,
+           win_rate_pooled = win_level_sum / pick_level_sum * 100,
            gold_pooled = mean(gold_avg[pick_level != 0]),
            kills_pooled = mean(kills_avg[pick_level != 0]),
            assists_pooled = mean(assists_avg[pick_level != 0]),
@@ -612,9 +612,9 @@ construct_lol_player_data <- function(dta) {
 
   cat("    Variables in rates. \n")
   extended_daily_panel <- daily_panel %>%
-    mutate(Graves_rate = Graves / n_matches,
-           Graves_ban_rate = Graves_ban / n_matches,
-           win_rate = win_sum / n_matches,
+    mutate(graves_rate = Graves / n_matches * 100,
+           graves_ban_rate = Graves_ban / n_matches * 100,
+           win_rate = win_sum / n_matches * 100,
            gold_avg = gold_sum / n_matches,
            kills_avg = kills_sum / n_matches,
            assists_avg = assists_sum / n_matches,

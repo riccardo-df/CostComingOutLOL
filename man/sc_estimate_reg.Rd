@@ -14,15 +14,10 @@ sc_estimate_reg(Y, N0, T0, X = array(dim = c(dim(Y), 0)))
 \item{T0}{Number of pre-treatment periods (they correspond to columns 1-T0 of Y).}
 
 \item{X}{Optional 3D array of time-varying covariates. Shape should be N X T X C for C covariates.}
-
-\item{eta.omega}{Determines the level of ridge regularization. Default corresponds to the level used in the paper. Total regularization equals \code{eta.omega} times the standard deviation of the first differences of \code{Y}.}
 }
 \description{
 Synthetic control with a ridge penalty, as defined in Algorithm 1 of Arkhangelsky et al. (2021). Taken from
 \href{https://synth-inference.github.io/synthdid/articles/paper-results.html}{https://synth-inference.github.io/synthdid/articles/paper-results.html}.
-}
-\seealso{
-\code{\link{pull_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{\code{\link{construct_lol_player_data}}}}
 }
 \author{
 Riccardo Di Francesco

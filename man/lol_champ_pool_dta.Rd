@@ -9,7 +9,7 @@ A data frame with the following variables:
 \describe{
   \item{\code{day}}{Day of observation.}
   \item{\code{day_no}}{Numeric version of \code{day}.}
-  \item{\code{n_matches}}{How many matches where played in that \code{day}.}
+  \item{\code{n_matches_sum}}{How many matches where played in that \code{day}.}
   \item{\code{champion}}{Champion (unit of observation).}
   \item{\code{pick_level_sum}}{How many times \code{champion} was picked in that \code{day}.}
   \item{\code{pick_rate_pooled}}{Proportion of times \code{champion} was picked in that \code{day} (equals \code{pick_level_sum} divided by \code{n_matches_sum}).}

@@ -33,9 +33,6 @@ A list with the following elements:
 \description{
 Constructs the synthetic outcome using the estimation results stored in an \code{\link[synthdid]{synthdid_estimate}} object.
 }
-\seealso{
-\code{\link{actual_controls}}, \code{\link{synth_outcome}}
-}
 \author{
 Riccardo Di Francesco
 }

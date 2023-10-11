@@ -115,7 +115,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-            legend.position = c(0.11, 0.79), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+            legend.position = c(0.13, 0.82), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
     # 2e.) Leave-one-out exercise.
     if (length(pooled_results[[my_champion]]$tau_hat_drop) != 0) {
@@ -137,7 +137,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-              legend.position = c(0.12, 0.77), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+              legend.position = c(0.15, 0.80), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
       plot_robustness <- gridExtra::arrangeGrob(plot_back, plot_drop, ncol = 1)
     } else {
@@ -272,6 +272,7 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
 #' While some parameters can change, others must be fixed over the specifications. These include the treatment date, the champion assigned to the treatment, the outcome series, and the bandwidths.
 #'
 #' @import dplyr stringr
+#' @importFrom Metrics rmse
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -384,6 +385,7 @@ produce_latex_pooled <- function(pooled_result_list) {
 #'
 #' @import dplyr stringr Metrics
 #' @importFrom stats setNames
+#' @importFrom Metrics rmse
 #' @author Riccardo Di Francesco
 #'
 #' @seealso \code{\link{produce_plots_pooled}} \code{\link{produce_plots_regional}} \code{\link{produce_latex_pooled}}
@@ -514,7 +516,7 @@ produce_latex_regional <- function(regional_result_list) {
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_north_am, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_north_am, ", ", cius_north_am, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_north_am, " &"), collapse = " "), end = -3), " \\\\
-      RMSE & ", stringr::str_sub(paste(paste0(rmses_north_am, " &"), collapse = " "), end = -3), " \\\\ \n\n", sep = "")
+      RMSE & ", stringr::str_sub(paste(paste0(rmses_north_am, " &"), collapse = " "), end = -3), " \\\\ \n", sep = "")
 
   cat("\n      \\addlinespace[3pt]
       \\\\[-1.8ex]\\hline
@@ -547,8 +549,9 @@ produce_latex_regional <- function(regional_result_list) {
 #'
 #' While some parameters can change, others must be fixed over the specifications. These include the treatment date, the champion assigned to the treatment, the outcome series, and the bandwidths.
 #'
-#' @import dplyr stringr Metrics
+#' @import dplyr stringr
 #' @importFrom stats setNames
+#' @importFrom Metrics rmse
 #' @author Riccardo Di Francesco
 #'
 #' @seealso \code{\link{produce_plots_pooled}} \code{\link{produce_plots_regional}} \code{\link{produce_latex_pooled}}
@@ -738,7 +741,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_north_am, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_north_am, ", ", cius_north_am, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_north_am, " &"), collapse = " "), end = -3), " \\\\
-      RMSE & ", stringr::str_sub(paste(paste0(rmses_north_am, " &"), collapse = " "), end = -3), " \\\\ \n\n", sep = "")
+      RMSE & ", stringr::str_sub(paste(paste0(rmses_north_am, " &"), collapse = " "), end = -3), " \\\\ \n", sep = "")
 
   cat("\n      \\addlinespace[3pt]
       \\\\[-1.8ex]\\hline

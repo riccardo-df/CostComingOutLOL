@@ -13,7 +13,7 @@ produce_latex_regional(regional_result_list)
 Prints LATEX code for a nice table.
 }
 \description{
-Produced LATEX code for a table displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_regional_result_list}}.
+Produced LATEX code for a table displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_regional}}.
 }
 \details{
 Different synthetic control specifications can be used by calling \code{\link{run_main_pooled}} multiple times in a for loop, with some parameters (e.g., donor pool, estimator)

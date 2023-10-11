@@ -36,7 +36,7 @@ The series are smoothed using a Nadaraya–Watson kernel regression. The user ca
 An infinitesimal bandwidth amounts to no smoothing.\cr
 }
 \seealso{
-\code{\link{descriptive_plots_lol}} \code{\link{descriptive_plots_lol_lgb}}
+\code{\link{champions_descriptive_plots_lol}} \code{\link{players_descriptive_plots_lol}}
 }
 \author{
 Riccardo Di Francesco
