@@ -124,12 +124,12 @@ call_synthdid <- function(dta, outcome_colname, estimator, covariate_colnames) {
 
   ## 1.) If necessary, adjust the outcomes.
   if (length(covariate_colnames) != 0) {
-    dta$y_adjusted <- xsynthdid::adjust.outcome.for.x(dta, unit = unit, time = time, outcome = outcome_colname, treatment = treatment, x = covariate_colnames)
+    dta$y_adjusted <- xsynthdid::adjust.outcome.for.x(dta, unit = unit, time = time, outcome = outcome, treatment = treatment, x = covariate_colnames)
     outcome <- which(colnames(dta) == "y_adjusted")
   }
 
   ## 2.) Process data.
-  setup <- synthdid::panel.matrices(as.data.frame(dta), unit = unit, time = time, outcome = outcome_colname, treatment = treatment)
+  setup <- synthdid::panel.matrices(as.data.frame(dta), unit = unit, time = time, outcome = outcome, treatment = treatment)
 
   ## 3.) Run estimation.
   if (estimator == "sc") {

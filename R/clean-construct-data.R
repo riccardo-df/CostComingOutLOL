@@ -581,9 +581,9 @@ construct_lol_player_data <- function(dta) {
   cat("    Interest for Graves (picks and bans). \n")
   picks_bans <- dta %>%
     group_by(player_puiid, day) %>%
-    mutate(Graves = sum(champion == 'Graves'),
-           Graves_ban = sum(ban == 'Graves')) %>%
-    select(player_puiid, day, Graves, Graves_ban) %>%
+    mutate(graves = sum(champion == 'Graves'),
+           graves_ban = sum(ban == 'Graves')) %>%
+    select(player_puiid, day, graves, graves_ban) %>%
     distinct(player_puiid, day, .keep_all = TRUE) %>%
     ungroup()
 
@@ -608,25 +608,25 @@ construct_lol_player_data <- function(dta) {
   daily_panel <- picks_bans %>%
     left_join(n_matches, by = c("player_puiid", "day")) %>%
     left_join(numeric_covariates, by = c("player_puiid", "day")) %>%
-    select(player_puiid, day, Graves, Graves_ban, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
+    select(player_puiid, day, graves, graves_ban, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
 
   cat("    Variables in rates. \n")
   extended_daily_panel <- daily_panel %>%
-    mutate(graves_rate = Graves / n_matches * 100,
-           graves_ban_rate = Graves_ban / n_matches * 100,
+    mutate(graves_rate = graves / n_matches * 100,
+           graves_ban_rate = graves_ban / n_matches * 100,
            win_rate = win_sum / n_matches * 100,
            gold_avg = gold_sum / n_matches,
            kills_avg = kills_sum / n_matches,
            assists_avg = assists_sum / n_matches,
            deaths_avg = deaths_sum / n_matches) %>%
-    select(day, player_puiid, n_matches, Graves_rate, Graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    select(day, player_puiid, n_matches, graves_rate, graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## Final operations.
   panel <- extended_daily_panel
   panel$day_no <- as.numeric(panel$day)
 
   panel <- panel %>%
-    select(day, day_no, player_puiid, n_matches, Graves_rate, Graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    select(day, day_no, player_puiid, n_matches, graves_rate, graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
   colnames(panel)[3] <- c("id")
 
   ## Write csv.

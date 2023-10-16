@@ -19,7 +19,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 champions <- c("Graves")
 
 ## Select outcome series.
-outcome_colname_pool <- "win_rate_pooled"
+outcome_colnames <- c("kd_ratio", "assists_pooled", "gold_pooled", "win_rate_pooled")
 
 bandwidth <- 3
 
@@ -27,31 +27,28 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("all", "adc", "support")
-estimators <- c("sc", "sc_reg")
+donors <- "all"
+estimator <- "sc_reg"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
 n_boot <- 2
 backdate <- 10
 
 covariates <- c()
-# covariates_pool <- c("ban_level_sum", "win_level_sum", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
 
 # Estimation --------------------------------------------------------------
 ## Loop over donor pools.
 pooled_result_list <- list()
 counter <- 1
 
-for (estimator in estimators) {
-  for (pool in donor_pools) {
-    cat("\n")
-    cat("Estimator: ", estimator, " donor pool: ", pool, "\n", sep = "")
-    cat("\n")
+for (outcome_colname in outcome_colnames) {
+  cat("\n")
+  cat("Outcome: ", outcome_colname, "\n", sep = "")
+  cat("\n")
 
-    pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
+  pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
 
-    counter <- counter + 1
-  }
+  counter <- counter + 1
 }
 
 # Plots -------------------------------------------------------------------
@@ -60,6 +57,3 @@ save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/C
 for (i in seq_len(length(pooled_result_list))) {
   produce_plots_pooled(pooled_result_list[[i]], save_here)
 }
-
-# LATEX -------------------------------------------------------------------
-produce_latex_pooled(pooled_result_list)

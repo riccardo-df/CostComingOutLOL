@@ -389,16 +389,16 @@ champions_performance_plots_lol <- function(champions,
       dplyr::filter(champion == my_champion) %>%
       dplyr::mutate(kd_ratio = kills_pooled / deaths_pooled) %>%
       replace(is.na(.), 0) %>%
-      dplyr::select(day, kd_ratio, assists_pooled, gold_pooled, win_rate_pooled)
-    colnames(plot_dta) <- c("day", "Kills/Deaths", "Assists", "Gold", "Win Rate")
+      dplyr::select(day, kd_ratio, win_rate_pooled)
+    colnames(plot_dta) <- c("day", "Kills/Deaths", "Win Rate")
 
-    to_smooth_pool <- c("Kills/Deaths", "Assists", "Gold", "Win Rate")
+    to_smooth_pool <- c("Kills/Deaths", "Win Rate")
 
     plot_dta <- plot_dta %>%
       dplyr::mutate(dplyr::across(dplyr::all_of(to_smooth_pool), function(x) { stats::ksmooth(stats::time(x), x, "normal", bandwidth = bandwidth)$y }))
 
     plot <- plot_dta %>%
-      reshape2::melt(id.vars = "day", measure.vars = c("Kills/Deaths", "Assists", "Gold", "Win Rate")) %>%
+      reshape2::melt(id.vars = "day", measure.vars = c("Kills/Deaths", "Win Rate")) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = value)) +
       ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
       ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
@@ -477,8 +477,8 @@ players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), m
     dplyr::ungroup() %>%
     dplyr::mutate(dplyr::across(dplyr::all_of(c("total_matches", "total_players")), function(x) { stats::ksmooth(stats::time(x), x, "normal", bandwidth = bandwidth)$y })) %>%
     ggplot2::ggplot(ggplot2::aes(x = day)) +
-    ggplot2::geom_line(ggplot2::aes(y = total_matches, color = "Matches"), linewidth = 1) +
-    ggplot2::geom_line(aes(y = total_players / trans_coef, color = "Players"), linewidth = 1) +
+    ggplot2::geom_line(ggplot2::aes(y = total_matches, color = "Matches"), linewidth = 0.8) +
+    ggplot2::geom_line(aes(y = total_players / trans_coef, color = "Players"), linewidth = 0.8) +
     ggplot2::annotation_raster(rainbow, xmin = pride_month_2022_begin, xmax = pride_month_2022_end, ymin = -Inf, ymax = Inf) +
     ggplot2::annotation_raster(rainbow, xmin = pride_month_2023_begin, xmax = pride_month_2023_end, ymin = -Inf, ymax = Inf) +
     ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +

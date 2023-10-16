@@ -37,7 +37,19 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
 
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
-  if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) y_label <- "Pick rate" else y_label <- "Pick level"
+  if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) {
+    y_label <- "Pick rate"
+  } else if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) {
+    y_label <- "Pick level"
+  } else if (outcome_colname == "win_rate_pooled") {
+    y_label <- "Win rate"
+  } else if (outcome_colname == "gold_pooled") {
+    y_label <- "Gold"
+  } else if (outcome_colname == "assists_pooled") {
+    y_label <- "Assists"
+  } else if (outcome_colname == "kd_ratio") {
+    y_label <- "Kills/deaths"
+  }
 
   ## 1.) Construct synthetic outcomes.
   synth_outcomes <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))], function(x) { construct_synth_outcome(x$tau_hat, x$dta, "champion", "smooth_outcome", "day") })
@@ -87,7 +99,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
             legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_", estimator, "_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
 
     # 2b.) Weights for the main fit.
     plot_weights <- synth_outcomes[[my_champion]]$weights %>%
@@ -99,7 +111,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_", estimator, "_", donors, "_weights", year, ".svg"), plot_weights, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".svg"), plot_weights, device = Cairo::CairoSVG, width = 7, height = 7)
 
     # 2d.) Backdate exercise.
     plot_back <- plot_dta %>%
@@ -144,7 +156,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       plot_robustness <- plot_back
     }
 
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_pooled_", estimator, "_", donors, "_robustness", year, ".svg"), plot_robustness, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_robustness", year, ".svg"), plot_robustness, device = Cairo::CairoSVG, width = 7, height = 7)
   }
 
   ## 4.) Talk to the user.
@@ -185,7 +197,11 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
 
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
-  if (outcome_colname %in% c("pick_rate", "pick_rate")) y_label <- "Pick rate" else y_label <- "Pick level"
+  if (outcome_colname %in% c("pick_rate_pooled", "pick_rate")) {
+    y_label <- "Pick rate"
+  } else if (outcome_colname %in% c("pick_level_sum", "pick_level")) {
+    y_label <- "Pick level"
+  }
 
   ## 1.) Construct synthetic outcomes.
   synth_outcomes <- lapply(regional_results[!(names(regional_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))], function(x) {
@@ -247,7 +263,7 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15),
             legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_regional_", estimator, "_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
   }
 
   ## 3.) Talk to the user.
@@ -297,7 +313,7 @@ produce_latex_pooled <- function(pooled_result_list) {
     dplyr::filter(champion == my_champion & day < treatment_date) %>%
     dplyr::select(day, smooth_outcome)
 
-  if (length(unique(outcome_colnames)) != 1) stop("'pooled_result_list' has been constructed using different treatment dates. Maybe you want two different tables.", call. = FALSE)
+  if (length(unique(outcome_colnames)) != 1) stop("'pooled_result_list' has been constructed using different outcomes. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(unlist(treatment_dates))) != 1) stop("'pooled_result_list' has been constructed using different treatment dates. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(champions)) != 1) stop("'pooled_result_list' has been constructed using different treated champions. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(bandwidths)) != 1) stop("'pooled_result_list' has been constructed using different bandwidths. Maybe you want two different tables.", call. = FALSE)
@@ -312,11 +328,11 @@ produce_latex_pooled <- function(pooled_result_list) {
   n_donor_pools <- length(unique(donor_pools))
 
   donor_pools[donor_pools == "all"] <- "All champions"
-  donor_pools[donor_pools == "adc"] <- "Only ADC"
+  donor_pools[donor_pools == "adc"] <- "Only Bottom"
   donor_pools[donor_pools == "support"] <- "Only Support"
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
-  donor_pools[donor_pools == "middle"] <- "Only Middle"
+  donor_pools[donor_pools == "middle"] <- "Only Mid"
 
   estimators[estimators == "sc"] <- "Synthetic Controls"
   estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
@@ -347,7 +363,8 @@ produce_latex_pooled <- function(pooled_result_list) {
       \\\\[-1.8ex]\\hline
       \\hline \\\\[-1.8ex]
       & ", stringr::str_sub(paste(paste0("\\multicolumn{", n_donor_pools, "}{c}{\\textit{", unique(estimators), "}} &"), collapse = " "), end = -3), " \\\\ ", paste0("\\cmidrule{", cmid_points_start, "-", cmid_points_end, "} "), "
-      & ", stringr::str_sub(paste(paste(paste0(donor_pools, " &"), collapse = " "), collapse = " "), end = -3), " \\\\
+      & " stringr::str_sub(paste(paste0("\\multicolumn{", n_donor_pools, "}{c}{\\textit{", unique(estimators), "}} &"), collapse = " "), end = -3), " \\\\
+      & ", stringr::str_sub(paste(paste(paste0("(", seq_len(n_estimators * n_donor_pools), ") &"), collapse = " "), collapse = " "), end = -3), " \\\\
       \\addlinespace[2pt]
       \\hline \\\\[-1.8ex] \n\n", sep = "")
 
@@ -409,7 +426,7 @@ produce_latex_regional <- function(regional_result_list) {
     dplyr::filter(champion == my_champion & day < treatment_date) %>%
     dplyr::select(region, day, smooth_outcome)
 
-  if (length(unique(outcome_colnames)) != 1) stop("'regional_result_list' has been constructed using different treatment dates. Maybe you want two different tables.", call. = FALSE)
+  if (length(unique(outcome_colnames)) != 1) stop("'regional_result_list' has been constructed using different outcomes. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(unlist(treatment_dates))) != 1) stop("'regional_result_list' has been constructed using different treatment dates. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(champions)) != 1) stop("'regional_result_list' has been constructed using different treated champions. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(bandwidths)) != 1) stop("'regional_result_list' has been constructed using different bandwidths. Maybe you want two different tables.", call. = FALSE)
@@ -430,11 +447,11 @@ produce_latex_regional <- function(regional_result_list) {
   n_donor_pools <- length(unique(donor_pools))
 
   donor_pools[donor_pools == "all"] <- "All champions"
-  donor_pools[donor_pools == "adc"] <- "Only ADC"
+  donor_pools[donor_pools == "adc"] <- "Only Bottom"
   donor_pools[donor_pools == "support"] <- "Only Support"
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
-  donor_pools[donor_pools == "middle"] <- "Only Middle"
+  donor_pools[donor_pools == "middle"] <- "Only Mid"
 
   estimators[estimators == "sc"] <- "Synthetic Controls"
   estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
@@ -490,6 +507,7 @@ produce_latex_regional <- function(regional_result_list) {
       \\\\[-1.8ex]\\hline
       \\hline \\\\[-1.8ex]
       & ", stringr::str_sub(paste(paste0("\\multicolumn{", n_donor_pools, "}{c}{\\textit{", unique(estimators), "}} &"), collapse = " "), end = -3), " \\\\ ", paste0("\\cmidrule{", cmid_points_start, "-", cmid_points_end, "} "), "
+      & ", stringr::str_sub(paste(paste(paste0("(", seq_len(n_estimators * n_donor_pools), ") &"), collapse = " "), collapse = " "), end = -3), " \\\\
       & ", stringr::str_sub(paste(paste(paste0(donor_pools, " &"), collapse = " "), collapse = " "), end = -3), " \\\\
       \\addlinespace[2pt]
       \\hline \\\\[-1.8ex] \n\n", sep = "")
@@ -576,7 +594,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
     dplyr::filter(champion == my_champion_pooled & day < treatment_date) %>%
     dplyr::select(day, smooth_outcome)
 
-  if (length(unique(outcome_colnames_pooled)) != 1) stop("'pooled_result_list' has been constructed using different treatment dates. Maybe you want two different tables.", call. = FALSE)
+  if (length(unique(outcome_colnames_pooled)) != 1) stop("'pooled_result_list' has been constructed using different outcomes. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(unlist(treatment_dates_pooled))) != 1) stop("'pooled_result_list' has been constructed using different treatment dates. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(champions_pooled)) != 1) stop("'pooled_result_list' has been constructed using different treated champions. Maybe you want two different tables.", call. = FALSE)
   if (length(unique(bandwidths_pooled)) != 1) stop("'pooled_result_list' has been constructed using different bandwidths. Maybe you want two different tables.", call. = FALSE)
@@ -636,11 +654,11 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   my_champion <- my_champion_regional
 
   donor_pools[donor_pools == "all"] <- "All champions"
-  donor_pools[donor_pools == "adc"] <- "Only ADC"
+  donor_pools[donor_pools == "adc"] <- "Only Bottom"
   donor_pools[donor_pools == "support"] <- "Only Support"
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
-  donor_pools[donor_pools == "middle"] <- "Only Middle"
+  donor_pools[donor_pools == "middle"] <- "Only Mid"
 
   estimators[estimators == "sc"] <- "Synthetic Controls"
   estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
@@ -709,6 +727,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
       \\\\[-1.8ex]\\hline
       \\hline \\\\[-1.8ex]
       & ", stringr::str_sub(paste(paste0("\\multicolumn{", n_donor_pools, "}{c}{\\textit{", unique(estimators), "}} &"), collapse = " "), end = -3), " \\\\ ", paste0("\\cmidrule{", cmid_points_start, "-", cmid_points_end, "} "), "
+      & ", stringr::str_sub(paste(paste(paste0("(", seq_len(n_estimators * n_donor_pools), ") &"), collapse = " "), collapse = " "), end = -3), " \\\\
       & ", stringr::str_sub(paste(paste(paste0(donor_pools, " &"), collapse = " "), collapse = " "), end = -3), " \\\\
       \\addlinespace[2pt]
       \\hline \\\\[-1.8ex] \n\n", sep = "")

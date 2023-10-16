@@ -48,7 +48,9 @@
 #' }
 #'
 #' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
-#' runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.
+#' runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.\cr
+#'
+#' A special value for \code{outcome_colname} is \code{"kd_ratio"}. In this case, the routine computes the daily kills/deaths ratio of each champion and uses this an an outcome.
 #'
 #' @return
 #' A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
@@ -68,7 +70,7 @@
 run_main_pooled <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
                             inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
-  if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled", "win_rate_pooled"))) stop("Invalid 'outcome'. This must be one of 'pick_level_sum', 'pick_rate_pooled', 'win_rate_pooled'.", call. = FALSE)
+  if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled", "win_rate_pooled", "gold_pooled", "assists_pooled", "kd_ratio"))) stop("Invalid 'outcome'. This must be one of 'pick_level_sum', 'pick_rate_pooled', 'win_rate_pooled', 'gold_pooled', 'assists_pooled', 'kd_ratio'.", call. = FALSE)
 
   if (length(donors) == 1) {
     if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
@@ -87,7 +89,17 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
     dplyr::filter(min_date < day & day < max_date)
 
-  lol_champ_pool_dta$selected_outcome <- lol_champ_pool_dta[[outcome_colname]]
+  if (outcome_colname != "kd_ratio") {
+    lol_champ_pool_dta$selected_outcome <- lol_champ_pool_dta[[outcome_colname]]
+  } else {
+    lol_champ_pool_dta <- lol_champ_pool_dta %>%
+      dplyr::mutate(selected_outcome = kills_pooled / deaths_pooled) %>%
+      replace(is.na(.), 0) %>%
+      dplyr::group_by(champion) %>%
+      dplyr::mutate(n_unique_outcome = length(unique(selected_outcome))) %>%
+      dplyr::filter(n_unique_outcome == length(unique(lol_champ_pool_dta$day))) %>%
+      dplyr::ungroup()
+  }
 
   ## Construct synthdid object for each champion.
   output <- list()
@@ -133,11 +145,11 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
     estimation_dta_back <- estimation_dta
     estimation_dta_back$treatment <- as.logical(ifelse(estimation_dta_back$champion == my_champion & estimation_dta_back$day >= as.Date(treatment_date) - backdate, 1, 0))
 
-    ## 3.) Process data and estimation. Estimate standard errors if necessary.
+    ## 3.) Process data and estimation.
     cat("    3.) Constructing weights; \n")
     tau_hat <- call_synthdid(estimation_dta, "smooth_outcome", estimator, covariate_colnames)
 
-    ## 4.) Estimate standard errors.
+    ## 4.) Estimate standard errors if necessary.
     cat("    4.) Estimating standard error; \n")
     if (inference) {
       se <- as.numeric(sqrt(stats::vcov(tau_hat, method = "placebo", replications = n_boot)))
@@ -263,7 +275,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 run_main_regional <- function(champions, outcome_colname, donors, estimator, treatment_date,
                               inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
-  if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must be either 'pick_level' or 'pick_rate'.", call. = FALSE)
+  if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must either 'pick_level' or 'pick_rate'.", call. = FALSE)
 
   if (length(donors) == 1) {
     if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)

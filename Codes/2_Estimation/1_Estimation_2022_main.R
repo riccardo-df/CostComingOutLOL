@@ -6,8 +6,6 @@
 
 ## This script runs the main analysis of the "The Cost of Coming Out" paper.
 
-## BARPLOTS FOR ASSOCIATION BTW DROP AND SKILLS/PERFORMANCE.
-
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
 set.seed(1986)
