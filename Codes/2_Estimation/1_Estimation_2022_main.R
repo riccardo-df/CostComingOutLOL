@@ -16,7 +16,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Settings --------------------------------------------
 ## Select champions.
-champions <- c("Graves")
+champions <- "Graves"
 
 ## Select outcome series.
 outcome_colname_pool <- "pick_rate_pooled"
@@ -33,13 +33,11 @@ donor_pools <- c("all", "adc", "support")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
-n_boot <- 2
+n_boot <- 200
 backdate <- 10
 
 covariates_pool <- c()
 covariates_regional <- c()
-# covariates_pool <- c("ban_level_sum", "win_level_sum", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
-# covariates_regional <- c("ban_level", "win_level", "gold_avg", "kills_avg", "assists_avg", "deaths_avg")
 # covariates_pool <- c("ban_rate_pooled", "win_rate_pooled", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
 # covariates_regional <- c("ban_rate", "win_rate", "gold_avg", "kills_avg", "assists_avg", "deaths_avg")
 
