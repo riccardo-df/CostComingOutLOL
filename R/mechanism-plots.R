@@ -37,14 +37,14 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
                   n_matches_pre = sum(n_matches * (1 - treatment)),
                   n_matches_post = sum(n_matches * treatment)) %>%
     dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post >= n_post_matches) %>%
-    dplyr::select(day, treatment, id, Graves_rate, Graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
+    dplyr::select(day, treatment, id, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
     dplyr::ungroup()
 
   never_graves <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(never = sum(Graves_rate) == 0,
-                  never_pre = sum(Graves_rate * (1 - treatment)) == 0,
-                  never_post = sum(Graves_rate * treatment) == 0) %>%
+    dplyr::mutate(never = sum(graves_rate) == 0,
+                  never_pre = sum(graves_rate * (1 - treatment)) == 0,
+                  never_post = sum(graves_rate * treatment) == 0) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
     dplyr::mutate(n_never_graves = sum(never),
@@ -70,8 +70,8 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
   ## 2.) Compute Graves' pre- and post-treatment pick rates, and use quantiles of pre rates to group units.
   pick_rates <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(avg_graves_rate_pre = sum(Graves_rate * (1 - treatment)) / sum(1 - treatment),
-                  avg_graves_rate_post = sum(Graves_rate * treatment) / sum(treatment)) %>%
+    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - treatment)) / sum(1 - treatment),
+                  avg_graves_rate_post = sum(graves_rate * treatment) / sum(treatment)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
     dplyr::mutate(quantile_pre = dplyr::ntile(avg_graves_rate_pre, n_groups)) %>%
@@ -79,7 +79,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(pick_rates, by = c("id")) %>%
-    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, quantile_pre, Graves_rate, Graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, quantile_pre, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 3.) Distribution of pre-treatment Graves' pick rates.
   plot_avg_rates_distribution <- lol_player_dta %>%
@@ -126,7 +126,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.05, 0.95), legend.title = ggplot2::element_blank(),
           legend.direction = "vertical", legend.justification = c("left", "top"))
-  ggplot2::ggsave(paste0(save_here, "/", "graves_pick_rates_by_group.svg"), plot_avg_rates_buckets, device = "svg", width = 7, height = 7)
+  # ggplot2::ggsave(paste0(save_here, "/", "graves_pick_rates_by_group.svg"), plot_avg_rates_buckets, device = "svg", width = 7, height = 7)
 
   ## 5.) Average players' performance in each bucket.
   # 5a.) Average number of daily matches.
@@ -140,7 +140,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(n_matches, by = c("id")) %>%
-    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, quantile_pre, Graves_rate, Graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, quantile_pre, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   plot_avg_n_matches_buckets_dta <- lol_player_dta %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
@@ -184,7 +184,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(win_rates, by = c("id")) %>%
-    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, avg_win_rate_pre, avg_win_rate_post, quantile_pre, Graves_rate, Graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, avg_win_rate_pre, avg_win_rate_post, quantile_pre, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   plot_avg_win_rate_buckets_dta <- lol_player_dta %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
@@ -232,7 +232,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(kd_ratios, by = c("id")) %>%
-    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, avg_win_rate_pre, avg_win_rate_post, avg_kd_ratio_pre, avg_kd_ratio_post, quantile_pre, Graves_rate, Graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, avg_win_rate_pre, avg_win_rate_post, avg_kd_ratio_pre, avg_kd_ratio_post, quantile_pre, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   plot_avg_kd_ratio_buckets_dta <- lol_player_dta %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
@@ -276,7 +276,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(gold, by = c("id")) %>%
-    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, avg_win_rate_pre, avg_win_rate_post, avg_kd_ratio_pre, avg_kd_ratio_post, avg_gold_pre, avg_gold_post, quantile_pre, Graves_rate, Graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, treatment, avg_graves_rate_pre, avg_graves_rate_post, avg_n_matches_pre, avg_n_matches_post, avg_win_rate_pre, avg_win_rate_post, avg_kd_ratio_pre, avg_kd_ratio_post, avg_gold_pre, avg_gold_post, quantile_pre, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   plot_avg_gold_buckets_dta <- lol_player_dta %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
@@ -310,7 +310,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
   ## 5e.) Export grid.
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), gridExtra::grid.arrange(plot_avg_n_matches_buckets, plot_win_rate_buckets, plot_kd_ratio_buckets, plot_gold_buckets), device = "svg", width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), gridExtra::grid.arrange(plot_avg_rates_buckets, plot_avg_n_matches_buckets, plot_win_rate_buckets, plot_kd_ratio_buckets), device = "svg", width = 7, height = 7)
 
   ## 6.) Talk to the user.
   cat("\n")

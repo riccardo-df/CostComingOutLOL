@@ -448,8 +448,6 @@ champions_performance_plots_lol <- function(champions,
 players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                                           bandwidth = 0.01, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
-  if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
-
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
 

@@ -16,11 +16,9 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Settings --------------------------------------------
 ## Select champions.
-champions <- c("Graves")
+champions <- "Graves"
 
 ## Select outcome series.
-outcome_colnames <- c("kd_ratio", "assists_pooled", "gold_pooled", "win_rate_pooled")
-
 bandwidth <- 3
 
 min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
@@ -31,29 +29,18 @@ donors <- "all"
 estimator <- "sc_reg"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
-n_boot <- 2
+n_boot <- 200
 backdate <- 10
 
 covariates <- c()
+# covariates <- c("ban_rate_pooled", "win_rate_pooled", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
 
 # Estimation --------------------------------------------------------------
-## Loop over donor pools.
-pooled_result_list <- list()
-counter <- 1
-
-for (outcome_colname in outcome_colnames) {
-  cat("\n")
-  cat("Outcome: ", outcome_colname, "\n", sep = "")
-  cat("\n")
-
-  pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
-
-  counter <- counter + 1
-}
+pooled_result_kd_ratio <- run_main_pooled(champions, "kd_ratio", donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
+pooled_result_win_rate <- run_main_pooled(champions, "win_rate_pooled", donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
 
 # Plots -------------------------------------------------------------------
 save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Performance"
 
-for (i in seq_len(length(pooled_result_list))) {
-  produce_plots_pooled(pooled_result_list[[i]], save_here)
-}
+produce_plots_pooled(pooled_result_kd_ratio, save_here)
+produce_plots_pooled(pooled_result_win_rate, save_here)
