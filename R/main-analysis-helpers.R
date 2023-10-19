@@ -363,8 +363,8 @@ produce_latex_pooled <- function(pooled_result_list) {
       \\\\[-1.8ex]\\hline
       \\hline \\\\[-1.8ex]
       & ", stringr::str_sub(paste(paste0("\\multicolumn{", n_donor_pools, "}{c}{\\textit{", unique(estimators), "}} &"), collapse = " "), end = -3), " \\\\ ", paste0("\\cmidrule{", cmid_points_start, "-", cmid_points_end, "} "), "
-      & ", stringr::str_sub(paste(paste0("\\multicolumn{", n_donor_pools, "}{c}{\\textit{", unique(estimators), "}} &"), collapse = " "), end = -3), " \\\\
       & ", stringr::str_sub(paste(paste(paste0("(", seq_len(n_estimators * n_donor_pools), ") &"), collapse = " "), collapse = " "), end = -3), " \\\\
+      & ", stringr::str_sub(paste(paste(paste0(donor_pools, " &"), collapse = " "), collapse = " "), end = -3), " \\\\
       \\addlinespace[2pt]
       \\hline \\\\[-1.8ex] \n\n", sep = "")
 

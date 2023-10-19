@@ -1,6 +1,7 @@
-#' LoL Descriptive Plots
+#' LoL Mechanisms Plots
 #'
-#' Produces plots
+#' Divide players into groups according to their pre-treatment pick rates for Graves and produces plots showing the average performance of players in each group
+#' before and after the treatment.
 #'
 #' @param n_groups How many groups to form.
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
@@ -19,7 +20,7 @@
 #' Groups are formed by cutting the Graves' pre-treatment pick rates distribution into \code{n_groups} buckets.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped. The number of
-#' players remaining in the data set is printed.\cr
+#' players remaining in the data set is printed.
 #'
 #' @import dplyr reshape2 ggplot2
 #'
@@ -126,7 +127,6 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.05, 0.95), legend.title = ggplot2::element_blank(),
           legend.direction = "vertical", legend.justification = c("left", "top"))
-  # ggplot2::ggsave(paste0(save_here, "/", "graves_pick_rates_by_group.svg"), plot_avg_rates_buckets, device = "svg", width = 7, height = 7)
 
   ## 5.) Average players' performance in each bucket.
   # 5a.) Average number of daily matches.
@@ -310,9 +310,116 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
   ## 5e.) Export grid.
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), gridExtra::grid.arrange(plot_avg_rates_buckets, plot_avg_n_matches_buckets, plot_win_rate_buckets, plot_kd_ratio_buckets), device = "svg", width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), gridExtra::grid.arrange(plot_avg_rates_buckets, plot_avg_n_matches_buckets, plot_kd_ratio_buckets, plot_win_rate_buckets), device = "svg", width = 7, height = 7)
 
   ## 6.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
+}
+
+
+#' LoL Impact on Players Performance
+#'
+#' Uses a diff-in-diff strategy to investigate the impact of the coming-out event on players' performance.
+#'
+#' @param n_groups How many groups to form.
+#' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
+#' @param n_post_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
+#' @param treatment_date Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
+#' @param min_date Object of class \code{POSIXct}. Where to start the series.
+#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#'
+#' @return
+#'
+#'
+#' @details
+#' For each player, \code{\link{did_players_performance}} computes the average kills-to-deaths ratios and win rates before and after the coming-out event. It then
+#' groups players by cutting the Graves' pre-treatment pick rates distribution into \code{n_groups} buckets. The largest groups (that is, those who used to
+#' select Graves quite often before his disclosure) are considered "treated" after the occurence of the coming-out event. Two-way fixed effect regressions are employed
+#' to estimate the impact of the coming-out event on the players' performance.\cr
+#'
+#' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#'
+#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped. The number of
+#' players remaining in the data set is printed.
+#'
+#' @import dplyr fixest
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @export
+did_players_performance <- function(n_groups, n_pre_matches, n_post_matches,
+                                    treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01")) {
+  ## 0.) Handling inputs and checks.
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::filter(min_date < day & day < max_date) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0),
+                  n_matches_pre = sum(n_matches * (1 - disclosure)),
+                  n_matches_post = sum(n_matches * disclosure)) %>%
+    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post >= n_post_matches) %>%
+    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
+    dplyr::ungroup()
+
+  cat("N. players is ", length(unique(lol_player_dta$id)), "\n\n", sep = "")
+
+  ## 1.) Compute average kills-to-deaths ratio and win rate of each player before and after the treatment.
+  kd_ratios <- lol_player_dta %>%
+    dplyr::mutate(kd_ratio = kills_avg / deaths_avg) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(avg_kd_ratio_pre = sum(kd_ratio * (1 - disclosure)) / sum(1 - disclosure),
+                  avg_kd_ratio_post = sum(kd_ratio * disclosure) / sum(disclosure)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(disclosure, id, .keep_all = TRUE) %>%
+    replace(is.na(.), 0) %>%
+    dplyr::select(disclosure, id, avg_kd_ratio_pre, avg_kd_ratio_post)
+  kd_ratios$avg_kd_ratio_pre[is.infinite(kd_ratios$avg_kd_ratio_pre )] <- 0
+  kd_ratios$avg_kd_ratio_post[is.infinite(kd_ratios$avg_kd_ratio_post )] <- 0
+
+  win_rates <- lol_player_dta %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(avg_win_rate_pre = sum(win_rate * (1 - disclosure)) / sum(1 - disclosure),
+                  avg_win_rate_post = sum(win_rate * disclosure) / sum(disclosure)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(disclosure, id, .keep_all = TRUE) %>%
+    dplyr::select(disclosure, id, avg_win_rate_pre, avg_win_rate_post)
+
+  ## 2.) Compute Graves' pre- and post-treatment pick rates, and use quantiles of pre rates to group units.
+  groups <- lol_player_dta %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
+                  avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(disclosure, id, .keep_all = TRUE) %>%
+    dplyr::mutate(group = dplyr::ntile(avg_graves_rate_pre, n_groups)) %>%
+    dplyr::select(disclosure, id, group)
+
+  ## 3.) Arrange estimation data.
+  estimation_dta <- kd_ratios %>%
+    dplyr::left_join(win_rates, by = c("disclosure", "id")) %>%
+    dplyr::left_join(groups, by = c("disclosure", "id")) %>%
+    dplyr::select(disclosure, id, group, avg_kd_ratio_pre, avg_kd_ratio_post, avg_win_rate_pre, avg_win_rate_post)
+
+  dta_pre <- estimation_dta %>%
+    dplyr::filter(disclosure == 0) %>%
+    dplyr::select(disclosure, id, group, avg_kd_ratio_pre, avg_win_rate_pre)
+  colnames(dta_pre) <- c("disclosure", "id", "group", "avg_kd_ratio", "avg_win_rate")
+
+  dta_post <- estimation_dta %>%
+    dplyr::filter(disclosure == 1) %>%
+    dplyr::select(disclosure, id, group, avg_kd_ratio_post, avg_win_rate_post)
+  colnames(dta_post) <- c("disclosure", "id", "group", "avg_kd_ratio", "avg_win_rate")
+
+  final_dta <- dplyr::bind_rows(dta_pre, dta_post)
+
+  ## 4.) Generate treatment variable for players in top groups.
+  final_dta <- final_dta %>%
+    dplyr::mutate(often_graves = ifelse(group %in% c(n_groups, n_groups - 1), 1, 0)) %>%
+    dplyr::select(disclosure, often_graves, id, group, avg_kd_ratio, avg_win_rate)
+
+  ## 5.) Two-way regressions.
+  results <- fixest::feols(c(avg_kd_ratio, avg_win_rate) ~ disclosure : often_graves | disclosure + id, data = final_dta, panel.id = c("id", "disclosure"), vcov = "twoway")
+
+  ## 6.) LATEX.
+  etable(results, tex = TRUE)
 }
