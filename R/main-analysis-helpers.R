@@ -400,7 +400,7 @@ produce_latex_pooled <- function(pooled_result_list) {
 #'
 #' While some parameters can change, others must be fixed over the specifications. These include the treatment date, the champion assigned to the treatment, the outcome series, and the bandwidths.
 #'
-#' @import dplyr stringr Metrics
+#' @import dplyr stringr
 #' @importFrom stats setNames
 #' @importFrom Metrics rmse
 #' @author Riccardo Di Francesco

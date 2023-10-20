@@ -85,7 +85,9 @@ An infinitesimal bandwidth amounts to no smoothing.\cr
 }
 
 It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
-runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.
+runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.\cr
+
+A special value for \code{outcome_colname} is \code{"kd_ratio"}. In this case, the routine computes the daily kills/deaths ratio of each champion and uses this an an outcome.
 }
 \seealso{
 \code{\link{run_main_regional}}

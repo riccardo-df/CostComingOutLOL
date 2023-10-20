@@ -330,7 +330,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @return
-#'
+#' Prints code for a LATEX table.
 #'
 #' @details
 #' For each player, \code{\link{did_players_performance}} computes the average kills-to-deaths ratios and win rates before and after the coming-out event. It then
