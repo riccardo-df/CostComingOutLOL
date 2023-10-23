@@ -28,6 +28,7 @@ Imports:
     magrittr,
     Metrics,
     parallel,
+    patchwork,
     plm,
     reshape2,
     stringr,

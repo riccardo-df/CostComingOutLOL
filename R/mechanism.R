@@ -339,7 +339,7 @@ mechanisms_plots_lol <- function(n_groups, n_pre_matches, n_post_matches,
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped. The number of
 #' players remaining in the data set is printed.
 #'
-#' @import dplyr reshape2 ggplot2
+#' @import dplyr reshape2 ggplot2 patchwork
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -570,7 +570,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
   ## 5e.) Export grid.
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), gridExtra::grid.arrange(plot_avg_rates_buckets, plot_avg_n_matches_buckets, plot_kd_ratio_buckets, plot_win_rate_buckets), device = "svg", width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), device = "svg", width = 7, height = 7)
 
   ## 6.) Talk to the user.
   cat("\n")
