@@ -361,18 +361,18 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
   ## 1.) Assign treatment status.
   treated_controls <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(treated_player = sum(graves_rate * (1 - disclosure)) != 0) %>%
+    dplyr::mutate(prior_user = sum(graves_rate * (1 - disclosure)) != 0) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(treated_player, id)
+    dplyr::select(prior_user, id)
 
   cat("N. players is ", length(unique(lol_player_dta$id)), " of which:
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(treated_players) %>% sum(), " was playing Graves before the disclosure (treatment group)
-  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(treated_players) %>% sum(), " has never played Graves before the disclosure (control group) \n", sep = "")
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " was playing Graves before the disclosure (treatment group)
+  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has never played Graves before the disclosure (control group) \n", sep = "")
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, disclosure, treated_player, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 2.) Average players' pick rates for Graves in each bucket.
   plot_avg_rates_buckets_dta <- lol_player_dta %>%
@@ -381,12 +381,12 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = mean(avg_graves_rate_pre),
                   post_treatment = mean(avg_graves_rate_post)) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "mean")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "mean")
 
   plot_avg_rates_se_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
@@ -394,16 +394,16 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = sd(avg_graves_rate_pre) / sqrt(n()),
                   post_treatment = sd(avg_graves_rate_post) / sqrt(n())) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "se")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "se")
 
   plot_avg_rates_buckets <- plot_avg_rates_buckets_dta %>%
-    dplyr::left_join(plot_avg_rates_se_buckets_dta, by = c("treated_player", "time")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treated_player), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
+    dplyr::left_join(plot_avg_rates_se_buckets_dta, by = c("prior_user", "time")) %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(prior_user, levels = c(FALSE, TRUE), labels = c("Non-prior users", "Prior users")), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
     ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
@@ -419,12 +419,12 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_n_matches_post = sum(n_matches * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = mean(avg_n_matches_pre),
                   post_treatment = mean(avg_n_matches_post)) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "mean")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "mean")
 
   plot_avg_n_matches_se_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
@@ -432,16 +432,16 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_n_matches_post = sum(n_matches * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = sd(avg_n_matches_pre) / sqrt(n()),
                   post_treatment = sd(avg_n_matches_post) / sqrt(n())) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "se")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "se")
 
   plot_avg_n_matches_buckets <- plot_avg_n_matches_buckets_dta %>% ## ISSUE: AFTER TREATMENT WE HAVE A SHORTER TIME SPAN. ALSO, SEASONALITY MAYBE HINDER INTERPRETATION.
-    dplyr::left_join(plot_avg_n_matches_se_buckets_dta, by = c("treated_player", "time")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treated_player), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
+    dplyr::left_join(plot_avg_n_matches_se_buckets_dta, by = c("prior_user", "time")) %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(prior_user, levels = c(FALSE, TRUE), labels = c("Non-prior users", "Prior users")), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
     ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
@@ -451,26 +451,18 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
   # 5b.) Average win rate.
-  # win_rates <- lol_player_dta %>%
-  #   dplyr::group_by(id) %>%
-    # dplyr::mutate(avg_win_rate_pre = sum(win_rate * (1 - treatment)) / sum(1 - treatment),
-    #               avg_win_rate_post = sum(win_rate * treatment) / sum(treatment)) %>%
-  #   dplyr::ungroup() %>%
-  #   dplyr::distinct(id, .keep_all = TRUE) %>%
-  #   dplyr::select(id, avg_win_rate_pre, avg_win_rate_post)
-
   plot_avg_win_rate_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(avg_win_rate_pre = sum(win_rate * (1 - disclosure)) / sum(1 - disclosure),
                   avg_win_rate_post = sum(win_rate * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = mean(avg_win_rate_pre),
                   post_treatment = mean(avg_win_rate_post)) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "mean")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "mean")
 
   plot_avg_win_rate_se_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
@@ -478,16 +470,16 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_win_rate_post = sum(win_rate * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = sd(avg_win_rate_pre) / sqrt(n()),
                   post_treatment = sd(avg_win_rate_post) / sqrt(n())) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "se")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "se")
 
   plot_win_rate_buckets <- plot_avg_win_rate_buckets_dta %>%
-    dplyr::left_join(plot_avg_win_rate_se_buckets_dta, by = c("treated_player", "time")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treated_player), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
+    dplyr::left_join(plot_avg_win_rate_se_buckets_dta, by = c("prior_user", "time")) %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(prior_user, levels = c(FALSE, TRUE), labels = c("Non-prior users", "Prior users")), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
     ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
@@ -508,12 +500,12 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_kd_ratio_post = sum(kd_ratio * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = mean(avg_kd_ratio_pre),
                   post_treatment = mean(avg_kd_ratio_post)) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "mean")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "mean")
 
   plot_avg_kd_ratio_se_buckets_dta <- kd_ratio_dta %>%
     dplyr::group_by(id) %>%
@@ -521,16 +513,16 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_kd_ratio_post = sum(kd_ratio * disclosure) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = sd(avg_kd_ratio_pre) / sqrt(n()),
                   post_treatment = sd(avg_kd_ratio_post) / sqrt(n())) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "se")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "se")
 
   plot_kd_ratio_buckets <- plot_avg_kd_ratio_buckets_dta %>% ## ISSUE: DIFFERENT ROLES GENERALLY HAVE DIFFERENT KD RATIOS.
-    dplyr::left_join(plot_avg_kd_ratio_se_buckets_dta, by = c("treated_player", "time")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treated_player), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
+    dplyr::left_join(plot_avg_kd_ratio_se_buckets_dta, by = c("prior_user", "time")) %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(prior_user, levels = c(FALSE, TRUE), labels = c("Non-prior users", "Prior users")), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
     ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
@@ -546,12 +538,12 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_gold_post = sum(gold_avg * (disclosure)) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = mean(avg_gold_pre),
                   post_treatment = mean(avg_gold_post)) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "mean")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "mean")
 
   plot_avg_gold_se_buckets_dta <- kd_ratio_dta %>%
     dplyr::group_by(id) %>%
@@ -559,16 +551,16 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
                   avg_gold_post = sum(gold_avg * (disclosure)) / sum(disclosure)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(treated_player) %>%
+    dplyr::group_by(prior_user) %>%
     dplyr::mutate(pre_treatment = sd(avg_gold_pre) / sqrt(n()),
                   post_treatment = sd(avg_gold_post) / sqrt(n())) %>%
-    dplyr::select(treated_player, pre_treatment, post_treatment) %>%
+    dplyr::select(prior_user, pre_treatment, post_treatment) %>%
     dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treated_player"), variable.name = "time", value.name = "se")
+    reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "se")
 
   plot_gold_buckets <- plot_avg_gold_buckets_dta %>% ## ISSUE: DIFFERENT ROLES GENERALLY EARN DIFFERENTLY.
-    dplyr::left_join(plot_avg_gold_se_buckets_dta, by = c("treated_player", "time")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treated_player), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
+    dplyr::left_join(plot_avg_gold_se_buckets_dta, by = c("prior_user", "time")) %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(prior_user, levels = c(FALSE, TRUE), labels = c("Non-prior users", "Prior users")), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
     ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
@@ -601,10 +593,10 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
 #' Prints code for a LATEX table.
 #'
 #' @details
-#' For each player, \code{\link{did_players_performance}} computes the average kills-to-deaths ratios and win rates before and after the coming-out event. It then
-#' groups players by cutting the Graves' pre-treatment pick rates distribution into \code{n_groups} buckets. The largest groups (that is, those who used to
-#' select Graves quite often before his disclosure) are considered "treated" after the occurence of the coming-out event. Two-way fixed effect regressions are employed
-#' to estimate the impact of the coming-out event on the players' performance.\cr
+#' Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the players' performance. These regressions are consistent for the average treatment
+#' effect on the treated under the assumptions of no anticipation and parallel trends.\cr
+#'
+#' Players that had a non-zero pick rate for Graves before his disclosure are considered "treated" after the occurrence of the coming-out event.\cr
 #'
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
@@ -631,62 +623,34 @@ did_players_performance <- function(n_groups, n_pre_matches, n_post_matches,
 
   cat("N. players is ", length(unique(lol_player_dta$id)), "\n\n", sep = "")
 
-  ## 1.) Compute average kills-to-deaths ratio and win rate of each player before and after the treatment.
-  kd_ratios <- lol_player_dta %>%
-    dplyr::mutate(kd_ratio = kills_avg / deaths_avg) %>%
+  ## 1.) Assign treatment status.
+  treated_controls <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(avg_kd_ratio_pre = sum(kd_ratio * (1 - disclosure)) / sum(1 - disclosure),
-                  avg_kd_ratio_post = sum(kd_ratio * disclosure) / sum(disclosure)) %>%
+    dplyr::mutate(prior_user = sum(graves_rate * (1 - disclosure)) != 0) %>%
     dplyr::ungroup() %>%
-    dplyr::distinct(disclosure, id, .keep_all = TRUE) %>%
-    replace(is.na(.), 0) %>%
-    dplyr::select(disclosure, id, avg_kd_ratio_pre, avg_kd_ratio_post)
-  kd_ratios$avg_kd_ratio_pre[is.infinite(kd_ratios$avg_kd_ratio_pre )] <- 0
-  kd_ratios$avg_kd_ratio_post[is.infinite(kd_ratios$avg_kd_ratio_post )] <- 0
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::select(prior_user, id)
 
-  win_rates <- lol_player_dta %>%
+  cat("N. players is ", length(unique(lol_player_dta$id)), " of which:
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " was playing Graves before the disclosure (treatment group)
+  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has never played Graves before the disclosure (control group) \n\n", sep = "")
+
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::left_join(treated_controls, by = "id") %>%
+    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+
+  ## 2.) Two-way fixed effects regressions.
+  estimation_dta <- lol_player_dta %>%
+    dplyr::mutate(time_treatment_interaction = disclosure * prior_user) %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(avg_win_rate_pre = sum(win_rate * (1 - disclosure)) / sum(1 - disclosure),
-                  avg_win_rate_post = sum(win_rate * disclosure) / sum(disclosure)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(disclosure, id, .keep_all = TRUE) %>%
-    dplyr::select(disclosure, id, avg_win_rate_pre, avg_win_rate_post)
+    dplyr::mutate(mean_n_matches_pre = sum(n_matches * (1 - disclosure) / sum(1 - disclosure)),
+                  mean_gold_pre = sum(gold_avg * (1 - disclosure)) / sum(1 - disclosure),
+                  mean_kills_pre = sum(kills_avg * (1 - disclosure)) / sum(1 - disclosure),
+                  mean_assists_pre = sum(assists_avg * (1 - disclosure)) / sum(1 - disclosure),
+                  mean_deaths_pre = sum(deaths_avg * (1 - disclosure)) / sum(1 - disclosure)) %>%
+    dplyr::select(day, id, win_rate, time_treatment_interaction, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre)
 
-  ## 2.) Compute Graves' pre- and post-treatment pick rates, and use quantiles of pre rates to group units.
-  groups <- lol_player_dta %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
-                  avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(disclosure, id, .keep_all = TRUE) %>%
-    dplyr::mutate(group = dplyr::ntile(avg_graves_rate_pre, n_groups)) %>%
-    dplyr::select(disclosure, id, group)
-
-  ## 3.) Arrange estimation data.
-  estimation_dta <- kd_ratios %>%
-    dplyr::left_join(win_rates, by = c("disclosure", "id")) %>%
-    dplyr::left_join(groups, by = c("disclosure", "id")) %>%
-    dplyr::select(disclosure, id, group, avg_kd_ratio_pre, avg_kd_ratio_post, avg_win_rate_pre, avg_win_rate_post)
-
-  dta_pre <- estimation_dta %>%
-    dplyr::filter(disclosure == 0) %>%
-    dplyr::select(disclosure, id, group, avg_kd_ratio_pre, avg_win_rate_pre)
-  colnames(dta_pre) <- c("disclosure", "id", "group", "avg_kd_ratio", "avg_win_rate")
-
-  dta_post <- estimation_dta %>%
-    dplyr::filter(disclosure == 1) %>%
-    dplyr::select(disclosure, id, group, avg_kd_ratio_post, avg_win_rate_post)
-  colnames(dta_post) <- c("disclosure", "id", "group", "avg_kd_ratio", "avg_win_rate")
-
-  final_dta <- dplyr::bind_rows(dta_pre, dta_post)
-
-  ## 4.) Generate treatment variable for players in top groups.
-  final_dta <- final_dta %>%
-    dplyr::mutate(often_graves = ifelse(group %in% c(n_groups, n_groups - 1), 1, 0)) %>%
-    dplyr::select(disclosure, often_graves, id, group, avg_kd_ratio, avg_win_rate)
-
-  ## 5.) Two-way regressions.
-  results <- fixest::feols(c(avg_kd_ratio, avg_win_rate) ~ disclosure : often_graves | disclosure + id, data = final_dta, panel.id = c("id", "disclosure"), vcov = "twoway")
+  results <- fixest::feols(win_rate ~ 0 + time_treatment_interaction | day + id, data = estimation_dta, panel.id = c("id", "day"), vcov = "twoway")
 
   ## 6.) LATEX.
   etable(results, tex = TRUE)

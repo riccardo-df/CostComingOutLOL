@@ -29,8 +29,7 @@ max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Players_Performance"
 
 ## Produce plots.
-mechanisms_plots_lol(n_groups, n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, save_here = save_here)
+mechanisms_plots_lol2(n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, save_here = save_here)
 
 # Diff-in-Diff on performance measures ------------------------------------
 did_players_performance(n_groups, n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
-
