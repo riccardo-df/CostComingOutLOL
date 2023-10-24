@@ -358,7 +358,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
     dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
     dplyr::ungroup()
 
-  ## 1.) Assign treatment status.
+  ## 1.) Define prior users.
   treated_controls <- lol_player_dta %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(prior_user = sum(graves_rate * (1 - disclosure)) != 0) %>%
@@ -374,7 +374,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
     dplyr::left_join(treated_controls, by = "id") %>%
     dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
-  ## 2.) Average players' pick rates for Graves in each bucket.
+  ## 2.) Average players' pick rates for Graves in each group.
   plot_avg_rates_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
@@ -412,7 +412,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.05, 0.95), legend.title = ggplot2::element_blank(),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
-  ## 5.) Average players' performance in each bucket.
+  ## 3.) Average number of matches in each group.
   plot_avg_n_matches_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(avg_n_matches_pre = sum(n_matches * (1 - disclosure)) / sum(1 - disclosure),
@@ -450,7 +450,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", legend.title = ggplot2::element_blank(),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
-  # 5b.) Average win rate.
+  ## 4.) Average players' win rate in each group.
   plot_avg_win_rate_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(avg_win_rate_pre = sum(win_rate * (1 - disclosure)) / sum(1 - disclosure),
@@ -488,7 +488,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", legend.title = ggplot2::element_blank(),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
-  # 5c.) Average kills/deaths ratio.
+  ## 5.) Average players' kills/deaths ratio.
   kd_ratio_dta <- lol_player_dta %>%
     dplyr::mutate(kd_ratio = kills_avg / deaths_avg) %>%
     replace(is.na(.), 0)
@@ -531,7 +531,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", legend.title = ggplot2::element_blank(),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
-  # 5d.) Average gold earned.
+  ## 6.) Average players' gold earned in each group.
   plot_avg_gold_buckets_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(avg_gold_pre = sum(gold_avg * (1 - disclosure)) / sum(1 - disclosure),
@@ -569,10 +569,10 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", legend.title = ggplot2::element_blank(),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
-  ## 5e.) Export grid.
+  ## 7.) Export grid.
   ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), device = "svg", width = 7, height = 7)
 
-  ## 6.) Talk to the user.
+  ## 8.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }
@@ -593,10 +593,14 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
 #' Prints code for a LATEX table.
 #'
 #' @details
+#' We define two versions of the treatment.
+#' \describe{
+#'    \item{\code{ReduceGraves}}{Players that reduce their average pick rate for Graves following his disclosure are considered treated.}
+#'    \item{\code{DropGraves}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
+#' }
+#'
 #' Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the players' performance. These regressions are consistent for the average treatment
 #' effect on the treated under the assumptions of no anticipation and parallel trends.\cr
-#'
-#' Players that had a non-zero pick rate for Graves before his disclosure are considered "treated" after the occurrence of the coming-out event.\cr
 #'
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
@@ -621,37 +625,44 @@ did_players_performance <- function(n_groups, n_pre_matches, n_post_matches,
     dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
     dplyr::ungroup()
 
-  cat("N. players is ", length(unique(lol_player_dta$id)), "\n\n", sep = "")
-
   ## 1.) Assign treatment status.
   treated_controls <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(prior_user = sum(graves_rate * (1 - disclosure)) != 0) %>%
+    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
+                  avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
+                  reduce_graves = avg_graves_rate_post < avg_graves_rate_pre,
+                  drop_graves = avg_graves_rate_pre > 0 & avg_graves_rate_post == 0) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(prior_user, id)
+    dplyr::select(id, reduce_graves, drop_graves)
 
   cat("N. players is ", length(unique(lol_player_dta$id)), " of which:
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " was playing Graves before the disclosure (treatment group)
-  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has never played Graves before the disclosure (control group) \n\n", sep = "")
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(reduce_graves) %>% sum(), " reduces their pick rates for Graves (treatment group 1)
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(drop_graves) %>% sum(), " completely stopped playing Graves (treatment group 2) \n\n", sep = "")
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, disclosure, reduce_graves, drop_graves, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 2.) Two-way fixed effects regressions.
-  estimation_dta <- lol_player_dta %>%
-    dplyr::mutate(time_treatment_interaction = disclosure * prior_user) %>%
+  estimation_dta_twfe <- lol_player_dta %>%
+    dplyr::mutate(reduce_graves_int = disclosure * reduce_graves,
+                  drop_graves_int = disclosure * drop_graves) %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(mean_n_matches_pre = sum(n_matches * (1 - disclosure) / sum(1 - disclosure)),
                   mean_gold_pre = sum(gold_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_kills_pre = sum(kills_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_assists_pre = sum(assists_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_deaths_pre = sum(deaths_avg * (1 - disclosure)) / sum(1 - disclosure)) %>%
-    dplyr::select(day, id, win_rate, time_treatment_interaction, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre)
+    dplyr::select(day, id, win_rate, disclosure, reduce_graves_int, drop_graves_int, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre) %>%
+    dplyr::mutate(n_matches_pre = mean_n_matches_pre * disclosure,
+                  gold_pre = mean_gold_pre * disclosure,
+                  kills_pre = mean_kills_pre * disclosure,
+                  assists_pre = mean_assists_pre * disclosure,
+                  deaths_pre = mean_deaths_pre * disclosure)
 
-  results <- fixest::feols(win_rate ~ 0 + time_treatment_interaction | day + id, data = estimation_dta, panel.id = c("id", "day"), vcov = "twoway")
+  twfe_results <- fixest::feols(win_rate ~ 0 + sw(reduce_graves_int, drop_graves_int) | day + id, data = estimation_dta_twfe, panel.id = c("id", "day"), vcov = "twoway")
 
   ## 6.) LATEX.
-  etable(results, tex = TRUE)
+  etable(twfe_results, tex = TRUE)
 }

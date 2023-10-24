@@ -33,10 +33,14 @@ Prints code for a LATEX table.
 Uses a diff-in-diff strategy to investigate the impact of the coming-out event on players' performance.
 }
 \details{
+We define two versions of the treatment.
+\describe{
+   \item{\code{ReduceGraves}}{Players that reduce their average pick rate for Graves following his disclosure are considered treated.}
+   \item{\code{DropGraves}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
+}
+
 Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the players' performance. These regressions are consistent for the average treatment
 effect on the treated under the assumptions of no anticipation and parallel trends.\cr
-
-Players that had a non-zero pick rate for Graves before his disclosure are considered "treated" after the occurrence of the coming-out event.\cr
 
 \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
