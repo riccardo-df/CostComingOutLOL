@@ -602,18 +602,25 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
 #' Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the players' performance. These regressions are consistent for the average treatment
 #' effect on the treated under the assumptions of no anticipation and parallel trends.\cr
 #'
+#' We also use the debiased diff-in-diff estimator of Chang (2020) as a robustness check. This allows us to flexibly include pre-treatment time-invarying covariates in the analysis.
+#' Because this estimator can only allocate two time periods, we take the average of the outcomes and covariates before and after the disclosure of each players. The covariates are
+#' the number of matches played each day, average of daily kills, assists, and deaths, and average gold earned.
+#' We use honest regression forests to estimate the nuisance parameters. The ATT estimator is fitted using 2-fold cross-fitting.\cr
+#'
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped. The number of
 #' players remaining in the data set is printed.
 #'
 #' @import dplyr fixest
+#' @importFrom lubridate month
 #'
 #' @author Riccardo Di Francesco
 #'
 #' @export
 did_players_performance <- function(n_groups, n_pre_matches, n_post_matches,
-                                    treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01")) {
+                                    treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
+                                    repeat_n = 10) {
   ## 0.) Handling inputs and checks.
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(min_date < day & day < max_date) %>%
@@ -662,7 +669,42 @@ did_players_performance <- function(n_groups, n_pre_matches, n_post_matches,
                   deaths_pre = mean_deaths_pre * disclosure)
 
   twfe_results <- fixest::feols(win_rate ~ 0 + sw(reduce_graves_int, drop_graves_int) | day + id, data = estimation_dta_twfe, panel.id = c("id", "day"), vcov = "twoway")
+  twfe_results_covariates <- fixest::feols(win_rate ~ 0 + sw(reduce_graves_int, drop_graves_int) + n_matches_pre + gold_pre + kills_pre + assists_pre + deaths_pre | day + id, data = estimation_dta_twfe, panel.id = c("id", "day"), vcov = "twoway")
 
-  ## 6.) LATEX.
-  etable(twfe_results, tex = TRUE)
+  ## 3.) Debiased ML.
+  pre_dta <- lol_player_dta %>%
+    dplyr::filter(lubridate::month(day) <= 5) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(mean_win_rate = mean(win_rate),
+                  mean_n_matches = mean(n_matches),
+                  mean_gold = mean(gold_avg),
+                  mean_kills = mean(kills_avg),
+                  mean_assists = mean(assists_avg),
+                  mean_deaths = mean(deaths_avg)) %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::select(id, disclosure, reduce_graves, drop_graves, mean_win_rate, mean_n_matches, mean_gold, mean_kills, mean_assists, mean_deaths)
+
+  post_dta <- lol_player_dta %>%
+    dplyr::filter(lubridate::month(day) >= 6) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(mean_win_rate = mean(win_rate),
+                  mean_n_matches = mean(n_matches),
+                  mean_gold = mean(gold_avg),
+                  mean_kills = mean(kills_avg),
+                  mean_assists = mean(assists_avg),
+                  mean_deaths = mean(deaths_avg)) %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::select(id, disclosure, reduce_graves, drop_graves, mean_win_rate, mean_n_matches, mean_gold, mean_kills, mean_assists, mean_deaths)
+
+  estimation_dta_dml <- pre_dta %>%
+    bind_rows(post_dta) %>%
+    dplyr::mutate(reduce_graves_int = disclosure * reduce_graves,
+                  drop_graves_int = disclosure * drop_graves)
+
+  dml_results_forest_reduce <- debiased_did(estimation_dta_dml$mean_win_rate, estimation_dta_dml$reduce_graves, estimation_dta_dml$disclosure, estimation_dta_dml[, 6:10], learner = "forest", repeat_n = repeat_n)
+  dml_results_forest_drop <- debiased_did(estimation_dta_dml$mean_win_rate, estimation_dta_dml$drop_graves, estimation_dta_dml$disclosure, estimation_dta_dml[, 6:10], learner = "forest", repeat_n = repeat_n)
+
+  ## 4.) Output.
+  return(list("twfe" = twfe_results,
+              "dml" = list("reduce_graves" = dml_results_forest_reduce, "drop_graves" = dml_results_forest_drop)))
 }

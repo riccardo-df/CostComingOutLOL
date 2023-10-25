@@ -10,7 +10,8 @@ did_players_performance(
   n_post_matches,
   treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-08-01")
+  max_date = as.POSIXct("2023-08-01"),
+  repeat_n = 10
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ did_players_performance(
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
 \item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
+
+\item{repeat_n}{How many times the DML estimator must be fitted.}
 }
 \value{
 Prints code for a LATEX table.
@@ -41,6 +44,12 @@ We define two versions of the treatment.
 
 Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the players' performance. These regressions are consistent for the average treatment
 effect on the treated under the assumptions of no anticipation and parallel trends.\cr
+
+We also use the debiased diff-in-diff estimator of Chang (2020) as a robustness check. This allows us to flexibly include pre-treatment time-invarying covariates in the analysis.
+Because this estimator can only allocate two time periods, we take the average of the outcomes and covariates before and after the disclosure of each players. The covariates are
+the number of matches played each day, average of daily kills, assists, and deaths, and average gold earned.
+We use honest regression forests to estimate the nuisance parameters. The ATT estimator is fitted using 2-fold cross-fitting. To avoid dependence
+on a particular sample split, the ATT estimator is fitted \code{repeat_n} times and the average is returned. \cr
 
 \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
