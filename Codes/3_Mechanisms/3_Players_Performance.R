@@ -32,10 +32,8 @@ save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/C
 mechanisms_plots_lol2(n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, save_here = save_here)
 
 # Diff-in-Diff on performance measures ------------------------------------
-repeat_n <- 10
+did_results <- did_players_performance(n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
 
-did_results <- did_players_performance(n_groups, n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, repeat_n = repeat_n)
-
-
-fixest::etable(twfe_results, tex = TRUE)
-
+# ggdid(dr_results_drop)
+# aggte(dr_results_drop, type = "simple")
+# fixest::etable(twfe_results, tex = TRUE)

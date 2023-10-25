@@ -5,18 +5,14 @@
 \title{LoL Impact on Players Performance}
 \usage{
 did_players_performance(
-  n_groups,
   n_pre_matches,
   n_post_matches,
   treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-08-01"),
-  repeat_n = 10
+  max_date = as.POSIXct("2023-08-01")
 )
 }
 \arguments{
-\item{n_groups}{How many groups to form.}
-
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
 \item{n_post_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
@@ -26,8 +22,6 @@ did_players_performance(
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
 \item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
-
-\item{repeat_n}{How many times the DML estimator must be fitted.}
 }
 \value{
 Prints code for a LATEX table.
@@ -42,14 +36,12 @@ We define two versions of the treatment.
    \item{\code{DropGraves}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
 }
 
-Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the players' performance. These regressions are consistent for the average treatment
+Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the performance of treated players. These regressions are consistent for the average treatment
 effect on the treated under the assumptions of no anticipation and parallel trends.\cr
 
-We also use the debiased diff-in-diff estimator of Chang (2020) as a robustness check. This allows us to flexibly include pre-treatment time-invarying covariates in the analysis.
-Because this estimator can only allocate two time periods, we take the average of the outcomes and covariates before and after the disclosure of each players. The covariates are
-the number of matches played each day, average of daily kills, assists, and deaths, and average gold earned.
-We use honest regression forests to estimate the nuisance parameters. The ATT estimator is fitted using 2-fold cross-fitting. To avoid dependence
-on a particular sample split, the ATT estimator is fitted \code{repeat_n} times and the average is returned. \cr
+We also use the estimator of Callaway and Sant’Anna (2021) as a robustness check. This is implemented using the \code{\link[did]{att_gt}} function. Technical details are given in the associated documentation.
+To summarize ideas, this estimates the average treatment effect on the treated for all time t > \code{treatment_date} (effects before that date are also estimated and are useful to check the plausibility
+of the parallel trend assumption). We fit the estimator both unconditionally and conditional on pre-treatment covariates (average kills, assists, deaths, gold earned, and matches played each day).\cr
 
 \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
