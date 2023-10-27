@@ -70,6 +70,18 @@
 run_main_pooled <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
                             inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
+  kills_pooled <- NULL
+  deaths_pooled <- NULL
+  . <- NULL
+  champion <- NULL
+  selected_outcome <- NULL
+  n_unique_outcome <- NULL
+  day_no <- NULL
+  lgb_selected_outcome <- NULL
+  main_role <- NULL
+  treatment <- NULL
+  smooth_outcome <- NULL
+
   if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled", "win_rate_pooled", "gold_pooled", "assists_pooled", "kd_ratio"))) stop("Invalid 'outcome'. This must be one of 'pick_level_sum', 'pick_rate_pooled', 'win_rate_pooled', 'gold_pooled', 'assists_pooled', 'kd_ratio'.", call. = FALSE)
 
   if (length(donors) == 1) {
@@ -275,6 +287,17 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 run_main_regional <- function(champions, outcome_colname, donors, estimator, treatment_date,
                               inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
+  lol_champ_pool_dta <- lol_champ_pool_dta
+  region <- NULL
+  champion <- NULL
+  day_no <- NULL
+  selected_outcome <- NULL
+  n_unique_outcome <- NULL
+  lgb_selected_outcome <- NULL
+  main_role <- NULL
+  treatment <- NULL
+  smooth_outcome <- NULL
+
   if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must either 'pick_level' or 'pick_rate'.", call. = FALSE)
 
   if (length(donors) == 1) {

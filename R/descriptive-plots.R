@@ -37,6 +37,34 @@ champions_descriptive_plots_lol <- function(champions,
                                   min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                                   bandwidth = 0.01, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
+  champion <- NULL
+  pick_level_sum <- NULL
+  pick_rate_pooled <- NULL
+  ban_level_sum <- NULL
+  ban_rate_pooled <- NULL
+  win_level_sum <- NULL
+  win_rate_pooled <- NULL
+  lgb_pick_level <- NULL
+  lgb_pick_rate <- NULL
+  lgb_ban_level <- NULL
+  lgb_ban_rate <- NULL
+  lgb_win_level <- NULL
+  lgb_win_rate <- NULL
+  main_role <- NULL
+  aux_role <- NULL
+  region <- NULL
+  pick_level <- NULL
+  pick_rate <- NULL
+  ban_level <- NULL
+  ban_rate <- NULL
+  win_level <- NULL
+  win_rate <- NULL
+  kills_pooled <- NULL
+  deaths_pooled <- NULL
+  kd_ratio <- NULL
+  value <- NULL
+  variable <- NULL
+
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
 
@@ -365,6 +393,16 @@ champions_performance_plots_lol <- function(champions,
                                   min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                                   bandwidth = 0.01, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
+  lol_champ_dta <- lol_champ_dta
+  champion <- NULL
+  kills_pooled <- NULL
+  deaths_pooled <- NULL
+  . <- NULL
+  kd_ratio <- NULL
+  win_rate_pooled <- NULL
+  value <- NULL
+  variable <- NULL
+
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
@@ -448,6 +486,11 @@ champions_performance_plots_lol <- function(champions,
 players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                                           bandwidth = 0.01, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
+  lol_champ_dta <- lol_champ_dta
+  n_matches <- NULL
+  total_matches <- NULL
+  total_players <- NULL
+
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
 

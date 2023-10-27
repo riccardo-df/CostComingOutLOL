@@ -17,7 +17,7 @@ did_players_performance(
 
 \item{n_post_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
-\item{treatment_date}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
+\item{treatment_date}{Object of class \code{POSIXct}. The date of the treatment.}
 
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
@@ -36,12 +36,10 @@ We define two versions of the treatment.
    \item{\code{DropGraves}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
 }
 
-Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the performance of treated players. These regressions are consistent for the average treatment
-effect on the treated under the assumptions of no anticipation and parallel trends.\cr
-
-We also use the estimator of Callaway and Sant’Anna (2021) as a robustness check. This is implemented using the \code{\link[did]{att_gt}} function. Technical details are given in the associated documentation.
-To summarize ideas, this estimates the average treatment effect on the treated for all time t > \code{treatment_date} (effects before that date are also estimated and are useful to check the plausibility
-of the parallel trend assumption). We fit the estimator both unconditionally and conditional on pre-treatment covariates (average kills, assists, deaths, gold earned, and matches played each day).\cr
+The estimators of Callaway and Sant’Anna (2021) are employed to estimate the impact of the coming-out event on the performance of treated players. This is implemented using the \code{\link[did]{att_gt}} function.
+Technical details are given in the associated documentation. To summarize, we identify and estimate the average treatment effect on the treated for all time t > \code{treatment_date}. "Effects" before that date are
+also estimated and are useful to check the plausibility of the parallel trend assumption. We consider both the unconditional estimator and the doubly-robust estimator that conditions on pre-treatment covariates
+(average kills, assists, deaths, gold earned, and matches played each day).\cr
 
 \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 

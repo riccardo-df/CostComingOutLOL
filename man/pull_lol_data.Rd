@@ -65,9 +65,6 @@ For more details on the output, please refer to Riot's official documentation:
 \href{https://developer.riotgames.com/apis#match-v5/GET_getMatchIdsByPUUID}{https://developer.riotgames.com/apis#match-v5/GET_getMatchIdsByPUUID}, and
 \href{https://developer.riotgames.com/apis#match-v5/GET_getMatch}{https://developer.riotgames.com/apis#match-v5/GET_getMatch}.
 }
-\seealso{
-\code{\link{pull_lol_match_ids}}, \code{\link{pull_lol_match_info}}
-}
 \author{
 Riccardo Di Francesco
 }

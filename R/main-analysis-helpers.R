@@ -20,6 +20,13 @@
 #' @export
 produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
+  champion <- NULL
+  day_no <- NULL
+  smooth_outcome <- NULL
+  lgb_smooth_outcome <- NULL
+  synth_outcome <- NULL
+  weight <- NULL
+
   outcome_colname <- pooled_results$outcome_colname
   estimator <- pooled_results$estimator
   donors <- pooled_results$donors
@@ -185,6 +192,13 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
 #' @export
 produce_plots_regional <- function(regional_results, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
+  champion <- NULL
+  day_no <- NULL
+  smooth_outcome <- NULL
+  region <- NULL
+  lgb_smooth_outcome <- NULL
+  synth_outcome <- NULL
+
   outcome_colname <- regional_results$outcome_colname
   estimator <- regional_results$estimator
   donors <- regional_results$donors
@@ -297,6 +311,9 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
 #' @export
 produce_latex_pooled <- function(pooled_result_list) {
   ## 0.) Handling inputs and checks.
+  champion <- NULL
+  smooth_outcome <- NULL
+
   outcome_colnames <- sapply(pooled_result_list, function(x) { x$outcome_colname })
   outcome_colname <- outcome_colnames[1]
   treatment_dates <- lapply(pooled_result_list, function(x) { x$treatment_date })
@@ -410,6 +427,11 @@ produce_latex_pooled <- function(pooled_result_list) {
 #' @export
 produce_latex_regional <- function(regional_result_list) {
   ## 0.) Handling inputs and checks.
+  champion <- NULL
+  region <- NULL
+  smooth_outcome <- NULL
+  synth_outcome <- NULL
+
   outcome_colnames <- sapply(regional_result_list, function(x) { x$outcome_colname })
   outcome_colname <- outcome_colnames[1]
   treatment_dates <- lapply(regional_result_list, function(x) { x$treatment_date })
@@ -577,6 +599,13 @@ produce_latex_regional <- function(regional_result_list) {
 #' @export
 produce_latex <- function(pooled_result_list, regional_result_list) {
   ## 0.) Handling inputs and checks.
+  champion <- NULL
+  treatment_date <- NULL
+  smooth_outcome <- NULL
+  treatment_date <- NULL
+  region <- NULL
+  synth_outcome <- NULL
+
   # Pooled.
   outcome_colnames_pooled <- sapply(pooled_result_list, function(x) { x$outcome_colname })
   outcome_colname_pooled <- if (outcome_colnames_pooled[1] == "pick_level_sum") "Pick level" else if (outcome_colnames_pooled[1] == "pick_rate_pooled") "Pick rate"

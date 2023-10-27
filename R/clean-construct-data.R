@@ -30,6 +30,16 @@
 #'
 #' @export
 clean_lol_data <- function(dta) {
+  ## Handle warnings.
+  region <- NULL
+  match_id <- NULL
+  player_puiid <- NULL
+  position <- NULL
+  champion <- NULL
+  main_role <- NULL
+  aux_role <- NULL
+  in_position <- NULL
+
   ## Merge regions according to macro area and drop regions with too many missings.
   cat("Merging regions of interest and dropping the others. \n")
   dta$region[dta$region == "Latin_America_South" | dta$region == "Latin_America_North" | dta$region == "Brasil"] <- "Latin_America"
@@ -323,6 +333,25 @@ clean_lol_data <- function(dta) {
 #'
 #' @export
 construct_lol_champion_data <- function(dta) {
+  ## Handle warnings.
+  region <- NULL
+  champion <- NULL
+  ban <- NULL
+  win <- NULL
+  . <- NULL
+  match_id <- NULL
+  day_no <- NULL
+  pick_rate <- NULL
+  ban_rate <- NULL
+  win_rate <- NULL
+  gold_avg <- NULL
+  kills_avg <- NULL
+  assists_avg <- NULL
+  deaths_avg <- NULL
+  main_role <- NULL
+  aux_role <- NULL
+  kills_avg <- NULL
+
   ## Keep only 2022 data and drop champions released after treatment.
   cat("Keeping only 2022 and 2023 data. \n")
 
@@ -497,6 +526,30 @@ construct_lol_champion_data <- function(dta) {
 #'
 #' @export
 construct_lol_champion_pooled_data <- function(dta) {
+  ## Handle warnings.
+  champion <- NULL
+  pick_level <- NULL
+  ban_level <- NULL
+  win_level <- NULL
+  n_matches <- NULL
+  pick_level_sum <- NULL
+  n_matches_sum <- NULL
+  ban_level_sum <- NULL
+  win_level_sum <- NULL
+  gold_avg <- NULL
+  kills_avg <- NULL
+  assists_avg <- NULL
+  deaths_avg <- NULL
+  day_no <- NULL
+  pick_rate_pooled <- NULL
+  ban_rate_pooled <- NULL
+  win_rate_pooled <- NULL
+  gold_pooled <- NULL
+  kills_pooled <- NULL
+  assists_pooled <- NULL
+  deaths_pooled <- NULL
+  . <- NULL
+
   ## Generate pooled variables.
   cat("Generating pooled variables. \n")
 
@@ -571,6 +624,32 @@ construct_lol_champion_pooled_data <- function(dta) {
 #'
 #' @export
 construct_lol_player_data <- function(dta) {
+  ## Handle warnings.
+  player_puiid <- NULL
+  champion <- NULL
+  ban <- NULL
+  graves <- NULL
+  graves_ban <- NULL
+  match_id <- NULL
+  gold <- NULL
+  kills <- NULL
+  assists <- NULL
+  deaths <- NULL
+  win <- NULL
+  gold_sum <- NULL
+  kills_sum <- NULL
+  assists_sum <- NULL
+  deaths_sum <- NULL
+  win_sum <- NULL
+  graves_rate <- NULL
+  graves_ban_rate <- NULL
+  win_rate <- NULL
+  gold_avg <- NULL
+  kills_avg <- NULL
+  assists_avg <- NULL
+  deaths_avg <- NULL
+  day_no <- NULL
+
   ## Keep only 2022 data.
   cat("Keeping only 2022 and 2023 data. \n")
     dta <- dta %>%

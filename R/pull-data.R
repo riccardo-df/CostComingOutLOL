@@ -328,8 +328,6 @@ pull_lol_match_info <- function(server, match_id, api_key,
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{pull_lol_match_ids}}, \code{\link{pull_lol_match_info}}
-#'
 #' @export
 pull_lol_data <- function(server, queue, rank, division, api_key, min_sec, max_sec) {
   ## 0.) Handling inputs and checks.

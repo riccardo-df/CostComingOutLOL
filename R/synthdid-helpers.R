@@ -29,6 +29,9 @@
 #' @keywords internal
 construct_donor_pool <- function(dta, donors, my_champion) {
   ## 0.) Handling inputs and checks.
+  champion <- NULL
+  main_role <- NULL
+
   if (length(donors) == 1) {
     if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
   } else {
@@ -169,6 +172,8 @@ call_synthdid <- function(dta, outcome_colname, estimator, covariate_colnames) {
 #' @export
 construct_synth_outcome <- function(object, dta, unit_colname, outcome_colname, time_colname) {
   ## 0.) Handling inputs and checks.
+  weight <- NULL
+
   if (!any(c(unit_colname, outcome_colname, time_colname) %in% colnames(dta))) stop("One or more of 'unit_colname', 'outcome_colname', and 'time_colname' are not found in 'dta'.", call. = FALSE)
   if(!inherits(object, "synthdid_estimate")) stop("Invalid 'object'. This must be of class 'synthdid_estimate'.", call. = FALSE)
 

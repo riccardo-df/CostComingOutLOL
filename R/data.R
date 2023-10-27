@@ -67,8 +67,8 @@
 #'   \item{\code{day_no}}{Numeric version of \code{day}.}
 #'   \item{\code{id}}{Player PUIID (unit of observation).}
 #'   \item{\code{n_matches}}{How many matches the player played in that \code{day}.}
-#'   \item{\code{Graves_rate}}{How often the player picked Graves in that \code{day}.}
-#'   \item{\code{Graves_ban_rate}}{How often the player banned Graves in that \code{day}.}
+#'   \item{\code{graves_rate}}{How often the player picked Graves in that \code{day}.}
+#'   \item{\code{graves_ban_rate}}{How often the player banned Graves in that \code{day}.}
 #'   \item{\code{win_rate}}{How often the player won a match in that \code{day}.}
 #'  \item{\code{gold_avg}}{Average gold earned by the player in that \code{day}.}
 #'  \item{\code{kills_avg}}{Average number of kills achieved by the player in that \code{day}.}
