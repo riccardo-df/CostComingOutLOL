@@ -584,7 +584,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param n_post_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
-#' @param treatment_date Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
+#' @param treatment_date Object of class \code{POSIXct}. The date of the treatment.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
@@ -599,7 +599,7 @@ mechanisms_plots_lol2 <- function(n_pre_matches, n_post_matches,
 #' }
 #'
 #' Two-way fixed effect regressions are employed to estimate the impact of the coming-out event on the performance of treated players. These regressions are consistent for the average treatment
-#' effect on the treated under the assumptions of no anticipation and parallel trends.\cr
+#' effect on the treated under the assumptions of no anticipation and parallel trends. Standard errors are obtained by clustering.\cr
 #'
 #' We also use the estimator of Callaway and Sant’Anna (2021) as a robustness check. This is implemented using the \code{\link[did]{att_gt}} function. Technical details are given in the associated documentation.
 #' To summarize ideas, this estimates the average treatment effect on the treated for all time t > \code{treatment_date} (effects before that date are also estimated and are useful to check the plausibility
@@ -692,10 +692,59 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
                                    xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
                                    data = estimation_dta, panel = FALSE, allow_unbalanced_panel = TRUE)
 
-  ## CODE PLOT AND LATEX OUTPUT.
-
-
   ## 5.) Output.
   return(list("twfe" = twfe_results,
-              "dml" = list("reduce_graves" = dml_results_forest_reduce, "drop_graves" = dml_results_forest_drop)))
+              "dr_reduce_graves" = dr_results_reduce,
+              "dr_reduce_graves_covariates" = dr_results_reduce_covariates,
+              "dr_drop_graves" = dr_results_drop,
+              "dr_drop_graves_covariates" = dr_results_drop_covariates))
+}
+
+
+#' Diff-in-Diff Plots
+#'
+#' Plots the time ATTs estimated by \code{\link{did_players_performance}}.
+#'
+#' @param att_gt_results One of the results of \code{\link{did_players_performance}}.
+#' @param title String, title of the plot.
+#' @param subtitle String, subtitle of the plot.
+#' @param treatment_date Object of class \code{POSIXct}. The date of the treatment. Must be the same used when calling \code{\link{did_players_performance}} for the result to make sense.
+#'
+#' @return
+#' Returns a nice plot.
+#'
+#' @import ggplot2
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @export
+plot_did <- function(att_gt_results, title, subtitle, treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")) {
+  ## 0.) Handling inputs and checks.
+  if (!inherits(att_gt_results, "MP")) stop("Invalid 'att_gt_results'. This must be an object of class 'MP'.", call. = FALSE)
+
+  n_times <- length(unique(att_gt_results$t))
+  times <- unique(att_gt_results$t)
+
+  results <- data.frame(year = as.POSIXct(times, origin = "1970-01-01"))
+  results$att <- att_gt_results$att
+  results$att.se <- att_gt_results$se
+  results$post <- as.factor(1*(results$year >= treatment_date))
+  results$c <- att_gt_results$c
+
+  alp <- att_gt_results$alp
+  c.point <- qnorm(1 - alp / 2)
+
+  plot <- ggplot2::ggplot(results, ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
+    ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
+    ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
+    ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+    ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
+    ggplot2::xlab("") + ggplot2::ylab("ATT") + ggplot2::ggtitle(label = title, subtitle = subtitle) +
+    ggplot2::theme_bw() +
+    theme(plot.title = ggplot2::element_text(color = "black", face = "bold", size = 12), plot.subtitle = ggplot2::element_text(color = "black", face = "italic", size = 9),
+          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15),
+          legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+
+  return(plot)
 }

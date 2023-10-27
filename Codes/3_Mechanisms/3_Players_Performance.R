@@ -32,8 +32,19 @@ save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/C
 mechanisms_plots_lol2(n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, save_here = save_here)
 
 # Diff-in-Diff on performance measures ------------------------------------
+## Fit estimators.
 did_results <- did_players_performance(n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
 
-# ggdid(dr_results_drop)
-# aggte(dr_results_drop, type = "simple")
-# fixest::etable(twfe_results, tex = TRUE)
+dr_reduce_graves_agg <- did::aggte(did_results$dr_reduce_graves, type = "simple")
+dr_reduce_graves_covariates_agg <- did::aggte(did_results$dr_reduce_graves_covariates, type = "simple")
+dr_drop_graves_agg <- did::aggte(did_results$dr_drop_graves, type = "simple")
+dr_drop_graves_covariates_agg <- did::aggte(did_results$dr_drop_graves_covariates, type = "simple")
+
+## Plots.
+plot_reduce_unconditional <- plot_did(did_results$dr_reduce_graves, "Unconditional", "Reduce Graves")
+plot_reduce_conditional <- plot_did(did_results$dr_reduce_graves_covariates, "Conditional", "Reduce Graves")
+plot_drop_unconditional <- plot_did(did_results$dr_drop_graves, "Unconditional", "Drop Graves")
+plot_drop_conditional <- plot_did(did_results$dr_drop_graves_covariates, "Conditional", "Drop Graves")
+
+ggsave(paste0(save_here, "/", "did_players_performance.svg"), (plot_reduce_unconditional + plot_reduce_conditional) / (plot_drop_unconditional + plot_drop_conditional), device = "svg", width = 7, height = 7)
+
