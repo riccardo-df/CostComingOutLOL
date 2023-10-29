@@ -429,17 +429,19 @@ latex_did <- function(did_results, seed = 1986) {
   cius <- format(round(c(dr_any_reduction_ciu, dr_any_reduction_covariates_ciu, dr_substantial_reduction_ciu, dr_substantial_reduction_covariates_ciu, dr_complete_abandonment_ciu, dr_complete_abandonment_covariates_ciu), 3), nsmall = 3)
 
   n_players <- length(unique(did_results$dr_any_reduction$DIDparams$data$id_no))
-  n_observations <- did_results$dr_any_reduction$n
+  n_observations <- dim(did_results$dr_any_reduction$DIDparams$data)[1]
+
+  treatment_date <- did_results$treatment_date
 
   n_treated_any_reduction <- did_results$dr_any_reduction$DIDparams$data %>%
-    dplyr::filter(day_no > 1654034400) %>%
+    dplyr::filter(day_no > as.numeric(treatment_date)) %>%
     dplyr::distinct(id_no, .keep_all = TRUE) %>%
     dplyr::mutate(n_treated = sum(any_reduction_no != 0)) %>%
     dplyr::pull(n_treated) %>%
     unique()
 
   n_treated_substantial_reduction <- did_results$dr_substantial_reduction$DIDparams$data %>%
-    dplyr::filter(day_no > 1654034400) %>%
+    dplyr::filter(day_no > as.numeric(treatment_date)) %>%
     dplyr::distinct(id_no, .keep_all = TRUE) %>%
     dplyr::mutate(n_treated = sum(substantial_reduction_no != 0)) %>%
     dplyr::pull(n_treated) %>%
@@ -525,6 +527,7 @@ plot_did <- function(did_results, save_here = getwd()) {
   c.point_any_reduction <- stats::qnorm(1 - alp_any_reduction / 2)
   results_any_reduction$treatment_type <- "Any reduction"
   results_any_reduction$parallel_type <- "Unconditional"
+  results_any_reduction$plot_post <- as.factor(1 * (results_any_reduction$year >= (as.Date(treatment_date) - 10)))
 
   results_any_reduction_covariates$att <- did_results$dr_any_reduction_covariates$att
   results_any_reduction_covariates$att.se <- did_results$dr_any_reduction_covariates$se
@@ -534,6 +537,7 @@ plot_did <- function(did_results, save_here = getwd()) {
   c.point_any_reduction_covariates <- stats::qnorm(1 - alp_any_reduction_covariates / 2)
   results_any_reduction_covariates$treatment_type <- "Any reduction"
   results_any_reduction_covariates$parallel_type <- "Conditional"
+  results_any_reduction_covariates$plot_post <- as.factor(1 * (results_any_reduction_covariates$year >= (as.Date(treatment_date) - 10)))
 
   results_substantial_reduction$att <- did_results$dr_substantial_reduction$att
   results_substantial_reduction$att.se <- did_results$dr_substantial_reduction$se
@@ -543,6 +547,7 @@ plot_did <- function(did_results, save_here = getwd()) {
   c.point_substantial_reduction <- stats::qnorm(1 - alp_substantial_reduction / 2)
   results_substantial_reduction$treatment_type <- "Substantial reduction"
   results_substantial_reduction$parallel_type <- "Unconditional"
+  results_substantial_reduction$plot_post <- as.factor(1 * (results_substantial_reduction$year >= (as.Date(treatment_date) - 10)))
 
   results_substantial_reduction_covariates$att <- did_results$dr_substantial_reduction_covariates$att
   results_substantial_reduction_covariates$att.se <- did_results$dr_substantial_reduction_covariates$se
@@ -552,6 +557,7 @@ plot_did <- function(did_results, save_here = getwd()) {
   c.point_substantial_reduction_covariates <- stats::qnorm(1 - alp_substantial_reduction_covariates / 2)
   results_substantial_reduction_covariates$treatment_type <- "Substantial reduction"
   results_substantial_reduction_covariates$parallel_type <- "Conditional"
+  results_substantial_reduction_covariates$plot_post <- as.factor(1 * (results_substantial_reduction_covariates$year >= (as.Date(treatment_date) - 10)))
 
   results_complete_abandonment$att <- did_results$dr_complete_abandonment$att
   results_complete_abandonment$att.se <- did_results$dr_complete_abandonment$se
@@ -561,6 +567,7 @@ plot_did <- function(did_results, save_here = getwd()) {
   c.point_complete_abandonment <- stats::qnorm(1 - alp_complete_abandonment / 2)
   results_complete_abandonment$treatment_type <- "Complete abandonment"
   results_complete_abandonment$parallel_type <- "Unconditional"
+  results_complete_abandonment$plot_post <- as.factor(1 * (results_complete_abandonment$year >= (as.Date(treatment_date) - 10)))
 
   results_complete_abandonment_covariates$att <- did_results$dr_complete_abandonment_covariates$att
   results_complete_abandonment_covariates$att.se <- did_results$dr_complete_abandonment$se
@@ -570,18 +577,19 @@ plot_did <- function(did_results, save_here = getwd()) {
   c.point_complete_abandonment_covariates <- stats::qnorm(1 - alp_complete_abandonment_covariates / 2)
   results_complete_abandonment_covariates$treatment_type <- "Complete abandonment"
   results_complete_abandonment_covariates$parallel_type <- "Conditional"
+  results_complete_abandonment_covariates$plot_post <- as.factor(1 * (results_complete_abandonment_covariates$year >= (as.Date(treatment_date) - 10)))
 
   ## 1.) Produce and save plot.
   plot_pre <- results_any_reduction %>%
     dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
-    dplyr::filter(post == 0) %>%
+    dplyr::filter(plot_post == 0) %>%
     dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
     ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
+    ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
     ggplot2::xlab("") + ggplot2::ylab("ATT") +
     ggplot2::theme_bw() +
@@ -591,7 +599,7 @@ plot_did <- function(did_results, save_here = getwd()) {
 
   plot_post <- results_any_reduction %>%
     dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
-    dplyr::filter(post == 1) %>%
+    dplyr::filter(plot_post == 1) %>%
     dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
