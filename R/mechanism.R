@@ -4,7 +4,6 @@
 #' in each group before and after the treatment.
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
-#' @param n_post_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param treatment_date Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
@@ -16,8 +15,7 @@
 #' @details
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped. The number of
-#' players remaining in the data set is printed.
+#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed.
 #'
 #' @import dplyr reshape2 ggplot2 patchwork
 #' @importFrom stats sd
@@ -25,7 +23,7 @@
 #' @author Riccardo Di Francesco
 #'
 #' @export
-players_performance_plots_lol <- function(n_pre_matches, n_post_matches,
+players_performance_plots_lol <- function(n_pre_matches,
                                  treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                                  save_here = getwd()) {
   ## 0.) Handling inputs and checks.
@@ -56,12 +54,20 @@ players_performance_plots_lol <- function(n_pre_matches, n_post_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(min_date < day & day < max_date) %>%
+    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0))
+
+  keep_these_players <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0),
-                  n_matches_pre = sum(n_matches * (1 - disclosure)),
+    dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
                   n_matches_post = sum(n_matches * disclosure)) %>%
-    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post >= n_post_matches) %>%
-    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
+    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
+    dplyr::distinct(id)
+
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::filter(id %in% keep_these_players$id) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0)) %>%
+    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
     dplyr::ungroup()
 
   ## 1.) Define prior users.
@@ -73,12 +79,12 @@ players_performance_plots_lol <- function(n_pre_matches, n_post_matches,
     dplyr::select(prior_user, id)
 
   cat("N. players is ", length(unique(lol_player_dta$id)), " of which:
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " was playing Graves before the disclosure (treatment group)
-  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has never played Graves before the disclosure (control group) \n", sep = "")
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " was playing Graves before the disclosure (prior users)
+  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has never played Graves before the disclosure (non-prior users) \n", sep = "")
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 2.) Average players' pick rates for Graves in each group.
   plot_avg_rates_buckets_dta <- lol_player_dta %>%
@@ -208,7 +214,6 @@ players_performance_plots_lol <- function(n_pre_matches, n_post_matches,
 #' Uses a diff-in-diff strategy to investigate the impact of the coming-out event on players' performance.
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
-#' @param n_post_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param treatment_date Object of class \code{POSIXct}. The date of the treatment.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
@@ -219,8 +224,9 @@ players_performance_plots_lol <- function(n_pre_matches, n_post_matches,
 #' @details
 #' We define two versions of the treatment.
 #' \describe{
-#'    \item{\code{ReduceGraves}}{Players that reduce their average pick rate for Graves following his disclosure are considered treated.}
-#'    \item{\code{DropGraves}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
+#'    \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
+#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 80% following his disclosure are considered treated.}
+#'    \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
 #' }
 #'
 #' The estimators of Callaway and Sant’Anna (2021) are employed to estimate the impact of the coming-out event on the performance of treated players. This is implemented using the \code{\link[did]{att_gt}} function.
@@ -239,7 +245,7 @@ players_performance_plots_lol <- function(n_pre_matches, n_post_matches,
 #' @author Riccardo Di Francesco
 #'
 #' @export
-did_players_performance <- function(n_pre_matches, n_post_matches,
+did_players_performance <- function(n_pre_matches,
                                     treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01")) {
   ## 0.) Handling inputs and checks.
   n_matches <- NULL
@@ -255,8 +261,8 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
   deaths_avg <- NULL
   avg_graves_rate_post <- NULL
   avg_graves_rate_pre <- NULL
-  reduce_graves <- NULL
-  drop_graves <- NULL
+  any_reduction <- NULL
+  complete_abandonment <- NULL
   mean_n_matches_pre <- NULL
   mean_gold_pre <- NULL
   mean_kills_pre <- NULL
@@ -265,12 +271,20 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(min_date < day & day < max_date) %>%
+    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0))
+
+  keep_these_players <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0),
-                  n_matches_pre = sum(n_matches * (1 - disclosure)),
+    dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
                   n_matches_post = sum(n_matches * disclosure)) %>%
-    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post >= n_post_matches) %>%
-    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
+    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
+    dplyr::distinct(id)
+
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::filter(id %in% keep_these_players$id) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0)) %>%
+    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
     dplyr::ungroup()
 
   ## 1.) Assign treatment status.
@@ -278,19 +292,22 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
     dplyr::group_by(id) %>%
     dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
                   avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
-                  reduce_graves = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
-                  drop_graves = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
+                  any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
+                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.2 * avg_graves_rate_pre),
+                  complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(id, reduce_graves, drop_graves)
+    dplyr::select(id, any_reduction, substantial_reduction, complete_abandonment)
 
-  cat("N. players is ", length(unique(lol_player_dta$id)), " of which:
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(reduce_graves) %>% sum(), " reduces their pick rates for Graves (treatment group 1)
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(drop_graves) %>% sum(), " completely stopped playing Graves (treatment group 2) \n\n", sep = "")
+  cat("N. observations is ", dim(lol_player_dta)[1], "
+N. players is ", length(unique(lol_player_dta$id)), " of which:
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(any_reduction) %>% sum(), " reduced their pick rates for Graves by any amount
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by a substantial amount
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(complete_abandonment) %>% sum(), " completely stopped playing Graves \n\n", sep = "")
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, disclosure, reduce_graves, drop_graves, graves_rate, graves_ban_rate, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, disclosure, any_reduction, substantial_reduction, complete_abandonment, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 2.) Arrange estimation data.
   estimation_dta <- lol_player_dta %>%
@@ -300,7 +317,7 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
                   mean_kills_pre = sum(kills_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_assists_pre = sum(assists_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_deaths_pre = sum(deaths_avg * (1 - disclosure)) / sum(1 - disclosure)) %>%
-    dplyr::select(day, id, win_rate, disclosure, reduce_graves, drop_graves, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre) %>%
+    dplyr::select(day, id, win_rate, disclosure, any_reduction, substantial_reduction, complete_abandonment, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre) %>%
     dplyr::mutate(n_matches_pre = mean_n_matches_pre * disclosure,
                   gold_pre = mean_gold_pre * disclosure,
                   kills_pre = mean_kills_pre * disclosure,
@@ -309,31 +326,166 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
     dplyr::ungroup() %>%
     dplyr::mutate(day_no = as.numeric(day),
                   id_no = as.numeric(factor(id)),
-                  gname_reduce = ifelse(reduce_graves == 1, as.numeric(treatment_date), 0),
-                  gname_drop = ifelse(drop_graves == 1, as.numeric(treatment_date), 0))
+                  any_reduction_no = ifelse(any_reduction == 1, as.numeric(treatment_date), 0),
+                  substantial_reduction_no = ifelse(substantial_reduction == 1, as.numeric(treatment_date), 0),
+                  complete_abandonment_no = ifelse(complete_abandonment == 1, as.numeric(treatment_date), 0))
 
   ## 3.) Doubly-robust DiD.
-  dr_results_reduce <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "gname_reduce",
+  dr_results_any_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "any_reduction_no",
                                               xformla = ~ 1,
-                                              data = estimation_dta, panel = FALSE, allow_unbalanced_panel = TRUE)
+                                              data = estimation_dta, panel = TRUE, allow_unbalanced_panel = TRUE)
 
-  dr_results_reduce_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "gname_reduce",
+  dr_results_any_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "any_reduction_no",
                                               xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-                                              data = estimation_dta, panel = FALSE, allow_unbalanced_panel = TRUE)
+                                              data = estimation_dta, panel = TRUE, allow_unbalanced_panel = TRUE)
 
-  dr_results_drop <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "gname_drop",
+  dr_results_substantial_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "substantial_reduction_no",
+                                   xformla = ~ 1,
+                                   data = estimation_dta, panel = TRUE, allow_unbalanced_panel = TRUE)
+
+  dr_results_substantial_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "substantial_reduction_no",
+                                              xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
+                                              data = estimation_dta, panel = TRUE, allow_unbalanced_panel = TRUE)
+
+  dr_results_complete_abandonment <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "complete_abandonment_no",
                                             xformla = ~ 1,
-                                            data = estimation_dta, panel = FALSE, allow_unbalanced_panel = TRUE)
+                                            data = estimation_dta, panel = TRUE, allow_unbalanced_panel = TRUE)
 
-  dr_results_drop_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "gname_drop",
+  dr_results_complete_abandonment_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "complete_abandonment_no",
                                    xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-                                   data = estimation_dta, panel = FALSE, allow_unbalanced_panel = TRUE)
+                                   data = estimation_dta, panel = TRUE, allow_unbalanced_panel = TRUE)
 
   ## 5.) Output.
-  return(list("dr_reduce_graves" = dr_results_reduce,
-              "dr_reduce_graves_covariates" = dr_results_reduce_covariates,
-              "dr_drop_graves" = dr_results_drop,
-              "dr_drop_graves_covariates" = dr_results_drop_covariates))
+  return(list("treatment_date" = treatment_date,
+              "dr_any_reduction" = dr_results_any_reduction,
+              "dr_any_reduction_covariates" = dr_results_any_reduction_covariates,
+              "dr_substantial_reduction" = dr_results_substantial_reduction,
+              "dr_substantial_reduction_covariates" = dr_results_substantial_reduction_covariates,
+              "dr_complete_abandonment" = dr_results_complete_abandonment,
+              "dr_complete_abandonment_covariates" = dr_results_complete_abandonment_covariates))
+}
+
+
+#' Diff-in-Diff Table
+#'
+#' Prints LATEX code for a nice table displaying the aggregated results of \code{\link{did_players_performance}}.
+#'
+#' @param did_results The results of \code{\link{did_players_performance}}.
+#' @param seed To make results reproducible.
+#'
+#' @return
+#' Prints LATEX code.
+#'
+#' @detail
+#' To summarize results, we report an average of the estimated ATT(t) for all t greater than \code{treatment_date} used when calling \code{\link{did_players_performance}}.
+#'
+#' @import did dplyr stringr
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @export
+latex_did <- function(did_results, seed = 1986) {
+  ## Aggregate time ATTs.
+  set.seed(seed)
+
+  dr_any_reduction_agg <- did::aggte(did_results$dr_any_reduction, type = "simple")
+  dr_any_reduction_covariates_agg <- did::aggte(did_results$dr_any_reduction_covariates, type = "simple")
+  dr_substantial_reduction_agg <- did::aggte(did_results$dr_substantial_reduction, type = "simple")
+  dr_substantial_reduction_covariates_agg <- did::aggte(did_results$dr_substantial_reduction_covariates, type = "simple")
+  dr_complete_abandonment_agg <- did::aggte(did_results$dr_complete_abandonment, type = "simple")
+  dr_complete_abandonment_covariates_agg <- did::aggte(did_results$dr_complete_abandonment_covariates, type = "simple")
+
+  dr_any_reduction_point <- dr_any_reduction_agg$overall.att
+  dr_any_reduction_covariates_point <- dr_any_reduction_covariates_agg$overall.att
+  dr_substantial_reduction_point <- dr_substantial_reduction_agg$overall.att
+  dr_substantial_reduction_covariates_point <- dr_substantial_reduction_covariates_agg$overall.att
+  dr_complete_abandonment_point <- dr_complete_abandonment_agg$overall.att
+  dr_complete_abandonment_covariates_point <- dr_complete_abandonment_covariates_agg$overall.att
+
+  dr_any_reduction_se <- dr_any_reduction_agg$overall.se
+  dr_any_reduction_covariates_se <- dr_any_reduction_covariates_agg$overall.se
+  dr_substantial_reduction_se <- dr_substantial_reduction_agg$overall.se
+  dr_substantial_reduction_covariates_se <- dr_substantial_reduction_covariates_agg$overall.se
+  dr_complete_abandonment_se <- dr_complete_abandonment_agg$overall.se
+  dr_complete_abandonment_covariates_se <- dr_complete_abandonment_covariates_agg$overall.se
+
+  dr_any_reduction_cil <- dr_any_reduction_point - 1.96 * dr_any_reduction_se
+  dr_any_reduction_covariates_cil <- dr_any_reduction_covariates_point - 1.96 * dr_any_reduction_covariates_se
+  dr_substantial_reduction_cil <- dr_substantial_reduction_point - 1.96 * dr_substantial_reduction_se
+  dr_substantial_reduction_covariates_cil <- dr_substantial_reduction_covariates_point - 1.96 * dr_substantial_reduction_covariates_se
+  dr_complete_abandonment_cil <- dr_complete_abandonment_point - 1.96 * dr_complete_abandonment_se
+  dr_complete_abandonment_covariates_cil <- dr_complete_abandonment_covariates_point - 1.96 * dr_complete_abandonment_covariates_se
+
+  dr_any_reduction_ciu <- dr_any_reduction_point + 1.96 * dr_any_reduction_se
+  dr_any_reduction_covariates_ciu <- dr_any_reduction_covariates_point + 1.96 * dr_any_reduction_covariates_se
+  dr_substantial_reduction_ciu <- dr_substantial_reduction_point + 1.96 * dr_substantial_reduction_se
+  dr_substantial_reduction_covariates_ciu <- dr_substantial_reduction_covariates_point + 1.96 * dr_substantial_reduction_covariates_se
+  dr_complete_abandonment_ciu <- dr_complete_abandonment_point + 1.96 * dr_complete_abandonment_se
+  dr_complete_abandonment_covariates_ciu <- dr_complete_abandonment_covariates_point + 1.96 * dr_complete_abandonment_covariates_se
+
+  ## Extract information.
+  atts <- format(round(c(dr_any_reduction_point, dr_any_reduction_covariates_point, dr_substantial_reduction_point, dr_substantial_reduction_covariates_point, dr_complete_abandonment_point, dr_complete_abandonment_covariates_point), 3), nsmall = 3)
+  cils <- format(round(c(dr_any_reduction_cil, dr_any_reduction_covariates_cil, dr_substantial_reduction_cil, dr_substantial_reduction_covariates_cil, dr_complete_abandonment_cil, dr_complete_abandonment_covariates_cil), 3), nsmall = 3)
+  cius <- format(round(c(dr_any_reduction_ciu, dr_any_reduction_covariates_ciu, dr_substantial_reduction_ciu, dr_substantial_reduction_covariates_ciu, dr_complete_abandonment_ciu, dr_complete_abandonment_covariates_ciu), 3), nsmall = 3)
+
+  n_players <- length(unique(did_results$dr_any_reduction$DIDparams$data$id_no))
+  n_observations <- did_results$dr_any_reduction$n
+
+  n_treated_any_reduction <- did_results$dr_any_reduction$DIDparams$data %>%
+    dplyr::filter(day_no > 1654034400) %>%
+    dplyr::distinct(id_no, .keep_all = TRUE) %>%
+    dplyr::mutate(n_treated = sum(any_reduction_no != 0)) %>%
+    dplyr::pull(n_treated) %>%
+    unique()
+
+  n_treated_substantial_reduction <- did_results$dr_substantial_reduction$DIDparams$data %>%
+    dplyr::filter(day_no > 1654034400) %>%
+    dplyr::distinct(id_no, .keep_all = TRUE) %>%
+    dplyr::mutate(n_treated = sum(substantial_reduction_no != 0)) %>%
+    dplyr::pull(n_treated) %>%
+    unique()
+
+  n_treated_complete_abandonment <- did_results$dr_complete_abandonment$DIDparams$data %>%
+    dplyr::filter(day_no > 1654034400) %>%
+    dplyr::distinct(id_no, .keep_all = TRUE) %>%
+    dplyr::mutate(n_treated = sum(complete_abandonment_no != 0)) %>%
+    dplyr::pull(n_treated) %>%
+    unique()
+
+  ## LATEX.
+  cat("\\begingroup
+  \\setlength{\\tabcolsep}{8pt}
+  \\renewcommand{\\arraystretch}{1.1}
+  \\begin{table}[H]
+    \\centering
+    \\begin{adjustbox}{width = 1\\textwidth}
+    \\begin{tabular}{@{\\extracolsep{5pt}}l c c c c c c}
+      \\\\[-1.8ex]\\hline
+      \\hline \\\\[-1.8ex]
+      & \\multicolumn{2}{c}{\\textit{Any Reduction}} & \\multicolumn{2}{c}{\\textit{Substantial Reduction}} & \\multicolumn{2}{c}{\\textit{Complete Abandonment}} \\\\ \\cmidrule{2-3} \\cmidrule{4-5} \\cmidrule{6-7}
+      & (1) & (2) & (3) & (4) & (5) & (6) \\\\
+
+      \\midrule
+
+      \\multirow{2}{*}{$\\overline{ATT \\left( t \\right)}$} & ", stringr::str_sub(paste(paste0(atts, " &"), collapse = " "), end = -3), " \\\\
+      &", stringr::str_sub(paste(paste0("[", cils, ", ", cius, "] &"), collapse = " "), end = -3), " \\\\
+
+      \\midrule
+
+      Conditional PT & & \\checkmark & & \\checkmark & & \\checkmark \\\\
+      Players & ", stringr::str_sub(paste(paste0(rep(n_players, length(atts)), " &"), collapse = " "), end = -3), " \\\\
+      Treated & ", paste0(rep(n_treated_any_reduction, 2), " & "), paste0(rep(n_treated_substantial_reduction, 2), " & "), stringr::str_sub(paste(paste0(rep(n_treated_complete_abandonment, 2), " &"), collapse = " "), end = -3), " \\\\
+      Observations & ", stringr::str_sub(paste(paste0(rep(n_observations, length(atts)), " &"), collapse = " "), end = -3), " \\\\
+
+      \\\\[-1.8ex]\\hline
+      \\hline \\\\[-1.8ex]
+
+      \\end{tabular}
+      \\end{adjustbox}
+      \\caption{Point estimates and $95\\%$ confidence intervals for $\\overline{ATT \\left( t \\right)}$. Standard errors are clustered at the player level and computed using the multiplier bootstrap. Columns marked with checkmarks under 'Conditional PT' display the results obtained with the doubly-robust approach. The remaining columns display the results obtained with the unconditional estimator.}
+      \\label{table_did_performance_measures}
+    \\end{table}
+\\endgroup \n", sep = "")
 }
 
 
@@ -341,10 +493,8 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
 #'
 #' Plots the time ATTs estimated by \code{\link{did_players_performance}}.
 #'
-#' @param att_gt_results One of the results of \code{\link{did_players_performance}}.
-#' @param title String, title of the plot.
-#' @param subtitle String, subtitle of the plot.
-#' @param treatment_date Object of class \code{POSIXct}. The date of the treatment. Must be the same used when calling \code{\link{did_players_performance}} for the result to make sense.
+#' @param did_results The results of \code{\link{did_players_performance}}.
+#' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
 #' Returns a nice plot.
@@ -355,37 +505,108 @@ did_players_performance <- function(n_pre_matches, n_post_matches,
 #' @author Riccardo Di Francesco
 #'
 #' @export
-plot_did <- function(att_gt_results, title, subtitle, treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")) {
+plot_did <- function(did_results, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   att <- NULL
   att.se <- NULL
   post <- NULL
 
-  if (!inherits(att_gt_results, "MP")) stop("Invalid 'att_gt_results'. This must be an object of class 'MP'.", call. = FALSE)
+  treatment_date <- did_results$treatment_date
+  n_times <- length(unique(did_results$dr_any_reduction$t))
+  times <- unique(did_results$dr_any_reduction$t)
 
-  n_times <- length(unique(att_gt_results$t))
-  times <- unique(att_gt_results$t)
+  results_any_reduction <- results_any_reduction_covariates <- results_substantial_reduction <- results_substantial_reduction_covariates <- results_complete_abandonment <- results_complete_abandonment_covariates <- data.frame(year = as.POSIXct(times, origin = "1970-01-01"))
 
-  results <- data.frame(year = as.POSIXct(times, origin = "1970-01-01"))
-  results$att <- att_gt_results$att
-  results$att.se <- att_gt_results$se
-  results$post <- as.factor(1*(results$year >= treatment_date))
-  results$c <- att_gt_results$c
+  results_any_reduction$att <- did_results$dr_any_reduction$att
+  results_any_reduction$att.se <- did_results$dr_any_reduction$se
+  results_any_reduction$post <- as.factor(1 * (results_any_reduction$year >= treatment_date))
+  results_any_reduction$c <- did_results$dr_any_reduction$c
+  alp_any_reduction <- did_results$dr_any_reduction$alp
+  c.point_any_reduction <- stats::qnorm(1 - alp_any_reduction / 2)
+  results_any_reduction$treatment_type <- "Any reduction"
+  results_any_reduction$parallel_type <- "Unconditional"
 
-  alp <- att_gt_results$alp
-  c.point <- stats::qnorm(1 - alp / 2)
+  results_any_reduction_covariates$att <- did_results$dr_any_reduction_covariates$att
+  results_any_reduction_covariates$att.se <- did_results$dr_any_reduction_covariates$se
+  results_any_reduction_covariates$post <- as.factor(1 * (results_any_reduction_covariates$year >= treatment_date))
+  results_any_reduction_covariates$c <- did_results$dr_any_reduction_covariates$c
+  alp_any_reduction_covariates <- did_results$dr_any_reduction_covariates$alp
+  c.point_any_reduction_covariates <- stats::qnorm(1 - alp_any_reduction_covariates / 2)
+  results_any_reduction_covariates$treatment_type <- "Any reduction"
+  results_any_reduction_covariates$parallel_type <- "Conditional"
 
-  plot <- ggplot2::ggplot(results, ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
+  results_substantial_reduction$att <- did_results$dr_substantial_reduction$att
+  results_substantial_reduction$att.se <- did_results$dr_substantial_reduction$se
+  results_substantial_reduction$post <- as.factor(1 * (results_substantial_reduction$year >= treatment_date))
+  results_substantial_reduction$c <- did_results$dr_substantial_reduction$c
+  alp_substantial_reduction <- did_results$dr_substantial_reduction$alp
+  c.point_substantial_reduction <- stats::qnorm(1 - alp_substantial_reduction / 2)
+  results_substantial_reduction$treatment_type <- "Substantial reduction"
+  results_substantial_reduction$parallel_type <- "Unconditional"
+
+  results_substantial_reduction_covariates$att <- did_results$dr_substantial_reduction_covariates$att
+  results_substantial_reduction_covariates$att.se <- did_results$dr_substantial_reduction_covariates$se
+  results_substantial_reduction_covariates$post <- as.factor(1 * (results_substantial_reduction_covariates$year >= treatment_date))
+  results_substantial_reduction_covariates$c <- did_results$dr_substantial_reduction_covariates$c
+  alp_substantial_reduction_covariates <- did_results$dr_substantial_reduction_covariates$alp
+  c.point_substantial_reduction_covariates <- stats::qnorm(1 - alp_substantial_reduction_covariates / 2)
+  results_substantial_reduction_covariates$treatment_type <- "Substantial reduction"
+  results_substantial_reduction_covariates$parallel_type <- "Conditional"
+
+  results_complete_abandonment$att <- did_results$dr_complete_abandonment$att
+  results_complete_abandonment$att.se <- did_results$dr_complete_abandonment$se
+  results_complete_abandonment$post <- as.factor(1 * (results_complete_abandonment$year >= treatment_date))
+  results_complete_abandonment$c <- did_results$dr_complete_abandonment$c
+  alp_complete_abandonment <- did_results$dr_complete_abandonment$alp
+  c.point_complete_abandonment <- stats::qnorm(1 - alp_complete_abandonment / 2)
+  results_complete_abandonment$treatment_type <- "Complete abandonment"
+  results_complete_abandonment$parallel_type <- "Unconditional"
+
+  results_complete_abandonment_covariates$att <- did_results$dr_complete_abandonment_covariates$att
+  results_complete_abandonment_covariates$att.se <- did_results$dr_complete_abandonment$se
+  results_complete_abandonment_covariates$post <- as.factor(1 * (results_complete_abandonment_covariates$year >= treatment_date))
+  results_complete_abandonment_covariates$c <- did_results$dr_complete_abandonment_covariates$c
+  alp_complete_abandonment_covariates <- did_results$dr_complete_abandonment_covariates$alp
+  c.point_complete_abandonment_covariates <- stats::qnorm(1 - alp_complete_abandonment_covariates / 2)
+  results_complete_abandonment_covariates$treatment_type <- "Complete abandonment"
+  results_complete_abandonment_covariates$parallel_type <- "Conditional"
+
+  ## 1.) Produce and save plot.
+  plot_pre <- results_any_reduction %>%
+    dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
+    dplyr::filter(post == 0) %>%
+    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional"))) %>%
+    ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
+    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
     ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
-    ggplot2::xlab("") + ggplot2::ylab("ATT") + ggplot2::ggtitle(label = title, subtitle = subtitle) +
+    ggplot2::xlab("") + ggplot2::ylab("ATT") +
     ggplot2::theme_bw() +
-    theme(plot.title = ggplot2::element_text(color = "black", face = "bold", size = 12), plot.subtitle = ggplot2::element_text(color = "black", face = "italic", size = 9),
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15),
+    theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_post.svg"), plot_post, device = "svg", width = 7, height = 7)
 
-  return(plot)
+  plot_post <- results_any_reduction %>%
+    dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
+    dplyr::filter(post == 1) %>%
+    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional"))) %>%
+    ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
+    ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
+    ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
+    ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
+    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+    ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
+    ggplot2::xlab("") + ggplot2::ylab("ATT") +
+    ggplot2::theme_bw() +
+    theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10),
+          legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_post.svg"), plot_post, device = "svg", width = 7, height = 7)
+
+  ## 6.) Talk to the user.
+  cat("\n")
+  cat("Figures are saved at ", save_here, "\n", sep = "")
 }

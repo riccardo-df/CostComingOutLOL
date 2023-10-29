@@ -17,9 +17,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Plots -------------------------------------------------------------------
 ## Settings.
-n_groups <- 5
 n_pre_matches <- 100
-n_post_matches <- 50
 
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 
@@ -29,22 +27,14 @@ max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Players_Performance"
 
 ## Produce plots.
-players_performance_plots_lol(n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, save_here = save_here)
+players_performance_plots_lol(n_pre_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, save_here = save_here)
 
 # Diff-in-Diff on performance measures ------------------------------------
 ## Fit estimators.
-did_results <- did_players_performance(n_pre_matches, n_post_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
+did_results <- did_players_performance(n_pre_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
 
-dr_reduce_graves_agg <- did::aggte(did_results$dr_reduce_graves, type = "simple")
-dr_reduce_graves_covariates_agg <- did::aggte(did_results$dr_reduce_graves_covariates, type = "simple")
-dr_drop_graves_agg <- did::aggte(did_results$dr_drop_graves, type = "simple")
-dr_drop_graves_covariates_agg <- did::aggte(did_results$dr_drop_graves_covariates, type = "simple")
+## LATEX.
+latex_did(did_results, 1986)
 
-## Plots.
-plot_reduce_unconditional <- plot_did(did_results$dr_reduce_graves, "Unconditional", "Reduce Graves")
-plot_reduce_conditional <- plot_did(did_results$dr_reduce_graves_covariates, "Conditional", "Reduce Graves")
-plot_drop_unconditional <- plot_did(did_results$dr_drop_graves, "Unconditional", "Drop Graves")
-plot_drop_conditional <- plot_did(did_results$dr_drop_graves_covariates, "Conditional", "Drop Graves")
-
-ggsave(paste0(save_here, "/", "did_players_performance.svg"), (plot_reduce_unconditional + plot_reduce_conditional) / (plot_drop_unconditional + plot_drop_conditional), device = "svg", width = 7, height = 7)
-
+## Plot.
+plot_did(did_results, save_here)
