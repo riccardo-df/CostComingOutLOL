@@ -581,13 +581,13 @@ plot_did <- function(did_results, save_here = getwd()) {
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
     ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
     ggplot2::xlab("") + ggplot2::ylab("ATT") +
     ggplot2::theme_bw() +
     theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_post.svg"), plot_post, device = "svg", width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_pre.svg"), plot_pre, device = "svg", width = 7, height = 7)
 
   plot_post <- results_any_reduction %>%
     dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
@@ -598,7 +598,7 @@ plot_did <- function(did_results, save_here = getwd()) {
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
     ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
     ggplot2::xlab("") + ggplot2::ylab("ATT") +
     ggplot2::theme_bw() +

@@ -151,7 +151,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick level")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -167,7 +167,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -184,7 +184,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban level")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -200,7 +200,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -217,7 +217,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win level")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -233,7 +233,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -251,7 +251,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick level")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -267,7 +267,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -284,7 +284,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban level")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -300,7 +300,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -317,7 +317,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win level")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -333,7 +333,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
@@ -443,7 +443,7 @@ champions_performance_plots_lol <- function(champions,
       ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
       ggplot2::facet_grid(rows = vars(variable), scales = "free") +
       ggplot2::xlab("") + ggplot2::ylab("") + ggplot2::ggtitle(my_champion) +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
 
@@ -522,7 +522,7 @@ players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), m
     ggplot2::geom_line(aes(y = total_players / trans_coef, color = "Players"), linewidth = 0.8) +
     ggplot2::annotation_raster(rainbow, xmin = pride_month_2022_begin, xmax = pride_month_2022_end, ymin = -Inf, ymax = Inf) +
     ggplot2::annotation_raster(rainbow, xmin = pride_month_2023_begin, xmax = pride_month_2023_end, ymin = -Inf, ymax = Inf) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::scale_y_continuous(name = "N. daily matches", sec.axis = sec_axis(~ . * trans_coef, name = "N. daily players")) +
     ggplot2::scale_color_manual(name = "Colors", values = c("Matches" = matches_color, "Players" = players_color)) +
     ggplot2::xlab("") +

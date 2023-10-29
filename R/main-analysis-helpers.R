@@ -101,7 +101,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Composite LGB" else my_champion) +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
@@ -130,7 +130,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Composite LGB" else my_champion) +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
@@ -152,7 +152,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
         ggplot2::geom_line(data = temp_drop, ggplot2::aes(y = synth_outcome, group = champion, col = "Synthetic LOO"), linetype = "dashed", linewidth = 0.5) +
         ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
         ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
-        ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+        ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
@@ -272,7 +272,7 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(~region, ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15),

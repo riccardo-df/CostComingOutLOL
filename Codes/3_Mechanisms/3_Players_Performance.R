@@ -17,7 +17,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Plots -------------------------------------------------------------------
 ## Settings.
-n_pre_matches <- 100
+n_pre_matches <- 150
 
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 
