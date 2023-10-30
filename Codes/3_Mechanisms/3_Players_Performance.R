@@ -18,6 +18,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 # Plots -------------------------------------------------------------------
 ## Settings.
 n_pre_matches <- 100
+filter <- "prior_users"
 
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 
@@ -31,7 +32,7 @@ players_performance_plots_lol(n_pre_matches, treatment_date = treatment_date, mi
 
 # Diff-in-Diff on performance measures ------------------------------------
 ## Fit estimators.
-did_results <- did_players_performance(n_pre_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
+did_results <- did_players_performance(n_pre_matches, filter = filter, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
 
 ## LATEX.
 latex_did(did_results, 1986)

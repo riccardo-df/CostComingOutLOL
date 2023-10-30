@@ -4,21 +4,12 @@
 \alias{plot_did}
 \title{Diff-in-Diff Plots}
 \usage{
-plot_did(
-  att_gt_results,
-  title,
-  subtitle,
-  treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d")
-)
+plot_did(did_results, save_here = getwd())
 }
 \arguments{
-\item{att_gt_results}{One of the results of \code{\link{did_players_performance}}.}
+\item{did_results}{The results of \code{\link{did_players_performance}}.}
 
-\item{title}{String, title of the plot.}
-
-\item{subtitle}{String, subtitle of the plot.}
-
-\item{treatment_date}{Object of class \code{POSIXct}. The date of the treatment. Must be the same used when calling \code{\link{did_players_performance}} for the result to make sense.}
+\item{save_here}{String denoting the path where to save the figures.}
 }
 \value{
 Returns a nice plot.

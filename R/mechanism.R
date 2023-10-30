@@ -214,6 +214,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' Uses a diff-in-diff strategy to investigate the impact of the coming-out event on players' performance.
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
+#' @param filter Which players to retain for the analysis.
 #' @param treatment_date Object of class \code{POSIXct}. The date of the treatment.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
@@ -225,7 +226,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' We define two versions of the treatment.
 #' \describe{
 #'    \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
-#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 80% following his disclosure are considered treated.}
+#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50% following his disclosure are considered treated.}
 #'    \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
 #' }
 #'
@@ -236,8 +237,9 @@ players_performance_plots_lol <- function(n_pre_matches,
 #'
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped. The number of
-#' players remaining in the data set is printed.
+#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped.
+#' Moreover, additional players are removed if the \code{filter} argument is not set to \code{"all"}. If this is set to \code{"prior_users"}, then only players that used to play Graves before
+#' his disclosure are used in the analysis.
 #'
 #' @import dplyr fixest did
 #' @importFrom lubridate month
@@ -245,7 +247,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' @author Riccardo Di Francesco
 #'
 #' @export
-did_players_performance <- function(n_pre_matches,
+did_players_performance <- function(n_pre_matches, filter = "prior_users",
                                     treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01")) {
   ## 0.) Handling inputs and checks.
   n_matches <- NULL
@@ -269,16 +271,29 @@ did_players_performance <- function(n_pre_matches,
   mean_assists_pre <- NULL
   mean_deaths_pre <- NULL
 
+  if (!(filter %in% c("prior_users", "all"))) stop("Invalid 'filter'. This must be either 'prior_users' or 'all'.", call. = FALSE)
+
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(min_date < day & day < max_date) %>%
     dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0))
 
-  keep_these_players <- lol_player_dta %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
-                  n_matches_post = sum(n_matches * disclosure)) %>%
-    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
-    dplyr::distinct(id)
+  if (filter == "all") {
+    keep_these_players <- lol_player_dta %>%
+      dplyr::group_by(id) %>%
+      dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
+                    n_matches_post = sum(n_matches * disclosure)) %>%
+      dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
+      dplyr::distinct(id)
+  } else if (filter == "prior_users") {
+    keep_these_players <- lol_player_dta %>%
+      dplyr::group_by(id) %>%
+      dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
+                    n_matches_post = sum(n_matches * disclosure),
+                    prior_user = sum(graves_rate * (1 - disclosure)) != 0) %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0 & prior_user) %>%
+      dplyr::distinct(id, .keep_all = TRUE)
+  }
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(id %in% keep_these_players$id) %>%
@@ -293,7 +308,7 @@ did_players_performance <- function(n_pre_matches,
     dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
                   avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
                   any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
-                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.2 * avg_graves_rate_pre),
+                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre),
                   complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
@@ -376,7 +391,7 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
 #' @return
 #' Prints LATEX code.
 #'
-#' @detail
+#' @details
 #' To summarize results, we report an average of the estimated ATT(t) for all t greater than \code{treatment_date} used when calling \code{\link{did_players_performance}}.
 #'
 #' @import did dplyr stringr
@@ -591,7 +606,7 @@ plot_did <- function(did_results, save_here = getwd()) {
     ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
     ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
-    ggplot2::xlab("") + ggplot2::ylab("ATT") +
+    ggplot2::xlab("") + ggplot2::ylab(expression(italic("ATT ( t )"))) +
     ggplot2::theme_bw() +
     theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
@@ -608,7 +623,7 @@ plot_did <- function(did_results, save_here = getwd()) {
     ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
     ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
-    ggplot2::xlab("") + ggplot2::ylab("ATT") +
+    ggplot2::xlab("") + ggplot2::ylab(expression(italic("ATT ( t )"))) +
     ggplot2::theme_bw() +
     theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))

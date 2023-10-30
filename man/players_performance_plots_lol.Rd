@@ -6,7 +6,6 @@
 \usage{
 players_performance_plots_lol(
   n_pre_matches,
-  n_post_matches,
   treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2023-08-01"),
@@ -15,8 +14,6 @@ players_performance_plots_lol(
 }
 \arguments{
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
-
-\item{n_post_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
 \item{treatment_date}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
 
@@ -36,8 +33,7 @@ in each group before and after the treatment.
 \details{
 \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
-Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped. The number of
-players remaining in the data set is printed.
+Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed.
 }
 \author{
 Riccardo Di Francesco
