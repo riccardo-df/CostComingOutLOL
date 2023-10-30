@@ -43,9 +43,14 @@
 #'    \item{"jungle" }{This includes all champions whose main role is Jungle.}
 #'    \item{"middle" }{This includes all champions whose main role is Middle.}
 #'    \item{"top" }{This includes all champions whose main role is Top.}
-#'    \item{"support" }{This includes all champions expect whose main role is Support.}
-#'    \item{"adc" }{This includes all champions expect whose main role is Adc.}
+#'    \item{"support" }{This includes all champions whose main role is Support.}
+#'    \item{"adc" }{This includes all champions whose main role is Adc.}
+#'    \item{"main_role"}{This includes all champions whose main role is the same as the champion of interest.}
+#'    \item{"aux_role"}{This includes all champions whose auxiliary role is the same as the champion of interest.}
 #' }
+#'
+#' Almost all of these choices (exceptions are \code{"all"} and \code{"non_lgb"}) can be combined with the prefix \code{"non"} to exclude champions from a particular role.
+#' For instance, setting \code{donors} to \code{non_jungle} excludes from the donor pool all champions whose main role is jungle.
 #'
 #' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
 #' runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.\cr
@@ -79,13 +84,14 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
   day_no <- NULL
   lgb_selected_outcome <- NULL
   main_role <- NULL
+  aux_role <- NULL
   treatment <- NULL
   smooth_outcome <- NULL
 
   if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled", "win_rate_pooled", "gold_pooled", "assists_pooled", "kd_ratio"))) stop("Invalid 'outcome'. This must be one of 'pick_level_sum', 'pick_rate_pooled', 'win_rate_pooled', 'gold_pooled', 'assists_pooled', 'kd_ratio'.", call. = FALSE)
 
   if (length(donors) == 1) {
-    if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
+    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
     if (any(champions == "LGB") & donors != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donors' is set to 'non_lgb'.", call. = FALSE)
   } else {
     if (sum(!(donors %in% unique(lol_champ_pool_dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'lol_champ_pool_dta'.", call. = FALSE)
@@ -136,11 +142,11 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
       lgb_avg_outcome$champion <- "LGB"
 
       temp_panel <- lol_champ_pool_dta %>%
-        dplyr::select(day, day_no, champion, selected_outcome, all_of(covariate_colnames), main_role) %>%
+        dplyr::select(day, day_no, champion, selected_outcome, all_of(covariate_colnames), main_role, aux_role) %>%
         dplyr::bind_rows(lgb_avg_outcome)
     } else {
       temp_panel <- lol_champ_pool_dta %>%
-        dplyr::select(day, day_no, champion, selected_outcome, all_of(covariate_colnames), main_role)
+        dplyr::select(day, day_no, champion, selected_outcome, all_of(covariate_colnames), main_role, aux_role)
     }
 
     temp_panel$treatment <- as.logical(ifelse(temp_panel$champion == my_champion & temp_panel$day >= treatment_date + 1, 1, 0))
@@ -148,7 +154,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
     temp_panel <- temp_panel %>%
       dplyr::group_by(champion) %>%
       dplyr::mutate(smooth_outcome = stats::ksmooth(stats::time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>%
-      dplyr::select(day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames), main_role) %>%
+      dplyr::select(day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames), main_role, aux_role) %>%
       dplyr::ungroup()
 
     ## 2.) Subset according to donor pool. Do that again for backdate exercise and change treatment date.
@@ -262,8 +268,10 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #'    \item{"jungle" }{This includes all champions whose main role is Jungle.}
 #'    \item{"middle" }{This includes all champions whose main role is Middle.}
 #'    \item{"top" }{This includes all champions whose main role is Top.}
-#'    \item{"support" }{This includes all champions expect whose main role is Support.}
-#'    \item{"adc" }{This includes all champions expect whose main role is Adc.}
+#'    \item{"support" }{This includes all champions whose main role is Support.}
+#'    \item{"adc" }{This includes all champions whose main role is Adc.}
+#'    \item{"main_role"}{This includes all champions whose main role is the same as the champion of interest.}
+#'    \item{"aux_role"}{This includes all champions whose auxiliary role is the same as the champion of interest.}
 #' }
 #'
 #' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
@@ -301,7 +309,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
   if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must either 'pick_level' or 'pick_rate'.", call. = FALSE)
 
   if (length(donors) == 1) {
-    if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
+    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
     if (any(champions == "LGB") & donors != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donors' is set to 'non_lgb'.", call. = FALSE)
   } else {
     if (sum(!(donors %in% unique(lol_champ_pool_dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'lol_champ_pool_dta'.", call. = FALSE)
@@ -339,7 +347,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
           dplyr::group_by(day_no) %>%
           dplyr::mutate(lgb_selected_outcome = mean(selected_outcome)) %>%
           dplyr::distinct(day, .keep_all = TRUE) %>%
-          dplyr::select(region, day, day_no, lgb_selected_outcome, all_of(covariate_colnames), main_role)
+          dplyr::select(region, day, day_no, lgb_selected_outcome, all_of(covariate_colnames), main_role, aux_role)
       })
 
       lgb_avg_outcome <- lapply(lgb_avg_outcome, function(x) {
@@ -350,7 +358,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
 
       temp_regional_panels <- lapply(regional_panels, function(x) {
         x %>%
-          dplyr::select(region, day, day_no, champion, selected_outcome, all_of(covariate_colnames), main_role)
+          dplyr::select(region, day, day_no, champion, selected_outcome, all_of(covariate_colnames), main_role, aux_role)
       })
 
       temp_regional_panels <- mapply(function(x, y) { bind_rows(x, y) }, x = temp_regional_panels, y = lgb_avg_outcome, SIMPLIFY = FALSE)
@@ -359,7 +367,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
       temp_regional_panels <- lapply(regional_panels, function(x) { x %>% dplyr::mutate(treatment = as.logical(ifelse(champion == my_champion & day >= treatment_date + 1, 1, 0))) })
     }
 
-    temp_regional_panels <- lapply(temp_regional_panels, function(x) { x %>% dplyr::group_by(champion) %>% dplyr::mutate(smooth_outcome = stats::ksmooth(stats::time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>% dplyr::select(region, day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames), main_role) %>% dplyr::ungroup()})
+    temp_regional_panels <- lapply(temp_regional_panels, function(x) { x %>% dplyr::group_by(champion) %>% dplyr::mutate(smooth_outcome = stats::ksmooth(stats::time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>% dplyr::select(region, day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames), main_role, aux_role) %>% dplyr::ungroup()})
 
     ## 2.) Construct donor pools.
     cat("    2.) Constructing donor pools; \n")

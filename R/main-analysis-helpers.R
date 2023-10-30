@@ -3,6 +3,7 @@
 #' Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_pooled}}.
 #'
 #' @param pooled_results Output of \code{\link{run_main_pooled}}
+#' @param ylims Vector storing lower and upper limit for the y-axis.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
@@ -18,7 +19,7 @@
 #' @seealso \code{\link{produce_plots_regional}} \code{\link{produce_latex_pooled}} \code{\link{produce_latex_regional}}
 #'
 #' @export
-produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
+produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   day_no <- NULL
@@ -101,6 +102,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Composite LGB" else my_champion) +
+      ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
@@ -130,6 +132,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Composite LGB" else my_champion) +
+      ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
@@ -152,6 +155,7 @@ produce_plots_pooled <- function(pooled_results, save_here = getwd()) {
         ggplot2::geom_line(data = temp_drop, ggplot2::aes(y = synth_outcome, group = champion, col = "Synthetic LOO"), linetype = "dashed", linewidth = 0.5) +
         ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
         ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
+        ggplot2::ylim(ylims[1], ylims[2]) +
         ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
@@ -350,6 +354,11 @@ produce_latex_pooled <- function(pooled_result_list) {
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
   donor_pools[donor_pools == "middle"] <- "Only Mid"
+  donor_pools[donor_pools == "non_adc"] <- "Non Bottom"
+  donor_pools[donor_pools == "non_support"] <- "Non Support"
+  donor_pools[donor_pools == "non_jungle"] <- "Non Jungle"
+  donor_pools[donor_pools == "non_top"] <- "Non Top"
+  donor_pools[donor_pools == "non_middle"] <- "Non Mid"
 
   estimators[estimators == "sc"] <- "Synthetic Controls"
   estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
@@ -474,6 +483,11 @@ produce_latex_regional <- function(regional_result_list) {
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
   donor_pools[donor_pools == "middle"] <- "Only Mid"
+  donor_pools[donor_pools == "non_adc"] <- "Non Bottom"
+  donor_pools[donor_pools == "non_support"] <- "Non Support"
+  donor_pools[donor_pools == "non_jungle"] <- "Non Jungle"
+  donor_pools[donor_pools == "non_top"] <- "Non Top"
+  donor_pools[donor_pools == "non_middle"] <- "Non Mid"
 
   estimators[estimators == "sc"] <- "Synthetic Controls"
   estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
@@ -620,7 +634,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   estimators_pooled <- sapply(pooled_result_list, function(x) { x$estimator })
   dtas_pooled <- lapply(pooled_result_list, function(x) { x[[my_champion_pooled]]$dta })
   dta_pooled <- dtas_pooled[[1]] %>%
-    dplyr::filter(champion == my_champion_pooled & day < treatment_date) %>%
+    dplyr::filter(champion == my_champion_pooled & day < treatment_date_pooled) %>%
     dplyr::select(day, smooth_outcome)
 
   if (length(unique(outcome_colnames_pooled)) != 1) stop("'pooled_result_list' has been constructed using different outcomes. Maybe you want two different tables.", call. = FALSE)
@@ -629,7 +643,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   if (length(unique(bandwidths_pooled)) != 1) stop("'pooled_result_list' has been constructed using different bandwidths. Maybe you want two different tables.", call. = FALSE)
 
   synth_outcomes_dta_pooled <- lapply(pooled_result_list, function(z) { lapply(z[!(names(z) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))], function(x) { construct_synth_outcome(x$tau_hat, x$dta, "champion", "smooth_outcome", "day") }) })
-  synth_outcomes_pooled <- lapply(synth_outcomes_dta_pooled, function(x) { x[[my_champion_pooled]]$synth_outcome %>% dplyr::filter(day < treatment_date) })
+  synth_outcomes_pooled <- lapply(synth_outcomes_dta_pooled, function(x) { x[[my_champion_pooled]]$synth_outcome %>% dplyr::filter(day < treatment_date_pooled) })
   n_donors_pooled <- sapply(synth_outcomes_dta_pooled, function(x) { x[[my_champion_pooled]]$weights %>% nrow()})
 
   # Regional.
@@ -646,7 +660,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   estimators_regional <- sapply(regional_result_list, function(x) { x$estimator })
   dtas_regional <- lapply(regional_result_list, function(x) { dplyr::bind_rows(x[[my_champion_regional]]$dta) })
   regional_dta <- dtas_regional[[1]] %>%
-    dplyr::filter(champion == my_champion_pooled & day < treatment_date) %>%
+    dplyr::filter(champion == my_champion_pooled & day < treatment_date_regional) %>%
     dplyr::select(region, day, smooth_outcome)
 
   if (length(unique(outcome_colnames_regional)) != 1) stop("'regional_result_list' has been constructed using different treatment dates. Maybe you want two different tables.", call. = FALSE)
@@ -660,7 +674,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
     })
   })
 
-  synth_outcomes_regional <- lapply(synth_outcomes_dta_regional, function(x) { lapply(x[[my_champion_regional]], function(y) { y$synth_outcome %>% dplyr::filter(day < treatment_date) }) %>% dplyr::bind_rows(.id = "groups") })
+  synth_outcomes_regional <- lapply(synth_outcomes_dta_regional, function(x) { lapply(x[[my_champion_regional]], function(y) { y$synth_outcome %>% dplyr::filter(day < treatment_date_regional) }) %>% dplyr::bind_rows(.id = "groups") })
   synth_outcomes_regional <- lapply(synth_outcomes_regional, stats::setNames, c("region", "day", "synth_outcome"))
   n_donors_regional <- lapply(synth_outcomes_dta_regional, function(x) { lapply(x[[my_champion_regional]], function(y) { y$weights %>% nrow() }) %>% unlist() })
 
@@ -688,6 +702,11 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   donor_pools[donor_pools == "jungle"] <- "Only Jungle"
   donor_pools[donor_pools == "top"] <- "Only Top"
   donor_pools[donor_pools == "middle"] <- "Only Mid"
+  donor_pools[donor_pools == "non_adc"] <- "Non Bottom"
+  donor_pools[donor_pools == "non_support"] <- "Non Support"
+  donor_pools[donor_pools == "non_jungle"] <- "Non Jungle"
+  donor_pools[donor_pools == "non_top"] <- "Non Top"
+  donor_pools[donor_pools == "non_middle"] <- "Non Mid"
 
   estimators[estimators == "sc"] <- "Synthetic Controls"
   estimators[estimators == "sc_reg"] <- "Regularized Synthetic Controls"
@@ -699,7 +718,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   ses_pooled <- sapply(pooled_result_list, function(x) { x[[my_champion]]$se_tau_hat })
 
   if (is.list(ses_pooled)) {
-    cils_pooled <- cius_pooled <- rep(NA, n_col)
+    cils_pooled <- cius_pooled <- rep(NA, n_col-1)
   } else {
     cils_pooled <- trimws(format(round(tau_hats_pooled - 1.96 * ses_pooled, 3), nsmall = 3))
     cius_pooled <- trimws(format(round(tau_hats_pooled + 1.96 * ses_pooled, 3), nsmall = 3))
@@ -711,8 +730,8 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   tau_hats_regional <- lapply(regional_result_list, function(x) { x[[my_champion]]$tau_hats %>% unlist() })
   ses_regional <- lapply(regional_result_list, function(x) { x[[my_champion]]$ses %>% unlist() })
 
-  if (length(ses_regional) == 1) {
-    cils_regional <- cius_regional <- vector("list", length = n_col)
+  if (is.null(ses_regional[[1]])) {
+    cils_regional <- cius_regional <- matrix(NA, nrow = 4, ncol = length(donor_pools))
   } else {
     cils_regional <- format(round(mapply(function(x, y) { x - 1.96 * y }, x = tau_hats_regional, y = ses_regional), 3), nsmall = 3)
     cius_regional <- format(round(mapply(function(x, y) { x + 1.96 * y }, x = tau_hats_regional, y = ses_regional), 3), nsmall = 3)

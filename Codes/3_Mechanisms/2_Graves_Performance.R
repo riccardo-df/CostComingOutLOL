@@ -42,7 +42,7 @@ pooled_result <- run_main_pooled(champions, outcome_colnames, donors, estimator,
 # Plots -------------------------------------------------------------------
 save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Performance"
 
-produce_plots_pooled(pooled_result, save_here)
+produce_plots_pooled(pooled_result, ylims = c(20, 80), save_here)
 
 # Point estimate and confidence intervals ---------------------------------
 tau_hat <-  summary(pooled_result$Graves$tau_hat)$estimate

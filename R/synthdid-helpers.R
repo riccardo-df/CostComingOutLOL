@@ -10,7 +10,7 @@
 #' \code{dta} filtered to contain only the champion under investigation and the desired donors.
 #'
 #' @details
-#' \code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, one of seven special strings can be used:
+#' \code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, one of the following special strings can be used:
 #'
 #' \itemize{
 #'    \item{"all" }{This includes all champions.}
@@ -18,9 +18,14 @@
 #'    \item{"jungle" }{This includes all champions whose main role is Jungle.}
 #'    \item{"middle" }{This includes all champions whose main role is Middle.}
 #'    \item{"top" }{This includes all champions whose main role is Top.}
-#'    \item{"support" }{This includes all champions expect whose main role is Support.}
-#'    \item{"adc" }{This includes all champions expect whose main role is Adc.}
+#'    \item{"support" }{This includes all champions whose main role is Support.}
+#'    \item{"adc" }{This includes all champions whose main role is Adc.}
+#'    \item{"main_role"}{This includes all champions whose main role is the same as the champion of interest.}
+#'    \item{"aux_role"}{This includes all champions whose auxiliary role is the same as the champion of interest.}
 #' }
+#'
+#' Almost all of these choices (exceptions are \code{"all"} and \code{"non_lgb"}) can be combined with the prefix \code{"non"} to exclude champions from a particular role.
+#' For instance, setting \code{donors} to \code{non_jungle} excludes from the donor pool all champions whose main role is jungle.
 #'
 #' @import dplyr
 #'
@@ -33,7 +38,7 @@ construct_donor_pool <- function(dta, donors, my_champion) {
   main_role <- NULL
 
   if (length(donors) == 1) {
-    if (!(donors %in% c("all", "non_lgb", "jungle", "middle", "top", "support", "adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
+    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
   } else {
     if (sum(!(donors %in% unique(dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'dta'.", call. = FALSE)
   }
@@ -48,6 +53,22 @@ construct_donor_pool <- function(dta, donors, my_champion) {
 
       my_subset <- dta %>%
         dplyr::filter(!(champion %in% exclude_these))
+    } else if (donors == "main_role") {
+      temp_main_role <- dta %>%
+        dplyr::filter(champion == my_champion) %>%
+        dplyr::pull(main_role) %>%
+        unique()
+
+      my_subset <- dta %>%
+        dplyr::filter(main_role == temp_main_role | champion == my_champion)
+    } else if (donors == "aux_role") {
+      temp_aux_role <- dta %>%
+        dplyr::filter(champion == my_champion) %>%
+        dplyr::pull(aux_role) %>%
+        unique()
+
+      my_subset <- dta %>%
+        dplyr::filter(main_role == temp_aux_role | champion == my_champion)
     } else if (donors == "jungle") {
       my_subset <- dta %>%
         dplyr::filter(main_role == "JUNGLE" | champion == my_champion)
@@ -63,6 +84,37 @@ construct_donor_pool <- function(dta, donors, my_champion) {
     } else if (donors == "adc") {
       my_subset <- dta %>%
         dplyr::filter(main_role == "BOTTOM" | champion == my_champion)
+    } else if (donors == "non_main_role") {
+      temp_main_role <- dta %>%
+        dplyr::filter(champion == my_champion) %>%
+        dplyr::pull(main_role) %>%
+        unique()
+
+      my_subset <- dta %>%
+        dplyr::filter(main_role != temp_main_role | champion == my_champion)
+    } else if (donors == "non_aux_role") {
+      temp_aux_role <- dta %>%
+        dplyr::filter(champion == my_champion) %>%
+        dplyr::pull(aux_role) %>%
+        unique()
+
+      my_subset <- dta %>%
+        dplyr::filter(main_role != temp_aux_role | champion == my_champion)
+    } else if (donors == "non_jungle") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role != "JUNGLE" | champion == my_champion)
+    } else if (donors == "non_middle") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role != "MIDDLE" | champion == my_champion)
+    } else if (donors == "non_top") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role != "TOP" | champion == my_champion)
+    } else if (donors == "non_support") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role != "UTILITY" | champion == my_champion)
+    } else if (donors == "non_adc") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role != "BOTTOM" | champion == my_champion)
     }
   } else {
     my_subset <- dta %>%
