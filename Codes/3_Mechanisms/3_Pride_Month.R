@@ -4,7 +4,7 @@
 
 ## The Cost of Coming Out - Synthetic Controls.
 
-## This script runs the main analysis of the "The Cost of Coming Out" paper.
+## This script estimates the effects of LGBT Pride Month on the LGB characters.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
@@ -16,11 +16,10 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Settings --------------------------------------------
 ## Select champions.
-champions <- c("LGB")
+champions <- "LGB"
 
 ## Select outcome series.
 outcome_colname <- "pick_rate_pooled"
-
 bandwidth <- 3
 
 min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
@@ -31,12 +30,10 @@ donors <- "non_lgb"
 estimator <- "sc_reg"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
-n_boot <- 2
+n_boot <- 200
 backdate <- 10
 
 covariates <- c()
-# covariates_pool <- c("ban_level_sum", "win_level_sum", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
-# covariates_pool <- c("ban_rate_pooled", "win_rate_pooled", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
 
 # Estimation --------------------------------------------------------------
 pooled_result <- run_main_pooled(champions, outcome_colname, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
@@ -44,7 +41,12 @@ pooled_result <- run_main_pooled(champions, outcome_colname, donors, estimator, 
 # Plots -------------------------------------------------------------------
 save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
 
-produce_plots_pooled(pooled_result, save_here)
+produce_plots_pooled(pooled_result, ylims = c(0, 40), save_here)
 
-# LATEX -------------------------------------------------------------------
-produce_latex_pooled(pooled_result)
+# Point estimate and confidence intervals ---------------------------------
+tau_hat <-  summary(pooled_result$LGB$tau_hat)$estimate
+se <- pooled_result$LGB$se_tau_hat
+cil <- trimws(format(round(tau_hat - 1.96 * se, 3), nsmall = 3))
+ciu <- trimws(format(round(tau_hat + 1.96 * se, 3), nsmall = 3))
+
+cat("Point estimate: ", tau_hat, " [", cil, ", ", ciu, "] \n", sep = "")

@@ -26,7 +26,7 @@ bandwidth_pool <- 3
 bandwidth_regional <- 3
 
 min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
-max_date <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
 donor_pools <- c("all", "adc", "support")

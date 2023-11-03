@@ -34,7 +34,6 @@ n_boot <- 200
 backdate <- 10
 
 covariates <- c()
-# covariates <- c("ban_rate_pooled", "win_rate_pooled", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
 
 # Estimation --------------------------------------------------------------
 pooled_result <- run_main_pooled(champions, outcome_colnames, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
