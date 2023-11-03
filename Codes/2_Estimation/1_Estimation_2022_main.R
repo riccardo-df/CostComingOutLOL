@@ -29,7 +29,7 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("all", "adc", "support")
+donor_pools <- c("all", "adc")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE

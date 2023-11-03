@@ -29,7 +29,7 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("jungle", "middle", "top")
+donor_pools <- c("top", "jungle", "middle", "support")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
@@ -38,8 +38,6 @@ backdate <- 10
 
 covariates_pool <- c()
 covariates_regional <- c()
-# covariates_pool <- c("ban_rate_pooled", "win_rate_pooled", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled")
-# covariates_regional <- c("ban_rate", "win_rate", "gold_avg", "kills_avg", "assists_avg", "deaths_avg")
 
 # Estimation --------------------------------------------------------------
 ## Loop over donor pools.
@@ -65,7 +63,7 @@ for (estimator in estimators) {
 save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
 for (i in seq_len(length(regional_result_list))) {
-  produce_plots_pooled(pooled_result_list[[i]], save_here)
+  produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), save_here)
   produce_plots_regional(regional_result_list[[i]], save_here)
 }
 

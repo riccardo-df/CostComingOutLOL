@@ -577,7 +577,7 @@ produce_latex_regional <- function(regional_result_list) {
       \\hline \\\\[-1.8ex]
       \\end{tabular}
       \\end{adjustbox}
-      \\caption{Point estimates and $95\\%$ confidence intervals for $\\hat{\\tau}$. Additionally, the number of donors receiving a non-zero weight and the pre-treatment root mean squared error are displayed. Each panel reports reports the results obtained using only matches from a particular region. Each column corresponds to a different specification, with the specifications differing solely in the employed estimator and donor pool.}
+      \\caption{Point estimates and $95\\%$ confidence intervals for $\\hat{\\tau}$. Additionally, the number of donors receiving a non-zero weight and the pre-treatment root mean squared error are displayed. Each panel reports reports the results obtained using only matches from a particular region. Each column corresponds to a different specification, with the specifications differing solely in the employed estimator and donor pool composition.}
       \\label{table_estimation_results_regional}
     \\end{table}
 \\endgroup")
@@ -815,7 +815,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
       \\hline \\\\[-1.8ex]
       \\end{tabular}
       \\end{adjustbox}
-      \\caption{Point estimates and $95\\%$ confidence intervals for $\\hat{\\tau}$. Additionally, the number of donors receiving a non-zero weight and the pre-treatment root mean squared error are displayed. The first panel reports the results obtained using all the observed matches. The remaining four panels report the results obtained using only matches from a particular region. Each column corresponds to a different specification, with the specifications differing solely in the employed estimator and donor pool.}
+      \\caption{Point estimates and $95\\%$ confidence intervals for $\\hat{\\tau}$. Additionally, the number of donors receiving a non-zero weight and the pre-treatment root mean squared error are displayed. The first panel reports the results obtained using all the observed matches. The remaining four panels report the results obtained using only matches from a particular region. Each column corresponds to a different specification, with the specifications differing solely in the employed estimator and donor pool composition.}
       \\label{table_estimation_results}
     \\end{table}
 \\endgroup")
