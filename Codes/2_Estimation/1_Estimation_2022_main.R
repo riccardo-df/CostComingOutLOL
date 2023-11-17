@@ -4,7 +4,7 @@
 
 ## The Cost of Coming Out - Synthetic Controls.
 
-## This script runs the main analysis of the "The Cost of Coming Out" paper.
+## This script runs the main analysis of the "The Cost of Coming Out" paper and produces Figure 4.1, Figure 4.2, and Table 4.1.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
@@ -16,7 +16,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Settings --------------------------------------------
 ## Select champions.
-champions <- "Graves"
+champions <- c("Graves", "TwistedFate")
 
 ## Select outcome series.
 outcome_colname_pool <- "pick_rate_pooled"
@@ -32,7 +32,7 @@ max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 donor_pools <- c("all", "adc")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- TRUE
+inference <- FALSE
 n_boot <- 200
 backdate <- 10
 

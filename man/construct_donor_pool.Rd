@@ -20,17 +20,22 @@ construct_donor_pool(dta, donors, my_champion)
 Subsets the provided data to include only the champion under investigation and the desired units in the donor pool.
 }
 \details{
-\code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, one of seven special strings can be used:
+\code{donors} must be a character vector with one or more champions contained in \code{dta}. Alternatively, one of the following special strings can be used:
 
 \itemize{
    \item{"all" }{This includes all champions.}
-   \item{"non_lgb" }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+   \item{"non_lgb" }{This includes all champions expect Graves, Twisted Fate, Diana, Leona, Nami, and Neeko.}
    \item{"jungle" }{This includes all champions whose main role is Jungle.}
    \item{"middle" }{This includes all champions whose main role is Middle.}
    \item{"top" }{This includes all champions whose main role is Top.}
-   \item{"support" }{This includes all champions expect whose main role is Support.}
-   \item{"adc" }{This includes all champions expect whose main role is Adc.}
+   \item{"support" }{This includes all champions whose main role is Support.}
+   \item{"adc" }{This includes all champions whose main role is Adc.}
+   \item{"main_role"}{This includes all champions whose main role is the same as the champion of interest.}
+   \item{"aux_role"}{This includes all champions whose auxiliary role is the same as the champion of interest.}
 }
+
+Almost all of these choices (exceptions are \code{"all"} and \code{"non_lgb"}) can be combined with the prefix \code{"non"} to exclude champions from a particular role.
+For instance, setting \code{donors} to \code{non_jungle} excludes from the donor pool all champions whose main role is jungle.
 }
 \author{
 Riccardo Di Francesco

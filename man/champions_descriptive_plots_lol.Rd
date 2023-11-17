@@ -2,7 +2,7 @@
 % Please edit documentation in R/descriptive-plots.R
 \name{champions_descriptive_plots_lol}
 \alias{champions_descriptive_plots_lol}
-\title{LoL Descriptive Plots}
+\title{LoL Champions' Descriptive Plots}
 \usage{
 champions_descriptive_plots_lol(
   champions,
@@ -11,6 +11,8 @@ champions_descriptive_plots_lol(
   min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2023-08-01"),
   bandwidth = 0.01,
+  ylims_levels = c(0, 100),
+  ylims_rates = c(0, 100),
   save_here = getwd()
 )
 }
@@ -21,11 +23,15 @@ champions_descriptive_plots_lol(
 
 \item{treatment_date2}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
 
-\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
+\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
 
-\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
+\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
 
 \item{bandwidth}{Parameter controlling the amount of smoothing.}
+
+\item{ylims_levels}{Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).}
+
+\item{ylims_rates}{Vector storing lower and upper limit for the y-axis (valid for the variables measured in rates).}
 
 \item{save_here}{String denoting the path where to save the figures.}
 }
@@ -33,16 +39,16 @@ champions_descriptive_plots_lol(
 Produces nice plots.
 }
 \description{
-Produces plots for the pick, ban, and win variables of the champions of interest. It also produces plots to investigate the most common auxiliary role given the main role.
+Produces plots for the pick, ban, and win variables of the champions of interest.
 }
 \details{
 \code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
-\code{\link{champions_descriptive_plots_lol}} always includes in the plots an LGB composite unit constructed by averaging the variables values of the champions
-Nami, Leona, Diana, and Neeko.\cr
+If one of the element of \code{champions} is \code{"LGB"}, \code{\link{champions_descriptive_plots_lol}} includes in the plots an LGB composite unit constructed by averaging the variables values of the
+champions Diana, Leona, Nami, and Neeko. These are the champions confirmed to be LGBT before Graves' disclosure. See Section 2.2 and Section 5.4 of the paper for more details.\cr
 
 The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
-An infinitesimal bandwidth amounts to no smoothing.\cr
+An infinitesimal bandwidth amounts to no smoothing.
 }
 \seealso{
 \code{\link{champions_performance_plots_lol}} \code{\link{players_descriptive_plots_lol}}

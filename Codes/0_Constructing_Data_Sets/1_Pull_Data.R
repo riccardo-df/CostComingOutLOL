@@ -17,7 +17,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 # Pull data ----------------------------------------------------------
 ## Settings.
 api_key <- "INSERT YOUR KEY"
-server <- "euw1"
+server <- "euw1" # Change this to target different servers.
 queue <- "RANKED_SOLO_5x5"
 rank <- "CHALLENGER"
 division <- "I"

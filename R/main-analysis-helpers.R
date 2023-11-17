@@ -9,7 +9,7 @@
 #' @return
 #' Save some nice plots.
 #'
-#' @import dplyr ggplot2 ggsci grDevices Cairo
+#' @import dplyr ggplot2 ggsci grDevices
 #' @importFrom stats reorder
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom lubridate year
@@ -91,7 +91,10 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = 
     }
 
     plot_dta <- dta %>%
-      dplyr::filter(champion == my_champion)
+      dplyr::filter(champion == my_champion) %>%
+      mutate(wrap = my_champion)
+
+    if (my_champion == "LGB") plot_dta$wrap <- "Composite LGB"
 
     # 2b.) Main fit.
     plot_main <- plot_dta %>%
@@ -101,26 +104,29 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = 
       ggplot2::geom_line(linewidth = 1) +
       ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
-      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Composite LGB" else my_champion) +
+      ggplot2::facet_wrap(vars(wrap)) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) +
       ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-            legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                     legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".eps"), plot_main, device = cairo_ps, width = 7, height = 7)
 
     # 2b.) Weights for the main fit.
     plot_weights <- synth_outcomes[[my_champion]]$weights %>%
+      mutate(wrap = my_champion) %>%
       ggplot2::ggplot(ggplot2::aes(x = stats::reorder(champion, -sort(weight)), y = weight, fill = champion)) +
       ggplot2::geom_bar(position = "dodge", stat = "identity") +
       ggplot2::coord_flip() +
       ggsci::scale_fill_jco() +
-      ggplot2::xlab("") + ggplot2::ylab("Weight") + ggplot2::ggtitle(if (my_champion == "LGB") "Composite LGB" else my_champion) +
+      ggplot2::facet_wrap(vars(wrap)) +
+      ggplot2::xlab("") + ggplot2::ylab("Weight") +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".svg"), plot_weights, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".eps"), plot_weights, device = cairo_ps, width = 7, height = 7)
 
     # 2d.) Backdate exercise.
     plot_back <- plot_dta %>%
@@ -131,13 +137,14 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = 
       ggplot2::geom_line(data = synth_outcomes_back[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
-      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Composite LGB" else my_champion) +
+      ggplot2::facet_wrap(vars(wrap)) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) +
       ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-            legend.position = c(0.13, 0.82), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                     legend.position = c(0.13, 0.82), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
     # 2e.) Leave-one-out exercise.
     if (length(pooled_results[[my_champion]]$tau_hat_drop) != 0) {
@@ -154,20 +161,21 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = 
         ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
         ggplot2::geom_line(data = temp_drop, ggplot2::aes(y = synth_outcome, group = champion, col = "Synthetic LOO"), linetype = "dashed", linewidth = 0.5) +
         ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
-        ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
+        ggplot2::facet_wrap(vars(wrap)) +
+        ggplot2::xlab("") + ggplot2::ylab(y_label) +
         ggplot2::ylim(ylims[1], ylims[2]) +
         ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-              legend.position = c(0.15, 0.80), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                       legend.position = c(0.15, 0.80), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
 
       plot_robustness <- gridExtra::arrangeGrob(plot_back, plot_drop, ncol = 1)
     } else {
       plot_robustness <- plot_back
     }
 
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_robustness", year, ".svg"), plot_robustness, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_robustness", year, ".eps"), plot_robustness, device = cairo_ps, width = 7, height = 7)
   }
 
   ## 4.) Talk to the user.
@@ -260,7 +268,8 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
     }
 
     plot_dta <- dta %>%
-      dplyr::filter(champion == my_champion)
+      dplyr::filter(champion == my_champion) %>%
+      mutate(wrap = my_champion)
 
     plot_synth_outcomes <- lapply(synth_outcomes[[my_champion]], function(x) { x$synth_outcome }) %>%
       dplyr::bind_rows(.id = "groups")
@@ -275,13 +284,13 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
       ggplot2::geom_line(data = plot_synth_outcomes, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 0.6) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(~region, ncol = 2) +
-      ggplot2::xlab("") + ggplot2::ylab(y_label) + ggplot2::ggtitle(if (my_champion == "LGB") "Other LGB" else my_champion) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15),
-            legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".svg"), plot_main, device = Cairo::CairoSVG, width = 7, height = 7)
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"),
+                     legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".eps"), plot_main, device = cairo_ps, width = 7, height = 7)
   }
 
   ## 3.) Talk to the user.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/descriptive-plots.R
 \name{players_descriptive_plots_lol}
 \alias{players_descriptive_plots_lol}
-\title{LoL Performance Plots}
+\title{LoL Players' Behavior Plots}
 \usage{
 players_descriptive_plots_lol(
   min_date = as.POSIXct("2022-01-01"),
@@ -12,9 +12,9 @@ players_descriptive_plots_lol(
 )
 }
 \arguments{
-\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
+\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
 
-\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
+\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
 
 \item{bandwidth}{Parameter controlling the amount of smoothing.}
 
@@ -24,7 +24,7 @@ players_descriptive_plots_lol(
 Produces a nice plot.
 }
 \description{
-Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
+Produces plots for the number of daily players and matches.
 }
 \details{
 \code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr

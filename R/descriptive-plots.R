@@ -1,13 +1,15 @@
-#' LoL Descriptive Plots
+#' LoL Champions' Descriptive Plots
 #'
-#' Produces plots for the pick, ban, and win variables of the champions of interest. It also produces plots to investigate the most common auxiliary role given the main role.
+#' Produces plots for the pick, ban, and win variables of the champions of interest.
 #'
 #' @param champions Character vector with the champions of interest.
 #' @param treatment_date1 Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
 #' @param treatment_date2 Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#' @param min_date Object of class \code{POSIXct}. When to start the series.
+#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param bandwidth Parameter controlling the amount of smoothing.
+#' @param ylims_levels Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).
+#' @param ylims_rates Vector storing lower and upper limit for the y-axis (valid for the variables measured in rates).
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
@@ -16,11 +18,11 @@
 #' @details
 #' \code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' \code{\link{champions_descriptive_plots_lol}} always includes in the plots an LGB composite unit constructed by averaging the variables values of the champions
-#' Nami, Leona, Diana, and Neeko.\cr
+#' If one of the element of \code{champions} is \code{"LGB"}, \code{\link{champions_descriptive_plots_lol}} includes in the plots an LGB composite unit constructed by averaging the variables values of the
+#' champions Diana, Leona, Nami, and Neeko. These are the champions confirmed to be LGBT before Graves' disclosure. See Section 2.2 and Section 5.4 of the paper for more details.\cr
 #'
 #' The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
-#' An infinitesimal bandwidth amounts to no smoothing.\cr
+#' An infinitesimal bandwidth amounts to no smoothing.
 #'
 #' @import dplyr ggplot2 grDevices
 #' @importFrom stats ksmooth
@@ -35,7 +37,7 @@ champions_descriptive_plots_lol <- function(champions,
                                   treatment_date1 = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
                                   treatment_date2 = as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d"),
                                   min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
-                                  bandwidth = 0.01, save_here = getwd()) {
+                                  bandwidth = 0.01, ylims_levels = c(0, 100), ylims_rates = c(0, 100), save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   pick_level_sum <- NULL
@@ -85,48 +87,50 @@ champions_descriptive_plots_lol <- function(champions,
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
     dplyr::filter(min_date < day & day < max_date)
 
-  ## 1.) Construct composite LGB unit and bind rows.
-  lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
+  ## 1.) If necessary, Construct composite LGB unit and bind rows.
+  if ("LGB" %in% champions) {
+    lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
 
-  lgb_aggregate_pool <- lol_champ_pool_dta %>%
-    dplyr::filter(champion %in% lgb_champions) %>%
-    dplyr::group_by(day) %>%
-    dplyr::mutate(lgb_pick_level = mean(pick_level_sum),
-                  lgb_pick_rate = mean(pick_rate_pooled),
-                  lgb_ban_level = mean(ban_level_sum),
-                  lgb_ban_rate = mean(ban_rate_pooled),
-                  lgb_win_level = mean(win_level_sum),
-                  lgb_win_rate = mean(win_rate_pooled)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(champion = "Composite LGB") %>%
-    dplyr::distinct(day, .keep_all = TRUE) %>%
-    dplyr::select(day, champion, lgb_pick_level, lgb_pick_rate, lgb_ban_level, lgb_ban_rate, lgb_win_level, lgb_win_rate, main_role, aux_role)
+    lgb_aggregate_pool <- lol_champ_pool_dta %>%
+      dplyr::filter(champion %in% lgb_champions) %>%
+      dplyr::group_by(day) %>%
+      dplyr::mutate(lgb_pick_level = mean(pick_level_sum),
+                    lgb_pick_rate = mean(pick_rate_pooled),
+                    lgb_ban_level = mean(ban_level_sum),
+                    lgb_ban_rate = mean(ban_rate_pooled),
+                    lgb_win_level = mean(win_level_sum),
+                    lgb_win_rate = mean(win_rate_pooled)) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(champion = "Composite LGB") %>%
+      dplyr::distinct(day, .keep_all = TRUE) %>%
+      dplyr::select(day, champion, lgb_pick_level, lgb_pick_rate, lgb_ban_level, lgb_ban_rate, lgb_win_level, lgb_win_rate, main_role, aux_role)
 
-  colnames(lgb_aggregate_pool) <- c("day", "champion", "pick_level_sum", "pick_rate_pooled", "ban_level_sum", "ban_rate_pooled", "win_level_sum", "win_rate_pooled", "main_role", "aux_role")
+    colnames(lgb_aggregate_pool) <- c("day", "champion", "pick_level_sum", "pick_rate_pooled", "ban_level_sum", "ban_rate_pooled", "win_level_sum", "win_rate_pooled", "main_role", "aux_role")
 
-  lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::select(day, champion, pick_level_sum, pick_rate_pooled, ban_level_sum, ban_rate_pooled, win_level_sum, win_rate_pooled, main_role, aux_role) %>%
-    dplyr::bind_rows(lgb_aggregate_pool)
+    lol_champ_pool_dta <- lol_champ_pool_dta %>%
+      dplyr::select(day, champion, pick_level_sum, pick_rate_pooled, ban_level_sum, ban_rate_pooled, win_level_sum, win_rate_pooled, main_role, aux_role) %>%
+      dplyr::bind_rows(lgb_aggregate_pool)
 
-  lgb_aggregate_regional <- lol_champ_dta %>%
-    dplyr::filter(champion %in% lgb_champions) %>%
-    dplyr::group_by(region, day) %>%
-    dplyr::mutate(lgb_pick_level = mean(pick_level),
-                  lgb_pick_rate = mean(pick_rate),
-                  lgb_ban_level = mean(ban_level),
-                  lgb_ban_rate = mean(ban_rate),
-                  lgb_win_level = mean(win_level),
-                  lgb_win_rate = mean(win_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(champion = "Composite LGB") %>%
-    dplyr::distinct(region, day, .keep_all = TRUE) %>%
-    dplyr::select(region, day, champion, lgb_pick_level, lgb_pick_rate, lgb_ban_level, lgb_ban_rate, lgb_win_level, lgb_win_rate)
+    lgb_aggregate_regional <- lol_champ_dta %>%
+      dplyr::filter(champion %in% lgb_champions) %>%
+      dplyr::group_by(region, day) %>%
+      dplyr::mutate(lgb_pick_level = mean(pick_level),
+                    lgb_pick_rate = mean(pick_rate),
+                    lgb_ban_level = mean(ban_level),
+                    lgb_ban_rate = mean(ban_rate),
+                    lgb_win_level = mean(win_level),
+                    lgb_win_rate = mean(win_rate)) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(champion = "Composite LGB") %>%
+      dplyr::distinct(region, day, .keep_all = TRUE) %>%
+      dplyr::select(region, day, champion, lgb_pick_level, lgb_pick_rate, lgb_ban_level, lgb_ban_rate, lgb_win_level, lgb_win_rate)
 
-  colnames(lgb_aggregate_regional) <- c("region", "day", "champion", "pick_level", "pick_rate", "ban_level", "ban_rate", "win_level", "win_rate")
+    colnames(lgb_aggregate_regional) <- c("region", "day", "champion", "pick_level", "pick_rate", "ban_level", "ban_rate", "win_level", "win_rate")
 
-  lol_champ_dta <- lol_champ_dta %>%
-    dplyr::select(region, day, champion, pick_level, pick_rate, ban_level, ban_rate, win_level, win_rate) %>%
-    dplyr::bind_rows(lgb_aggregate_regional)
+    lol_champ_dta <- lol_champ_dta %>%
+      dplyr::select(region, day, champion, pick_level, pick_rate, ban_level, ban_rate, win_level, win_rate) %>%
+      dplyr::bind_rows(lgb_aggregate_regional)
+  }
 
   ## 2.) Smooth the series.
   to_smooth_pool <- c("pick_level_sum", "pick_rate_pooled", "ban_level_sum", "ban_rate_pooled", "win_level_sum", "win_rate_pooled")
@@ -150,13 +154,14 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::ylim(ylims_levels[1], ylims_levels[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick level")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_pooled.svg"), plot_pick_level_pooled, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_pooled.eps"), plot_pick_level_pooled, device = cairo_ps, width = 7, height = 7)
 
   plot_pick_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -166,13 +171,14 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::ylim(ylims_rates[1], ylims_rates[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_pooled.svg"), plot_pick_rate_pooled, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_pooled.eps"), plot_pick_rate_pooled, device = cairo_ps, width = 7, height = 7)
 
   # 3b.) Bans.
   plot_ban_level_pooled <- lol_champ_pool_dta %>%
@@ -183,13 +189,14 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::ylim(ylims_levels[1], ylims_levels[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban level")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_pooled.svg"), plot_ban_level_pooled, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_pooled.eps"), plot_ban_level_pooled, device = cairo_ps, width = 7, height = 7)
 
   plot_ban_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -199,13 +206,14 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::ylim(ylims_rates[1], ylims_rates[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_pooled.svg"), plot_ban_rate_pooled, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_pooled.eps"), plot_ban_rate_pooled, device = cairo_ps, width = 7, height = 7)
 
   # 3c.) Wins.
   plot_win_level_pooled <- lol_champ_pool_dta %>%
@@ -216,13 +224,14 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::ylim(ylims_levels[1], ylims_levels[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win level")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_pooled.svg"), plot_win_level_pooled, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_pooled.eps"), plot_win_level_pooled, device = cairo_ps, width = 7, height = 7)
 
   plot_win_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -232,13 +241,14 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::ylim(ylims_rates[1], ylims_rates[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%Y") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
     ggplot2::facet_wrap(vars(champion)) +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_pooled.svg"), plot_win_rate_pooled, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_pooled.eps"), plot_win_rate_pooled, device = cairo_ps, width = 7, height = 7)
 
   ## 4.) Regional plots.
   # 4a.) Picks.
@@ -254,9 +264,9 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_regional.svg"), plot_pick_level_regional, device = Cairo::CairoSVG, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_regional.eps"), plot_pick_level_regional, device = cairo_ps, width = 7, height = 7)
 
   plot_pick_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -270,9 +280,9 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_regional.svg"), plot_pick_rate_regional, device = Cairo::CairoSVG, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_regional.eps"), plot_pick_rate_regional, device = cairo_ps, width = 7, height = 7)
 
   # 4b.) Bans.
   plot_ban_level_regional <- lol_champ_dta %>%
@@ -287,9 +297,9 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_regional.svg"), plot_ban_level_regional, device = Cairo::CairoSVG, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_regional.eps"), plot_ban_level_regional, device = cairo_ps, width = 7, height = 7)
 
   plot_ban_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -303,9 +313,9 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_regional.svg"), plot_ban_rate_regional, device = Cairo::CairoSVG, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_regional.eps"), plot_ban_rate_regional, device = cairo_ps, width = 7, height = 7)
 
   # 4c.) Wins.
   plot_win_level_regional <- lol_champ_dta %>%
@@ -320,9 +330,9 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_regional.svg"), plot_win_level_regional, device = Cairo::CairoSVG, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_regional.eps"), plot_win_level_regional, device = cairo_ps, width = 7, height = 7)
 
   plot_win_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -336,38 +346,23 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_regional.svg"), plot_win_rate_regional, device = Cairo::CairoSVG, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_regional.eps"), plot_win_rate_regional, device = cairo_ps, width = 7, height = 7)
 
-  ## 5.) Auxiliary role.
-  plot_aux_role <- lol_champ_pool_dta %>%
-    dplyr::distinct(champion, .keep_all = TRUE) %>%
-    dplyr::group_by(main_role, aux_role) %>%
-    dplyr::summarize(count = n()) %>%
-    dplyr::arrange(main_role, desc(count)) %>%
-    ggplot2::ggplot(ggplot2::aes(x = aux_role, y = count)) +
-    ggplot2::geom_bar(stat = "identity") +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Count")) +
-    ggplot2::facet_grid(vars(main_role), scales = "fixed") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none",
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_aux_role.svg"), plot_aux_role, device = Cairo::CairoSVG, width = 7, height = 7)
-
-  ## 6.) Talk to the user.
+  ## 5.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }
 
 
-#' LoL Performance Plots
+#' LoL Champions' Performance Plots
 #'
 #' Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
 #'
 #' @param champions Character vector with the champions of interest.
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#' @param min_date Object of class \code{POSIXct}. When to start the series.
+#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -445,9 +440,9 @@ champions_performance_plots_lol <- function(champions,
       ggplot2::xlab("") + ggplot2::ylab("") + ggplot2::ggtitle(my_champion) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
 
-    ggsave(paste0(save_here, "/", tolower(my_champion), "_performance_pooled.svg"), plot = plot, device = Cairo::CairoSVG, width = 7, height = 7)
+    ggsave(paste0(save_here, "/", tolower(my_champion), "_performance_pooled.eps"), plot = plot, device = cairo_ps, width = 7, height = 7)
   }
 
   ## 2.) Talk to the user.
@@ -456,12 +451,12 @@ champions_performance_plots_lol <- function(champions,
 }
 
 
-#' LoL Performance Plots
+#' LoL Players' Behavior Plots
 #'
-#' Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
+#' Produces plots for the number of daily players and matches.
 #'
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#' @param min_date Object of class \code{POSIXct}. When to start the series.
+#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -529,7 +524,7 @@ players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), m
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
                    legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-  ggplot2::ggsave(paste0(save_here, "/", "n_matches_players.svg"), plot, device = Cairo::CairoSVG, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "n_matches_players.eps"), plot, device = cairo_ps, width = 7, height = 7)
 
   ## 2.) Talk to the user.
   cat("\n")

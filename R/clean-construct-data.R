@@ -15,10 +15,9 @@
 #'
 #' Third, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
 #'
-#' Fourth, it identifies the main and the auxiliary positions of each champion based on where they are played the most and drops matches where champions are
-#' played in a different position.\cr
+#' Fourth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most. It then drops matches where champions were played in weird roles.\cr
 #'
-#' The raw data are available on request.
+#' The raw data are available from the authors on request.
 #'
 #' @import dplyr
 #'
@@ -236,7 +235,7 @@ clean_lol_data <- function(dta) {
   cat("Formatting time variable. \n")
   dta_noduplicate$day <- as.POSIXct(strftime(dta_noduplicate$day, format = "%Y-%m-%d"))
 
-  ## To each champion, assign most-played positions.Then, drop observations playing "out-of-role."
+  ## To each champion, assign most-played positions.
   cat("Identifying main and auxiliary positions and dropping 'out-of-role' matches. \n")
   champs_positions1 <- apply(table(dta_noduplicate$champion, dta_noduplicate$position), MARGIN = 1, function(x) {
     if (which.max(x) == 1) {"BOTTOM"}
@@ -285,9 +284,9 @@ clean_lol_data <- function(dta) {
 }
 
 
-#' Construct LoL Champion Data Set
+#' Construct LoL Champion Regional Data Set
 #'
-#' Constructs the LoL champion data set by pooling observations over regions.
+#' Constructs the LoL champion regional data set.
 #'
 #' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
 #'
@@ -352,7 +351,7 @@ construct_lol_champion_data <- function(dta) {
   aux_role <- NULL
   kills_avg <- NULL
 
-  ## Keep only 2022 data and drop champions released after treatment.
+  ## Keep only 2022 and 2023 data.
   cat("Keeping only 2022 and 2023 data. \n")
 
   dta <- dta %>%
@@ -498,9 +497,9 @@ construct_lol_champion_data <- function(dta) {
 }
 
 
-#' Construct LoL Champion Data Set (Pooled)
+#' Construct LoL Champion Pooled Data Set
 #'
-#' Constructs the LoL champion data set by aggregating observations over regions.
+#' Constructs the LoL champion pooled data set by aggregating observations over regions.
 #'
 #' @param dta Data set as constructed by the \code{\link{construct_lol_champion_data}} function (you can find this data set already bundled in the package).
 #'
@@ -650,18 +649,24 @@ construct_lol_player_data <- function(dta) {
   deaths_avg <- NULL
   day_no <- NULL
 
-  ## Keep only 2022 data.
+  ## Keep only 2022 and 2023 data.
   cat("Keeping only 2022 and 2023 data. \n")
     dta <- dta %>%
       dplyr::filter(lubridate::year(day) %in% c(2022, 2023))
 
   ## Generate variables.
   cat("Generating variables. \n")
-  cat("    Interest for Graves (picks and bans). \n")
+  cat("    Preferences for Graves (picks and bans) and roles. \n")
   picks_bans <- dta %>%
     group_by(player_puiid, day) %>%
     mutate(graves = sum(champion == 'Graves'),
-           graves_ban = sum(ban == 'Graves')) %>%
+           graves_ban = sum(ban == 'Graves'),
+           top = sum(main_role == "TOP"),
+           jungle = sum(main_role == "JUNGLE"),
+           mid = sum(main_role == "MIDDLE"),
+           bottom = sum(main_role == "BOTTOM"),
+           support = sum(main_role == "UTILITY"),
+           lgb = sum(champion %in% c("Diana", "Leona", "Nami", "Neeko"))) %>% # https://gaymingmag.com/2023/05/every-lgbtq-character-in-league-of-legends/
     select(player_puiid, day, graves, graves_ban) %>%
     distinct(player_puiid, day, .keep_all = TRUE) %>%
     ungroup()

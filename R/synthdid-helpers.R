@@ -14,7 +14,7 @@
 #'
 #' \itemize{
 #'    \item{"all" }{This includes all champions.}
-#'    \item{"non_lgb" }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+#'    \item{"non_lgb" }{This includes all champions expect Graves, Twisted Fate, Diana, Leona, Nami, and Neeko.}
 #'    \item{"jungle" }{This includes all champions whose main role is Jungle.}
 #'    \item{"middle" }{This includes all champions whose main role is Middle.}
 #'    \item{"top" }{This includes all champions whose main role is Top.}
@@ -48,7 +48,7 @@ construct_donor_pool <- function(dta, donors, my_champion) {
     if (donors == "all") {
       my_subset <- dta
     } else if (donors == "non_lgb") {
-      lgb_champions <- c("Graves", "Nami", "Leona", "Diana", "Neeko")
+      lgb_champions <- c("Graves", "TwistedFate", "Nami", "Leona", "Diana", "Neeko")
       exclude_these <- lgb_champions[lgb_champions != my_champion]
 
       my_subset <- dta %>%

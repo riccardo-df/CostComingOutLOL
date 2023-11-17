@@ -16,8 +16,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Plots -------------------------------------------------------------------
 ## Settings.
-lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
-champions <- c("Graves", lgb_champions)
+champions <- c("Graves", "TwistedFate")
 
 bandwidth_champions <- 5
 bandwidth_players <- 3
@@ -32,6 +31,6 @@ save_here_champions <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Co
 save_here_players <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
 
 ## Produce plots.
-champions_descriptive_plots_lol(champions, treatment_date1 = treatment_date1, treatment_date2 = treatment_date2, min_date = min_date, max_date = max_date, bandwidth = bandwidth_champions, save_here = save_here_champions)
+champions_descriptive_plots_lol(champions, treatment_date1 = treatment_date1, treatment_date2 = treatment_date2, min_date = min_date, max_date = max_date, bandwidth = bandwidth_champions, ylims_rates = c(0, 40), save_here = save_here_champions)
 champions_performance_plots_lol(champions, min_date = min_date, max_date = max_date, bandwidth = bandwidth_champions, save_here = save_here_champions)
 players_descriptive_plots_lol(min_date = min_date, max_date = max_date, bandwidth = bandwidth_players, save_here = save_here_players)

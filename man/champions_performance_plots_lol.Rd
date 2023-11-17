@@ -2,7 +2,7 @@
 % Please edit documentation in R/descriptive-plots.R
 \name{champions_performance_plots_lol}
 \alias{champions_performance_plots_lol}
-\title{LoL Performance Plots}
+\title{LoL Champions' Performance Plots}
 \usage{
 champions_performance_plots_lol(
   champions,
@@ -15,9 +15,9 @@ champions_performance_plots_lol(
 \arguments{
 \item{champions}{Character vector with the champions of interest.}
 
-\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
+\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
 
-\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
+\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
 
 \item{bandwidth}{Parameter controlling the amount of smoothing.}
 

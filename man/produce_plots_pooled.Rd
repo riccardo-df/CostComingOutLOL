@@ -4,10 +4,12 @@
 \alias{produce_plots_pooled}
 \title{Cost of Coming Out - Main Analysis}
 \usage{
-produce_plots_pooled(pooled_results, save_here = getwd())
+produce_plots_pooled(pooled_results, ylims = c(0, 100), save_here = getwd())
 }
 \arguments{
 \item{pooled_results}{Output of \code{\link{run_main_pooled}}}
+
+\item{ylims}{Vector storing lower and upper limit for the y-axis.}
 
 \item{save_here}{String denoting the path where to save the figures.}
 }

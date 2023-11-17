@@ -12,8 +12,8 @@
 #' @param n_boot Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_pool_dta}} storing the time-varying covariates for which we want to adjust for.
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#' @param min_date Object of class \code{POSIXct}. When to start the series.
+#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #'
 #' @details
 #' For each champion in \code{champions}, \code{\link{run_main_pooled}} performs the following operations.
@@ -39,7 +39,7 @@
 #'
 #' \itemize{
 #'    \item{"all" }{This includes all champions.}
-#'    \item{"non_lgb" }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+#'    \item{"non_lgb" }{This includes all champions expect Graves, Twisted Fate, Diana, Leona, Nami, and Neeko.}
 #'    \item{"jungle" }{This includes all champions whose main role is Jungle.}
 #'    \item{"middle" }{This includes all champions whose main role is Middle.}
 #'    \item{"top" }{This includes all champions whose main role is Top.}
@@ -239,8 +239,8 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' @param n_boot Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_dta}} storing the time-varying covariates for which we want to adjust for.
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#' @param min_date Object of class \code{POSIXct}. When to start the series.
+#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #'
 #' @details
 #' \code{\link{run_main_regional}} disaggregates \code{\link{lol_champ_dta}} by constructing four data sets, one for each region. Then, for each champion in \code{champions}, it performs
@@ -264,7 +264,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #'
 #' \itemize{
 #'    \item{"all" }{This includes all champions.}
-#'    \item{"non_lgb" }{This includes all champions expect Graves, Nami, Leona, Diana, and Neeko.}
+#'    \item{"non_lgb" }{This includes all champions expect Graves, Twisted Fate, Diana, Leona, Nami, and Neeko.}
 #'    \item{"jungle" }{This includes all champions whose main role is Jungle.}
 #'    \item{"middle" }{This includes all champions whose main role is Middle.}
 #'    \item{"top" }{This includes all champions whose main role is Top.}
@@ -273,6 +273,9 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #'    \item{"main_role"}{This includes all champions whose main role is the same as the champion of interest.}
 #'    \item{"aux_role"}{This includes all champions whose auxiliary role is the same as the champion of interest.}
 #' }
+#'
+#' Almost all of these choices (exceptions are \code{"all"} and \code{"non_lgb"}) can be combined with the prefix \code{"non"} to exclude champions from a particular role.
+#' For instance, setting \code{donors} to \code{non_jungle} excludes from the donor pool all champions whose main role is jungle.
 #'
 #' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
 #' runs the analysis detailed above on this new unit. This is compatible only with \code{donor_pool} set to \code{"non_lgb"}.

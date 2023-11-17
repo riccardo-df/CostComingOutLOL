@@ -4,7 +4,7 @@
 
 ## The Cost of Coming Out - Synthetic Controls.
 
-## This script runs the main analysis of the "The Cost of Coming Out" paper.
+## This script runs the main analysis of the "The Cost of Coming Out" paper and produces Table B.1.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

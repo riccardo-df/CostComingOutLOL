@@ -17,6 +17,9 @@ Prints LATEX code.
 \description{
 Prints LATEX code for a nice table displaying the aggregated results of \code{\link{did_players_performance}}.
 }
+\details{
+To summarize results, we report an average of the estimated ATT(t) for all t greater than \code{treatment_date} used when calling \code{\link{did_players_performance}}.
+}
 \author{
 Riccardo Di Francesco
 }

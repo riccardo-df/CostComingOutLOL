@@ -2,7 +2,7 @@
 % Please edit documentation in R/clean-construct-data.R
 \name{construct_lol_champion_data}
 \alias{construct_lol_champion_data}
-\title{Construct LoL Champion Data Set}
+\title{Construct LoL Champion Regional Data Set}
 \usage{
 construct_lol_champion_data(dta)
 }
@@ -10,7 +10,7 @@ construct_lol_champion_data(dta)
 \item{dta}{Data set as constructed by the \code{\link{clean_lol_data}} function.}
 }
 \description{
-Constructs the LoL champion data set by pooling observations over regions.
+Constructs the LoL champion regional data set.
 }
 \details{
 \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr

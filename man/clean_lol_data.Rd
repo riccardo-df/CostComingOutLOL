@@ -23,10 +23,9 @@ where the position of some player is not assigned).\cr
 
 Third, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
 
-Fourth, it identifies the main and the auxiliary positions of each champion based on where they are played the most and drops matches where champions are
-played in a different position.\cr
+Fourth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most. It then drops matches where champions were played in weird roles.\cr
 
-The raw data are available on request.
+The raw data are available from the authors on request.
 }
 \seealso{
 \code{\link{pull_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{construct_lol_player_data}}
