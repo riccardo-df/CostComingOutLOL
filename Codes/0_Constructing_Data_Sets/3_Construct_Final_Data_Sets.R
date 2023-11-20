@@ -27,9 +27,6 @@ construct_lol_champion_data(clean_dta)
 construct_lol_champion_pooled_data(lol_champ_dta)
 construct_lol_player_data(clean_dta)
 
-lol_player_dta <- fread("lol_player_dta.csv")
-usethis::use_data(lol_player_dta, compress = "xz", overwrite = TRUE)
-
 # Descriptives ------------------------------------------------------------
 lol_champ_dta <- lol_champ_dta %>%
   filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))

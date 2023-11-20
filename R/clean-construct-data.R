@@ -667,7 +667,7 @@ construct_lol_player_data <- function(dta) {
            bottom = sum(main_role == "BOTTOM"),
            support = sum(main_role == "UTILITY"),
            lgb = sum(champion %in% c("Diana", "Leona", "Nami", "Neeko"))) %>% # https://gaymingmag.com/2023/05/every-lgbtq-character-in-league-of-legends/
-    select(player_puiid, day, graves, graves_ban) %>%
+    select(player_puiid, day, graves, graves_ban, top, jungle, mid, bottom, support, lgb) %>%
     distinct(player_puiid, day, .keep_all = TRUE) %>%
     ungroup()
 
@@ -692,7 +692,7 @@ construct_lol_player_data <- function(dta) {
   daily_panel <- picks_bans %>%
     left_join(n_matches, by = c("player_puiid", "day")) %>%
     left_join(numeric_covariates, by = c("player_puiid", "day")) %>%
-    select(player_puiid, day, graves, graves_ban, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
+    select(player_puiid, day, graves, graves_ban, top, jungle, mid, bottom, support, lgb, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
 
   cat("    Variables in rates. \n")
   extended_daily_panel <- daily_panel %>%
@@ -703,14 +703,14 @@ construct_lol_player_data <- function(dta) {
            kills_avg = kills_sum / n_matches,
            assists_avg = assists_sum / n_matches,
            deaths_avg = deaths_sum / n_matches) %>%
-    select(day, player_puiid, n_matches, graves_rate, graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    select(day, player_puiid, n_matches, graves_rate, graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg, top, jungle, mid, bottom, support, lgb)
 
   ## Final operations.
   panel <- extended_daily_panel
   panel$day_no <- as.numeric(panel$day)
 
   panel <- panel %>%
-    select(day, day_no, player_puiid, n_matches, graves_rate, graves_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    select(day, day_no, player_puiid, n_matches, graves_rate, graves_ban_rate, top, jungle, mid, bottom, support, lgb, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
   colnames(panel)[3] <- c("id")
 
   ## Write csv.
