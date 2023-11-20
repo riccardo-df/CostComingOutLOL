@@ -4,7 +4,7 @@
 
 ## The Cost of Coming Out - Mechanisms (Graves' Performance).
 
-## This script uses synthetic control methods to investigate whether Graves' performance changes at the treatment date.
+## This script replicates Section 5.1 and produces Figure 5.1.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

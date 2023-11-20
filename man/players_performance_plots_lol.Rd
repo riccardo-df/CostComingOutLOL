@@ -15,11 +15,11 @@ players_performance_plots_lol(
 \arguments{
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
-\item{treatment_date}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
+\item{treatment_date}{Object of class \code{POSIXct}. When the treatment took place.}
 
-\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
+\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
 
-\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
+\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
 
 \item{save_here}{String denoting the path where to save the figures.}
 }
@@ -27,13 +27,13 @@ players_performance_plots_lol(
 Produces nice plots.
 }
 \description{
-Divide players into treated and control groups according to whether they never picked Graves pre-treatment (prior and non prior users) and produces plots showing the average performance of players
+Divides players into treated and control groups according to whether they never picked Graves pre-treatment (prior and non prior users) and produces plots showing the average performance of players
 in each group before and after the treatment.
 }
 \details{
 \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
-Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed.
+Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 }
 \author{
 Riccardo Di Francesco

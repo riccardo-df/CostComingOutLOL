@@ -4,7 +4,7 @@
 
 ## The Cost of Coming Out - Google Trends.
 
-## This script produces Figure 2.1 of the "The Cost of Coming Out" paper.
+## This script produces Figure 2.1.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

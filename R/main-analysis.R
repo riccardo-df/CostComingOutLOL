@@ -52,7 +52,7 @@
 #' Almost all of these choices (exceptions are \code{"all"} and \code{"non_lgb"}) can be combined with the prefix \code{"non"} to exclude champions from a particular role.
 #' For instance, setting \code{donors} to \code{non_jungle} excludes from the donor pool all champions whose main role is jungle.
 #'
-#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
+#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Diana, Leona, Nami, and Neeko and
 #' runs the analysis detailed above on this new unit. This is compatible only with \code{donors} set to \code{"non_lgb"}.\cr
 #'
 #' A special value for \code{outcome_colname} is \code{"kd_ratio"}. In this case, the routine computes the daily kills/deaths ratio of each champion and uses this an an outcome.
@@ -132,7 +132,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 
     if (my_champion == "LGB") {
       lgb_avg_outcome <- lol_champ_pool_dta %>%
-        dplyr::filter(champion %in% c("Nami", "Leona", "Diana", "Neeko")) %>%
+        dplyr::filter(champion %in% c("Diana", "Leona", "Nami", "Neeko")) %>%
         dplyr::group_by(day_no) %>%
         dplyr::mutate(lgb_selected_outcome = mean(selected_outcome)) %>%
         dplyr::distinct(day, .keep_all = TRUE) %>%
@@ -277,7 +277,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' Almost all of these choices (exceptions are \code{"all"} and \code{"non_lgb"}) can be combined with the prefix \code{"non"} to exclude champions from a particular role.
 #' For instance, setting \code{donors} to \code{non_jungle} excludes from the donor pool all champions whose main role is jungle.
 #'
-#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Nami, Leona, Diana, and Neeko and
+#' It is possible to include \code{"LGB"} in \code{champions}. If so, \code{\link{run_main_pooled}} constructs a new unit by averaging the outcomes of Diana, Leona, Nami, and Neeko and
 #' runs the analysis detailed above on this new unit. This is compatible only with \code{donor_pool} set to \code{"non_lgb"}.
 #'
 #' @return
@@ -346,7 +346,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
     if (my_champion == "LGB") {
       lgb_avg_outcome <- lapply(regional_panels, function(x) {
         x %>%
-          dplyr::filter(champion %in% c("Nami", "Leona", "Diana", "Neeko")) %>%
+          dplyr::filter(champion %in% c("Diana", "Leona", "Nami", "Neeko")) %>%
           dplyr::group_by(day_no) %>%
           dplyr::mutate(lgb_selected_outcome = mean(selected_outcome)) %>%
           dplyr::distinct(day, .keep_all = TRUE) %>%

@@ -4,7 +4,7 @@
 
 ## The Cost of Coming Out - Descriptive Plots.
 
-## This script produces a bunch of figures to investigate the dynamics of the variables of the champions of interest.
+## This script produces Figure A.1 and a bunch of other figures not appearing in the paper that we used to investigate the dynamics of the variables of the champions of interest.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

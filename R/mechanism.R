@@ -1,12 +1,12 @@
 #' LoL Players' Performance Plots
 #'
-#' Divide players into treated and control groups according to whether they never picked Graves pre-treatment (prior and non prior users) and produces plots showing the average performance of players
+#' Divides players into treated and control groups according to whether they never picked Graves pre-treatment (prior and non prior users) and produces plots showing the average performance of players
 #' in each group before and after the treatment.
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
-#' @param treatment_date Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
+#' @param min_date Object of class \code{POSIXct}. When to start the series.
+#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
@@ -15,7 +15,7 @@
 #' @details
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed.
+#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #'
 #' @import dplyr reshape2 ggplot2 patchwork
 #' @importFrom stats sd
@@ -61,10 +61,11 @@ players_performance_plots_lol <- function(n_pre_matches,
     dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
                   n_matches_post = sum(n_matches * disclosure)) %>%
     dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
-    dplyr::distinct(id)
+    dplyr::distinct(id) %>%
+    dplyr::pull(id)
 
   lol_player_dta <- lol_player_dta %>%
-    dplyr::filter(id %in% keep_these_players$id) %>%
+    dplyr::filter(id %in% keep_these_players) %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0)) %>%
     dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
@@ -121,7 +122,7 @@ players_performance_plots_lol <- function(n_pre_matches,
     ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
     ggplot2::xlab("") + ggplot2::ylab("Average Graves' pick rate") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.05, 0.95), legend.title = ggplot2::element_blank(),
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.05, 0.97), legend.title = ggplot2::element_blank(),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
   ## 3.) Average number of matches in each group.
@@ -201,7 +202,7 @@ players_performance_plots_lol <- function(n_pre_matches,
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
   ## 5.) Export grid.
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.svg"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), device = "svg", width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.eps"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), device = cairo_ps, width = 7, height = 7)
 
   ## 6.) Talk to the user.
   cat("\n")
@@ -220,13 +221,14 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @return
-#' Prints code for a LATEX table.
+#' Returns a list with \code{treatment_date} and all the diff-in-diff results. The user can post-process the output using the \code{\link{plot_did}} function.
 #'
 #' @details
-#' We define two versions of the treatment.
+#' We define three versions of the treatment.
+#'
 #' \describe{
 #'    \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
-#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50% following his disclosure are considered treated.}
+#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50\% following his disclosure are considered treated.}
 #'    \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
 #' }
 #'
@@ -237,7 +239,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #'
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or less than \code{n_post_matches} between \code{treatment_date} and \code{max_date} are dropped.
+#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #' Moreover, additional players are removed if the \code{filter} argument is not set to \code{"all"}. If this is set to \code{"prior_users"}, then only players that used to play Graves before
 #' his disclosure are used in the analysis.
 #'
@@ -598,36 +600,38 @@ plot_did <- function(did_results, save_here = getwd()) {
   plot_pre <- results_any_reduction %>%
     dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
     dplyr::filter(plot_post == 0) %>%
-    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional"))) %>%
+    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional")),
+                  treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
-    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
-    ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
+    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_factor)) +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
     ggplot2::xlab("") + ggplot2::ylab(expression(italic("ATT ( t )"))) +
     ggplot2::theme_bw() +
-    theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10),
+    theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"), strip.text.y = ggplot2::element_text(size = 10, face = "italic"),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_pre.svg"), plot_pre, device = "svg", width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_pre.eps"), plot_pre, device = cairo_ps, width = 7, height = 7)
 
   plot_post <- results_any_reduction %>%
     dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
     dplyr::filter(plot_post == 1) %>%
-    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional"))) %>%
+    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional")),
+                  treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
-    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_type)) +
+    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_factor)) +
     ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
     ggplot2::xlab("") + ggplot2::ylab(expression(italic("ATT ( t )"))) +
     ggplot2::theme_bw() +
-    theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10),
+    theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"), strip.text.y = ggplot2::element_text(size = 10, face = "italic"),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_post.svg"), plot_post, device = "svg", width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_post.eps"), plot_post, device = cairo_ps, width = 7, height = 7)
 
   ## 6.) Talk to the user.
   cat("\n")

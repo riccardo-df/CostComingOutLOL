@@ -2,9 +2,9 @@
 ## University of Rome Tor Vergata
 ## 09\08\2023
 
-## The Cost of Coming Out - Synthetic Controls.
+## The Cost of Coming Out - Main Results.
 
-## This script runs the main analysis of the "The Cost of Coming Out" paper and produces Figure 4.1, Figure 4.2, and Table 4.1.
+## This script replicates Section 4.2 and Section 4.3 and produces Figure 4.1, Figure 4.2, Figure A.2, and Table 4.1.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

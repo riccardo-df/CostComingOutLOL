@@ -2,9 +2,9 @@
 ## University of Rome Tor Vergata
 ## 09\08\2023
 
-## The Cost of Coming Out - Synthetic Controls.
+## The Cost of Coming Out - Mechanisms (LGBT Pride Month).
 
-## This script estimates the effects of LGBT Pride Month on the LGB characters.
+## This script replicates Section 5.4 and produces Figure 5.4.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

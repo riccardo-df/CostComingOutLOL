@@ -4,7 +4,7 @@
 
 ## The Cost of Coming Out - Constructing the final data sets.
 
-## This script constructs the data sets used for the analysis of the "The Cost of Coming Out" paper.
+## This script constructs the data sets used in the paper.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
