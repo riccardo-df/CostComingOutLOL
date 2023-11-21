@@ -1,7 +1,8 @@
 #' LoL Players' Performance Plots
 #'
-#' Divides players into treated and control groups according to whether they never picked Graves pre-treatment (prior and non prior users) and produces plots showing the average performance of players
-#' in each group before and after the treatment.
+#' Divides players into two groups according to whether they never picked Graves pre-treatment (prior and non-prior users) and produces plots showing the average performance of players
+#' in each group before and after the treatment. It also produces a plot to investigate which positions are the most played in each group before and after the treatment. The same
+#' plot is then repeated only for those prior users that are "treated" as discussed in the documentation of the \code{\link{did_players_performance}}.
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
@@ -61,15 +62,15 @@ players_performance_plots_lol <- function(n_pre_matches,
     dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
                   n_matches_post = sum(n_matches * disclosure)) %>%
     dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
-    dplyr::distinct(id) %>%
-    dplyr::pull(id)
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::select(id, n_matches_pre, n_matches_post) %>%
+    dplyr::ungroup()
 
   lol_player_dta <- lol_player_dta %>%
-    dplyr::filter(id %in% keep_these_players) %>%
-    dplyr::group_by(id) %>%
+    dplyr::filter(id %in% keep_these_players$id) %>%
+    dplyr::left_join(keep_these_players, by = "id") %>%
     dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0)) %>%
-    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
-    dplyr::ungroup()
+    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, top, jungle, mid, bottom, support, lgb, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 1.) Define prior users.
   treated_controls <- lol_player_dta %>%
@@ -85,7 +86,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, top, jungle, mid, bottom, support, lgb, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 2.) Average players' pick rates for Graves in each group.
   plot_avg_rates_buckets_dta <- lol_player_dta %>%
@@ -152,7 +153,7 @@ players_performance_plots_lol <- function(n_pre_matches,
     dplyr::distinct() %>%
     reshape2::melt(id.vars = c("prior_user"), variable.name = "time", value.name = "se")
 
-  plot_avg_n_matches_buckets <- plot_avg_n_matches_buckets_dta %>% ## ISSUE: AFTER TREATMENT WE HAVE A SHORTER TIME SPAN. ALSO, SEASONALITY MAYBE HINDER INTERPRETATION.
+  plot_avg_n_matches_buckets <- plot_avg_n_matches_buckets_dta %>%
     dplyr::left_join(plot_avg_n_matches_se_buckets_dta, by = c("prior_user", "time")) %>%
     ggplot2::ggplot(ggplot2::aes(x = factor(prior_user, levels = c(FALSE, TRUE), labels = c("Non-prior users", "Prior users")), y = mean, fill = factor(time, labels = c("Pre-treatment", "Post-treatment")))) +
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
@@ -201,10 +202,525 @@ players_performance_plots_lol <- function(n_pre_matches,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", legend.title = ggplot2::element_blank(),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
-  ## 5.) Export grid.
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.eps"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), device = cairo_ps, width = 7, height = 7)
+  ## 5.) Count positions chosen by each group.
+  plot_positions_buckets_dta_pre <- lol_player_dta %>%
+    dplyr::filter(disclosure == 0) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
+                  jungle_lane = mean(avg_jungle_rate_pre),
+                  mid_lane = mean(avg_mid_rate_pre),
+                  bottom_lane = mean(avg_bottom_rate_pre),
+                  support_lane = mean(avg_support_rate_pre),
+                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
 
-  ## 6.) Talk to the user.
+  plot_positions_buckets_dta_post <- lol_player_dta %>%
+    dplyr::filter(disclosure == 1) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_post = mean(top_rate),
+                  avg_jungle_rate_post = mean(jungle_rate),
+                  avg_mid_rate_post = mean(mid_rate),
+                  avg_bottom_rate_post = mean(bottom_rate),
+                  avg_support_rate_post = mean(support_rate),
+                  avg_lgb_rate_post = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_post),
+                  jungle_lane = mean(avg_jungle_rate_post),
+                  mid_lane = mean(avg_mid_rate_post),
+                  bottom_lane = mean(avg_bottom_rate_post),
+                  support_lane = mean(avg_support_rate_post),
+                  lgb_lane = mean(avg_lgb_rate_post)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
+
+  plot_positions_buckets_dta <- plot_positions_buckets_dta_pre %>%
+    dplyr::bind_rows(plot_positions_buckets_dta_post)
+
+  plot_positions_se_buckets_dta_pre <- lol_player_dta %>%
+    dplyr::filter(disclosure == 0) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_pre) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_pre) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_pre) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+
+  plot_positions_se_buckets_dta_post <- lol_player_dta %>%
+    dplyr::filter(disclosure == 1) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_post = mean(top_rate),
+                  avg_jungle_rate_post = mean(jungle_rate),
+                  avg_mid_rate_post = mean(mid_rate),
+                  avg_bottom_rate_post = mean(bottom_rate),
+                  avg_support_rate_post = mean(support_rate),
+                  avg_lgb_rate_post = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_post) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_post) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_post) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+
+  plot_positions_se_buckets_dta <- plot_positions_se_buckets_dta_pre %>%
+    dplyr::bind_rows(plot_positions_se_buckets_dta_post)
+
+  plot_positions_buckets <- plot_positions_buckets_dta %>%
+    dplyr::left_join(plot_positions_se_buckets_dta, by = c("prior_user", "disclosure", "position")) %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(position, levels = c("top_lane", "jungle_lane", "mid_lane", "bottom_lane", "support_lane", "lgb_lane"), labels = c("Top", "Jungle", "Mid", "Bottom", "Support", "LGB")), y = mean, fill = factor(disclosure, levels = c(0, 1), labels = c("Pre-treatment", "Post-treatment")))) +
+    ggplot2::geom_bar(position = "dodge", stat = "identity") +
+    ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
+    ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
+    ggplot2::facet_wrap(vars(factor(prior_user, levels = c(FALSE, TRUE), labels = c("Non-prior users", "Prior users"))), nrow = 2) +
+    ggplot2::xlab("") + ggplot2::ylab("") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.04, 0.98), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
+                   legend.direction = "vertical", legend.justification = c("left", "top"))
+
+  ## 6.) Same as 5, but only for those prior users that reduced their pick rates of Graves.
+  reductions <- lol_player_dta %>%
+    dplyr::filter(prior_user) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
+                  avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
+                  any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
+                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre),
+                  complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE)
+
+  plot_positions_prior_buckets_dta_pre_any_reduction <- reductions %>%
+    dplyr::filter(disclosure == 0 & any_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
+                  jungle_lane = mean(avg_jungle_rate_pre),
+                  mid_lane = mean(avg_mid_rate_pre),
+                  bottom_lane = mean(avg_bottom_rate_pre),
+                  support_lane = mean(avg_support_rate_pre),
+                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
+  plot_positions_prior_buckets_dta_pre_any_reduction$treatment <- "any_reduction"
+
+  plot_positions_prior_buckets_dta_post_any_reduction <- reductions %>%
+    dplyr::filter(disclosure == 1 & any_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
+                  jungle_lane = mean(avg_jungle_rate_pre),
+                  mid_lane = mean(avg_mid_rate_pre),
+                  bottom_lane = mean(avg_bottom_rate_pre),
+                  support_lane = mean(avg_support_rate_pre),
+                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
+  plot_positions_prior_buckets_dta_post_any_reduction$treatment <- "any_reduction"
+
+  plot_positions_prior_buckets_dta_pre_substantial_reduction <- reductions %>%
+    dplyr::filter(disclosure == 0 & substantial_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
+                  jungle_lane = mean(avg_jungle_rate_pre),
+                  mid_lane = mean(avg_mid_rate_pre),
+                  bottom_lane = mean(avg_bottom_rate_pre),
+                  support_lane = mean(avg_support_rate_pre),
+                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
+  plot_positions_prior_buckets_dta_pre_substantial_reduction$treatment <- "substantial_reduction"
+
+  plot_positions_prior_buckets_dta_post_substantial_reduction <- reductions %>%
+    dplyr::filter(disclosure == 1 & substantial_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
+                  jungle_lane = mean(avg_jungle_rate_pre),
+                  mid_lane = mean(avg_mid_rate_pre),
+                  bottom_lane = mean(avg_bottom_rate_pre),
+                  support_lane = mean(avg_support_rate_pre),
+                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
+  plot_positions_prior_buckets_dta_post_substantial_reduction$treatment <- "substantial_reduction"
+
+  plot_positions_prior_buckets_dta_pre_complete_abandonment <- reductions %>%
+    dplyr::filter(disclosure == 0 & complete_abandonment) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
+                  jungle_lane = mean(avg_jungle_rate_pre),
+                  mid_lane = mean(avg_mid_rate_pre),
+                  bottom_lane = mean(avg_bottom_rate_pre),
+                  support_lane = mean(avg_support_rate_pre),
+                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
+  plot_positions_prior_buckets_dta_pre_complete_abandonment$treatment <- "complete_abandonment"
+
+  plot_positions_prior_buckets_dta_post_complete_abandonment <- reductions %>%
+    dplyr::filter(disclosure == 1 & complete_abandonment) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
+                  jungle_lane = mean(avg_jungle_rate_pre),
+                  mid_lane = mean(avg_mid_rate_pre),
+                  bottom_lane = mean(avg_bottom_rate_pre),
+                  support_lane = mean(avg_support_rate_pre),
+                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
+  plot_positions_prior_buckets_dta_post_complete_abandonment$treatment <- "complete_abandonment"
+
+  plot_positions_prior_buckets_dta <- plot_positions_prior_buckets_dta_pre_any_reduction %>%
+    dplyr::bind_rows(plot_positions_prior_buckets_dta_post_any_reduction,
+                     plot_positions_prior_buckets_dta_pre_substantial_reduction, plot_positions_prior_buckets_dta_post_substantial_reduction,
+                     plot_positions_prior_buckets_dta_pre_complete_abandonment, plot_positions_prior_buckets_dta_post_complete_abandonment)
+
+  plot_positions_prior_se_buckets_dta_pre_any_reduction <- reductions %>%
+    dplyr::filter(disclosure == 0 & any_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_pre) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_pre) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_pre) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+  plot_positions_prior_se_buckets_dta_pre_any_reduction$treatment <- "any_reduction"
+
+  plot_positions_prior_se_buckets_dta_post_any_reduction <- reductions %>%
+    dplyr::filter(disclosure == 1 & any_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_post = mean(top_rate),
+                  avg_jungle_rate_post = mean(jungle_rate),
+                  avg_mid_rate_post = mean(mid_rate),
+                  avg_bottom_rate_post = mean(bottom_rate),
+                  avg_support_rate_post = mean(support_rate),
+                  avg_lgb_rate_post = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_post) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_post) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_post) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+  plot_positions_prior_se_buckets_dta_post_any_reduction$treatment <- "any_reduction"
+
+  plot_positions_prior_se_buckets_dta_pre_substantial_reduction <- reductions %>%
+    dplyr::filter(disclosure == 0 & substantial_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_pre) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_pre) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_pre) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+  plot_positions_prior_se_buckets_dta_pre_substantial_reduction$treatment <- "substantial_reduction"
+
+  plot_positions_prior_se_buckets_dta_post_substantial_reduction <- reductions %>%
+    dplyr::filter(disclosure == 1 & substantial_reduction) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_post = mean(top_rate),
+                  avg_jungle_rate_post = mean(jungle_rate),
+                  avg_mid_rate_post = mean(mid_rate),
+                  avg_bottom_rate_post = mean(bottom_rate),
+                  avg_support_rate_post = mean(support_rate),
+                  avg_lgb_rate_post = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_post) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_post) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_post) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+  plot_positions_prior_se_buckets_dta_post_substantial_reduction$treatment <- "substantial_reduction"
+
+  plot_positions_prior_se_buckets_dta_pre_complete_abandonment <- reductions %>%
+    dplyr::filter(disclosure == 0 & complete_abandonment) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_pre = mean(top_rate),
+                  avg_jungle_rate_pre = mean(jungle_rate),
+                  avg_mid_rate_pre = mean(mid_rate),
+                  avg_bottom_rate_pre = mean(bottom_rate),
+                  avg_support_rate_pre = mean(support_rate),
+                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_pre) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_pre) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_pre) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+  plot_positions_prior_se_buckets_dta_pre_complete_abandonment$treatment <- "complete_abandonment"
+
+  plot_positions_prior_se_buckets_dta_post_complete_abandonment <- reductions %>%
+    dplyr::filter(disclosure == 1 & complete_abandonment) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
+                  avg_top_rate_post = mean(top_rate),
+                  avg_jungle_rate_post = mean(jungle_rate),
+                  avg_mid_rate_post = mean(mid_rate),
+                  avg_bottom_rate_post = mean(bottom_rate),
+                  avg_support_rate_post = mean(support_rate),
+                  avg_lgb_rate_post = mean(lgb_rate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::group_by(prior_user) %>%
+    dplyr::mutate(top_lane = stats::sd(avg_top_rate_post) / sqrt(n()),
+                  jungle_lane = stats::sd(avg_jungle_rate_post) / sqrt(n()),
+                  mid_lane = stats::sd(avg_mid_rate_post) / sqrt(n()),
+                  bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
+                  support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
+                  lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
+  plot_positions_prior_se_buckets_dta_post_complete_abandonment$treatment <- "complete_abandonment"
+
+  plot_positions_prior_se_buckets_dta <- plot_positions_prior_se_buckets_dta_pre_any_reduction %>%
+    dplyr::bind_rows(plot_positions_prior_se_buckets_dta_post_any_reduction,
+                     plot_positions_prior_se_buckets_dta_pre_substantial_reduction, plot_positions_prior_se_buckets_dta_post_substantial_reduction,
+                     plot_positions_prior_se_buckets_dta_pre_complete_abandonment, plot_positions_prior_se_buckets_dta_post_complete_abandonment)
+
+  plot_positions_reductions_buckets <- plot_positions_prior_buckets_dta %>%
+    dplyr::left_join(plot_positions_prior_se_buckets_dta, by = c("prior_user", "disclosure", "treatment", "position")) %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(position, levels = c("top_lane", "jungle_lane", "mid_lane", "bottom_lane", "support_lane", "lgb_lane"), labels = c("Top", "Jungle", "Mid", "Bottom", "Support", "LGB")), y = mean, fill = factor(disclosure, levels = c(0, 1), labels = c("Pre-treatment", "Post-treatment")))) +
+    ggplot2::geom_bar(position = "dodge", stat = "identity") +
+    ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
+    ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
+    ggplot2::facet_wrap(vars(factor(treatment, levels = c("any_reduction", "substantial_reduction", "complete_abandonment"), labels = c("Any reduction", "Substantial reduction", "Complete abandonment"))), nrow = 2) +
+    ggplot2::xlab("") + ggplot2::ylab("") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.28, 0.98), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
+                   legend.direction = "vertical", legend.justification = c("left", "top"))
+
+  ## 6.) Export plots.
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.eps"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group.eps"), plot_positions_buckets, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group_reductions.eps"), plot_positions_reductions_buckets, device = cairo_ps, width = 7, height = 7)
+
+  ## 7.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }

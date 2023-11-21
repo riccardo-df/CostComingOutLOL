@@ -27,8 +27,9 @@ players_performance_plots_lol(
 Produces nice plots.
 }
 \description{
-Divides players into treated and control groups according to whether they never picked Graves pre-treatment (prior and non prior users) and produces plots showing the average performance of players
-in each group before and after the treatment.
+Divides players into two groups according to whether they never picked Graves pre-treatment (prior and non-prior users) and produces plots showing the average performance of players
+in each group before and after the treatment. It also produces a plot to investigate which positions are the most played in each group before and after the treatment. The same
+plot is then repeated only for those prior users that are "treated" as discussed in the documentation of the \code{\link{did_players_performance}}.
 }
 \details{
 \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
