@@ -16,7 +16,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Settings --------------------------------------------
 ## Select champions.
-champions <- c("Graves", "TwistedFate")
+champions <- "Graves"
 
 ## Select outcome series.
 outcome_colname_pool <- "pick_rate_pooled"
@@ -69,3 +69,15 @@ for (i in seq_len(length(regional_result_list))) {
 
 # LATEX -------------------------------------------------------------------
 produce_latex(pooled_result_list, regional_result_list)
+
+# Check LOO ---------------------------------------------------------------
+## Extract main specification.
+idx <- lapply(pooled_result_list, function(x) { data.frame("estimator" = x$estimator, "donor_pool" = x$donors) })
+this_element <- which(sapply(idx, function(x) { is.element("sc_reg", x) & is.element("all", x) }))
+this_fit <- pooled_result_list[[this_element]]
+
+## Investigate point estimates.
+this_fit$Graves$tau_hat_drop$Ezreal # This is the series that diverges from the others.
+this_fit$Graves$tau_hat_drop$Ahri
+this_fit$Graves$tau_hat_drop$Nautilus
+this_fit$Graves$tau_hat_drop$Jinx

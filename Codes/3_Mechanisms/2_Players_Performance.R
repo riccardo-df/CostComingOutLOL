@@ -31,4 +31,6 @@ players_performance_plots_lol(n_pre_matches, treatment_date = treatment_date, mi
 
 ## Assess impact of Pride Month on prior users' performance.
 did_results <- did_players_performance(n_pre_matches, filter = filter, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
+
 plot_did(did_results, save_here)
+latex_did(did_results)
