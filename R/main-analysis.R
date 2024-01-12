@@ -59,8 +59,9 @@
 #'
 #' @return
 #' A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
-#' Each inner list stores four elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, and the data used for estimation.
-#' The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth the outcome series.
+#' Each inner list stores five elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, the pre-treatment average of \code{outcome_colname},
+#' and the data used for estimation. The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth
+#' the outcome series.
 #'
 #' @import dplyr fixest
 #' @importFrom stats ksmooth
@@ -209,7 +210,12 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
     cat("\n")
 
     ## 7.) Save results.
-    output[[counter]] <- list("tau_hat" =  tau_hat, "se_tau_hat" = se, "tau_hat_back" = tau_hat_back, "tau_hat_drop" = tau_hat_drop, "dta" = temp_panel)
+    temp_pre_avg <- temp_panel %>%
+      dplyr::filter(champion == my_champion & day < treatment_date) %>%
+      dplyr::pull(smooth_outcome) %>%
+      mean()
+
+    output[[counter]] <- list("tau_hat" =  tau_hat, "se_tau_hat" = se, "tau_hat_back" = tau_hat_back, "tau_hat_drop" = tau_hat_drop, "pre_treatment_avg" = temp_pre_avg, "dta" = temp_panel)
     counter <- counter + 1
   }
 
