@@ -103,7 +103,7 @@ plot_graves <- plot_dta %>%
   xlab("") + ylab("Search interest") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 10, face = "italic"),
-        legend.position = c(0.12, 0.92), legend.title = element_blank())
+        legend.position = "none")
 
 plot_graves_twisted <- plot_dta %>%
   ggplot(aes(x = week, y = hits, color = champion)) +
