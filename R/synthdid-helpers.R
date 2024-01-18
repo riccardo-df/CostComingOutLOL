@@ -38,7 +38,7 @@ construct_donor_pool <- function(dta, donors, my_champion) {
   main_role <- NULL
 
   if (length(donors) == 1) {
-    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
+    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "support_adc", "top_jungle_middle", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
   } else {
     if (sum(!(donors %in% unique(dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'dta'.", call. = FALSE)
   }
@@ -84,6 +84,12 @@ construct_donor_pool <- function(dta, donors, my_champion) {
     } else if (donors == "adc") {
       my_subset <- dta %>%
         dplyr::filter(main_role == "BOTTOM" | champion == my_champion)
+    } else if (donors == "support_adc") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role %in% c("UTILITY", "BOTTOM") | champion == my_champion)
+    } else if (donors == "top_jungle_middle") {
+      my_subset <- dta %>%
+        dplyr::filter(main_role %in% c("TOP", "JUNGLE", "MIDDLE") | champion == my_champion)
     } else if (donors == "non_main_role") {
       temp_main_role <- dta %>%
         dplyr::filter(champion == my_champion) %>%

@@ -86,13 +86,13 @@ plot_dta <- bind_rows(search_interest, search_interest_gay) %>%
   replace(is.na(.), 0) %>%
   melt(id.vars = c("week", "keyword"), measure.vars = c("Graves", "Twisted_Fate"), variable.name = "champion", value.name = "hits") %>%
   mutate(graves = factor(grepl("Graves", keyword), levels = c(TRUE, FALSE), labels = c("Graves", "Twisted Fate")),
-         gay_query = factor(grepl("gay", keyword), levels = c(TRUE, FALSE), labels = c("[champion] gay", "lol [champion]")))
+         gay_query = factor(grepl("gay", keyword), levels = c(TRUE, FALSE), labels = c("[champion] gay", "LoL [champion]")))
 plot_dta$week <- as.POSIXct(plot_dta$week)
 
 ## Plot and save.
 plot_graves <- plot_dta %>%
   filter(champion == "Graves") %>%
-  mutate(gay_query = factor(grepl("gay", keyword), levels = c(TRUE, FALSE), labels = c("Graves gay", "lol Graves"))) %>%
+  mutate(gay_query = factor(grepl("gay", keyword), levels = c(TRUE, FALSE), labels = c("Graves gay", "LoL Graves"))) %>%
   ggplot(aes(x = week, y = hits, color = champion)) +
   geom_line(linewidth = 1.2) +
   geom_vline(xintercept = as.POSIXct(treatment_week), linetype = 4) +

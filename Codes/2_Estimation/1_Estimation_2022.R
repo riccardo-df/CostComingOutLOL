@@ -29,10 +29,10 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("all", "adc")
+donor_pools <- c("all", "support_adc", "top_jungle_middle")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- FALSE
+inference <- TRUE
 n_boot <- 200
 backdate <- 10
 
@@ -60,7 +60,7 @@ for (estimator in estimators) {
 }
 
 # Plots -------------------------------------------------------------------
-save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
 for (i in seq_len(length(regional_result_list))) {
   produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), save_here)
@@ -73,7 +73,7 @@ produce_latex(pooled_result_list, regional_result_list)
 # Check LOO ---------------------------------------------------------------
 ## Extract main specification.
 idx <- lapply(pooled_result_list, function(x) { data.frame("estimator" = x$estimator, "donor_pool" = x$donors) })
-this_element <- which(sapply(idx, function(x) { is.element("sc_reg", x) & is.element("all", x) }))
+this_element <- which(sapply(idx, function(x) { is.element("sc", x) & is.element("all", x) }))
 this_fit <- pooled_result_list[[this_element]]
 
 ## Investigate point estimates.
@@ -81,3 +81,4 @@ this_fit$Graves$tau_hat_drop$Ezreal # This is the series that diverges from the 
 this_fit$Graves$tau_hat_drop$Ahri
 this_fit$Graves$tau_hat_drop$Nautilus
 this_fit$Graves$tau_hat_drop$Jinx
+

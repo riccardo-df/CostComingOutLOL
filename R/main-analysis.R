@@ -45,6 +45,8 @@
 #'    \item{"top" }{This includes all champions whose main role is Top.}
 #'    \item{"support" }{This includes all champions whose main role is Support.}
 #'    \item{"adc" }{This includes all champions whose main role is Adc.}
+#'    \item{"support_adc"}{This includes all champions whose main role is either Support or Adc.}
+#'    \item{"top_jungle_middle"}{This includes all champions whose main role is either Top, Jungle, or Middle.}
 #'    \item{"main_role"}{This includes all champions whose main role is the same as the champion of interest.}
 #'    \item{"aux_role"}{This includes all champions whose auxiliary role is the same as the champion of interest.}
 #' }
@@ -92,7 +94,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
   if (!(outcome_colname %in% c("pick_level_sum", "pick_rate_pooled", "win_rate_pooled", "gold_pooled", "assists_pooled", "kd_ratio"))) stop("Invalid 'outcome'. This must be one of 'pick_level_sum', 'pick_rate_pooled', 'win_rate_pooled', 'gold_pooled', 'assists_pooled', 'kd_ratio'.", call. = FALSE)
 
   if (length(donors) == 1) {
-    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
+    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "support_adc", "top_jungle_middle", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
     if (any(champions == "LGB") & donors != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donors' is set to 'non_lgb'.", call. = FALSE)
   } else {
     if (sum(!(donors %in% unique(lol_champ_pool_dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'lol_champ_pool_dta'.", call. = FALSE)
@@ -318,7 +320,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
   if (!(outcome_colname %in% c("pick_level", "pick_rate"))) stop("Invalid 'outcome'. This must either 'pick_level' or 'pick_rate'.", call. = FALSE)
 
   if (length(donors) == 1) {
-    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
+    if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "support_adc", "top_jungle_middle", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)
     if (any(champions == "LGB") & donors != "non_lgb") stop("We can run the analysis for the new LGB unit only if 'donors' is set to 'non_lgb'.", call. = FALSE)
   } else {
     if (sum(!(donors %in% unique(lol_champ_pool_dta$champion))) > 0) stop("Invalid 'donors'. One or more champions are not found in 'lol_champ_pool_dta'.", call. = FALSE)
