@@ -27,7 +27,7 @@ max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
 donors <- "non_lgb"
-estimator <- "sc_reg"
+estimator <- "sc"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
 n_boot <- 200
@@ -39,7 +39,7 @@ covariates <- c()
 pooled_result <- run_main_pooled(champions, outcome_colname, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
 
 # Plots -------------------------------------------------------------------
-save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
 
 produce_plots_pooled(pooled_result, ylims = c(0, 40), save_here)
 
@@ -50,16 +50,3 @@ cil <- trimws(format(round(tau_hat - 1.96 * se, 3), nsmall = 3))
 ciu <- trimws(format(round(tau_hat + 1.96 * se, 3), nsmall = 3))
 
 cat("Point estimate: ", tau_hat, " [", cil, ", ", ciu, "] \n", sep = "")
-
-# Compare LGB characters --------------------------------------------------
-lgb_characters <- c("Diana", "Leona", "Nami", "Neeko")
-
-compare_charactestics <- function(champions) {
-  lol_champ_pool_dta %>%
-    filter(champion %in% champions & day < treatment_date) %>%
-    group_by(champion) %>%
-    summarise_at(c("pick_rate_pooled", "ban_rate_pooled", "win_rate_pooled", "gold_pooled", "kills_pooled", "assists_pooled", "deaths_pooled"), mean)
-}
-
-compare_charactestics(lgb_characters)
-

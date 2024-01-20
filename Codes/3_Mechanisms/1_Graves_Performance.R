@@ -39,7 +39,7 @@ covariates <- c()
 pooled_result <- run_main_pooled(champions, outcome_colnames, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
 
 # Plots -------------------------------------------------------------------
-save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Performance"
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Performance"
 
 produce_plots_pooled(pooled_result, ylims = c(20, 80), save_here)
 
