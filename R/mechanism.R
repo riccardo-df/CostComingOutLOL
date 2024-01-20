@@ -227,7 +227,7 @@ players_performance_plots_lol <- function(n_pre_matches,
                   bottom_lane = mean(avg_bottom_rate_pre),
                   support_lane = mean(avg_support_rate_pre),
                   lgb_lane = mean(avg_lgb_rate_pre)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane) %>%
     dplyr::distinct() %>%
     reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
 
@@ -255,7 +255,7 @@ players_performance_plots_lol <- function(n_pre_matches,
                   bottom_lane = mean(avg_bottom_rate_post),
                   support_lane = mean(avg_support_rate_post),
                   lgb_lane = mean(avg_lgb_rate_post)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane) %>%
     dplyr::distinct() %>%
     reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
 
@@ -286,7 +286,7 @@ players_performance_plots_lol <- function(n_pre_matches,
                   bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
                   support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
                   lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane) %>%
     dplyr::distinct() %>%
     reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
 
@@ -314,7 +314,7 @@ players_performance_plots_lol <- function(n_pre_matches,
                   bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
                   support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
                   lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
+    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane) %>%
     dplyr::distinct() %>%
     reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
 
@@ -323,7 +323,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 
   plot_positions_buckets <- plot_positions_buckets_dta %>%
     dplyr::left_join(plot_positions_se_buckets_dta, by = c("prior_user", "disclosure", "position")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(position, levels = c("top_lane", "jungle_lane", "mid_lane", "bottom_lane", "support_lane", "lgb_lane"), labels = c("Top", "Jungle", "Mid", "Bottom", "Support", "LGB")), y = mean, fill = factor(disclosure, levels = c(0, 1), labels = c("Pre-treatment", "Post-treatment")))) +
+    ggplot2::ggplot(ggplot2::aes(x = factor(position, levels = c("top_lane", "jungle_lane", "mid_lane", "bottom_lane", "support_lane"), labels = c("Top", "Jungle", "Mid", "Bottom", "Support")), y = mean, fill = factor(disclosure, levels = c(0, 1), labels = c("Pre-treatment", "Post-treatment")))) +
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
     ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +

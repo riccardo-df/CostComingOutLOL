@@ -33,7 +33,7 @@ backdate <- 10
 covariates_pool <- c()
 
 ## Select most played champions.
-choose_n <- 50
+choose_n <- 30
 
 champions <- lol_champ_pool_dta %>%
   filter(champion != "Graves" & day < treatment_date) %>%
@@ -53,5 +53,4 @@ pooled_results <- run_main_pooled(c("Graves", champions), outcome_colname_pool, 
 # Plot -------------------------------------------------------------------
 save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
-rmses <- produce_plot_placebo(pooled_results, "Graves", to_plot_n = 50, ylims = c(-20, 20), save_here)
-
+rmses <- produce_plot_placebo(pooled_results, "Graves", to_plot_n = 20, ylims = c(-20, 20), save_here)
