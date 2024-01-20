@@ -1,6 +1,6 @@
 ## @author: riccardo-df
 ## University of Rome Tor Vergata
-## 09\08\2023
+## 01\01\2024
 
 ## The Cost of Coming Out - Synthetic Controls.
 
@@ -14,10 +14,7 @@ set.seed(1986)
 pkgs <- c("CostComingOutLOL")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
-# Run SC algorithm for all control champions ------------------------------
-## Select champions.
-champions <- setdiff(sort(unique(lol_champ_pool_dta$champion)), "Graves")
-
+# Run SC algorithm for control champions ------------------------------
 ## Select outcome series.
 outcome_colname_pool <- "pick_rate_pooled"
 
@@ -27,7 +24,7 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-estimator <- "sc_reg"
+estimator <- "sc"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- FALSE
 n_boot <- 200
@@ -35,21 +32,26 @@ backdate <- 10
 
 covariates_pool <- c()
 
-## Loop over donor pools. Each pool excludes Graves and the "treated" champion.
-pooled_result_list <- list()
-counter <- 1
+## Select most played champions.
+choose_n <- 50
 
-for (champion in champions) {
-  pool <- setdiff(champions, champion)
+champions <- lol_champ_pool_dta %>%
+  filter(champion != "Graves" & day < treatment_date) %>%
+  group_by(champion) %>%
+  mutate(avg_pick_pre = mean(pick_rate_pooled)) %>%
+  ungroup() %>%
+  select(champion, avg_pick_pre) %>%
+  distinct(champion, .keep_all = TRUE) %>%
+  arrange(desc(avg_pick_pre)) %>%
+  top_n(choose_n) %>%
+  pull(champion) %>%
+  sort()
 
-  pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
-  counter <- counter + 1
-}
+## Estimation.
+pooled_results <- run_main_pooled(c("Graves", champions), outcome_colname_pool, champions, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
 
-# Plots -------------------------------------------------------------------
-save_here <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2023"
+# Plot -------------------------------------------------------------------
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
-for (i in seq_len(length(pooled_result_list))) {
-  produce_plots_pooled(pooled_result_list[[i]], save_here)
-  produce_plots_regional(regional_result_list[[i]], save_here)
-}
+rmses <- produce_plot_placebo(pooled_results, "Graves", to_plot_n = 50, ylims = c(-20, 20), save_here)
+

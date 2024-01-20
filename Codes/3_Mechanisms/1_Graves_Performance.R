@@ -27,7 +27,7 @@ max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
 donors <- "all"
-estimator <- "sc_reg"
+estimator <- "sc"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 inference <- TRUE
 n_boot <- 200

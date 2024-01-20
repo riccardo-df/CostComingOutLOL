@@ -259,3 +259,129 @@ construct_synth_outcome <- function(object, dta, unit_colname, outcome_colname, 
   ## 4.) Output.
   return(list("weights" = weights, "synth_outcome" = synth_outcome_results))
 }
+
+
+#' Placebo Plot
+#'
+#' Produced a placebo plot for synthetic control estimators.
+#'
+#' @param pooled_results Output of \code{\link{run_main_pooled}} called on several distinct characters.
+#' @param main_champion String denoting the actual treated champion.
+#' @param to_plot_n Plot only results for the characters with the lowest pre-treatment RMSE.
+#' @param ylims Vector storing lower and upper limit for the y-axis.
+#' @param save_here String denoting the path where to save the figures.
+#'
+#' @return
+#' Save some nice plots and returns a tibble storing the pre-treatment root mean squared errors of all fits.
+#'
+#' @import dplyr ggplot2 ggsci grDevices
+#' @importFrom stats reorder
+#' @importFrom gridExtra arrangeGrob
+#' @importFrom lubridate year
+#' @importFrom Metrics rmse
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @seealso \code{\link{produce_plots_regional}} \code{\link{produce_latex_pooled}} \code{\link{produce_latex_regional}}
+#'
+#' @export
+produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims = c(0, 100), save_here = getwd()) {
+  ## 0.) Handling inputs and checks.
+  champion <- NULL
+  day_no <- NULL
+  smooth_outcome <- NULL
+  lgb_smooth_outcome <- NULL
+  synth_outcome <- NULL
+  weight <- NULL
+
+  outcome_colname <- pooled_results$outcome_colname
+  estimator <- pooled_results$estimator
+  donors <- pooled_results$donors
+  treatment_date <- pooled_results$treatment_date
+  year <- lubridate::year(treatment_date)
+  n_back_days <- as.numeric(summary(pooled_results[[1]]$tau_hat)$dimensions["T0"] - summary(pooled_results[[1]]$tau_hat_back)$dimensions["T0"] - 1)
+  treatment_date_back <- as.Date(treatment_date) - n_back_days
+  champions <- names(pooled_results)[!(names(pooled_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))]
+
+  if (!(main_champion %in% champions)) stop("Invalid 'main_champion'. This is not found among 'pooled_results'.", call. = FALSE)
+  if (to_plot_n > length(champions)) stop("Invalid 'to_plot_n'. This number exceeds that of champions analyzed.", call. = FALSE)
+
+  pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+
+  pride_month_2023_begin <- as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2023_end <- as.POSIXct("2023-06-30", tryFormats = "%Y-%m-%d")
+
+  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+
+  if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) {
+    y_label <- "Pick rate"
+  } else if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) {
+    y_label <- "Pick level"
+  } else if (outcome_colname == "win_rate_pooled") {
+    y_label <- "Win rate"
+  } else if (outcome_colname == "gold_pooled") {
+    y_label <- "Gold"
+  } else if (outcome_colname == "assists_pooled") {
+    y_label <- "Assists"
+  } else if (outcome_colname == "kd_ratio") {
+    y_label <- "Kills/deaths"
+  }
+
+  ## 1.) Construct synthetic outcomes and compute pre-treatment RMSE.
+  synth_outcomes <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))], function(x) { construct_synth_outcome(x$tau_hat, x$dta, "champion", "smooth_outcome", "day")$synth_outcome })
+  synth_outcomes <- mapply(function(x, y) { x %>% mutate(champion = y) }, synth_outcomes, names(synth_outcomes), SIMPLIFY = FALSE) %>%
+    dplyr::bind_rows()
+
+  dta <- pooled_results[[1]]$dta %>%
+    dplyr::filter(champion %in% champions) %>%
+    dplyr::left_join(synth_outcomes, by = c("day", "champion")) %>%
+    dplyr::mutate(gaps = smooth_outcome - synth_outcome)
+
+  rmses <- dta %>%
+    dplyr::filter(day < treatment_date) %>%
+    dplyr::group_by(champion) %>%
+    dplyr::mutate(rmse = Metrics::rmse(smooth_outcome, synth_outcome)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(champion, .keep_all = TRUE) %>%
+    dplyr::select(champion, rmse) %>%
+    dplyr::arrange(rmse)
+
+  ## 2.) Placebo plot.
+  plot_2022_rainbow <- (as.Date(min(dta$day)) < as.Date(pride_month_2022_begin) + 1) & (as.Date(max(dta$day)) > as.Date(pride_month_2022_end) + 1)
+  plot_2023_rainbow <- (as.Date(min(dta$day)) < as.Date(pride_month_2023_begin) + 1) & (as.Date(max(dta$day)) > as.Date(pride_month_2023_end) + 1)
+
+  plot_these <- rmses %>%
+    dplyr::filter(champion != main_champion) %>%
+    dplyr::slice(1:to_plot_n) %>%
+    pull(champion)
+
+  plot_dta_main <- dta %>%
+    dplyr::filter(champion == main_champion)
+
+  plot_dta_aux <- dta %>%
+    dplyr::filter(champion %in% plot_these)
+
+  plot_main <- plot_dta_aux %>%
+    ggplot2::ggplot(ggplot2::aes(x = day, y = gaps, group = champion, color = "Controls")) +
+    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::geom_line(linewidth = 0.2) +
+    ggplot2::geom_line(data = plot_dta_main, ggplot2::aes(y = gaps, col = "Graves"), linewidth = 1) +
+    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
+    ggplot2::geom_hline(yintercept = 0, linetype = 4) +
+    ggplot2::xlab("") + ggplot2::ylab("Gaps") +
+    ggplot2::ylim(ylims[1], ylims[2]) +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
+    ggplot2::scale_color_manual(name = "Colors", values = c("Controls" = "gray", "Graves" = "black"), breaks = c("Graves", "Controls")) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
+                   legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_placebo.eps"), plot_main, device = cairo_ps, width = 7, height = 7)
+
+  ## 3.) Talk to the user and output.
+  cat("\n")
+  cat("Figures are saved at ", save_here, "\n", sep = "")
+
+  return(rmses)
+}

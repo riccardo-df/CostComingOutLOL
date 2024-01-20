@@ -32,7 +32,7 @@ max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 donor_pools <- c("all", "support_adc", "top_jungle_middle")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- TRUE
+inference <- FALSE
 n_boot <- 200
 backdate <- 10
 
@@ -68,7 +68,18 @@ for (i in seq_len(length(regional_result_list))) {
 }
 
 # LATEX -------------------------------------------------------------------
+## Produce table.
 produce_latex(pooled_result_list, regional_result_list)
+
+## Compute percentages.
+graves_pre_avg <- lol_champ_pool_dta %>%
+  filter(champion == "Graves" & day < treatment_date) %>%
+  pull(pick_rate_pooled) %>%
+  mean()
+
+effects <- sapply(pooled_result_list, function(x) { as.numeric(x$Graves$tau_hat) })
+
+percentages <- effects / graves_pre_avg * 100
 
 # Check LOO ---------------------------------------------------------------
 ## Extract main specification.

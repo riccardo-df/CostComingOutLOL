@@ -46,8 +46,9 @@ run_main_pooled(
 }
 \value{
 A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
-Each inner list stores four elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, and the data used for estimation.
-The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth the outcome series.
+Each inner list stores five elements: the results of the main fit, the results of the backdating exercise, the results of the leave-one-out exercise, the pre-treatment average of \code{outcome_colname},
+and the data used for estimation. The outer list stores five additional elements: the name of the outcome, the name of the estimator, the name of the donors, the treatment date, and the bandwidth used to smooth
+the outcome series.
 }
 \description{
 Runs the main analysis of the Cost of Coming Out paper using \code{\link{lol_champ_pool_dta}}.
@@ -82,6 +83,8 @@ An infinitesimal bandwidth amounts to no smoothing.\cr
    \item{"top" }{This includes all champions whose main role is Top.}
    \item{"support" }{This includes all champions whose main role is Support.}
    \item{"adc" }{This includes all champions whose main role is Adc.}
+   \item{"support_adc"}{This includes all champions whose main role is either Support or Adc.}
+   \item{"top_jungle_middle"}{This includes all champions whose main role is either Top, Jungle, or Middle.}
    \item{"main_role"}{This includes all champions whose main role is the same as the champion of interest.}
    \item{"aux_role"}{This includes all champions whose auxiliary role is the same as the champion of interest.}
 }

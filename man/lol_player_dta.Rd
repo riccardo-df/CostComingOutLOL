@@ -13,12 +13,12 @@ A data frame with the following variables:
   \item{\code{n_matches}}{How many matches the player played in that \code{day}.}
   \item{\code{graves_rate}}{How often the player picked Graves in that \code{day}.}
   \item{\code{graves_ban_rate}}{How often the player banned Graves in that \code{day}.}
-  \item{\code{top}}{How many times the player picked a champion whose main role is top lane.}
-  \item{\code{jungle}}{How many times the player picked a champion whose main role is jungle.}
-  \item{\code{mid}}{How many times the player picked a champion whose main role is middle lane.}
-  \item{\code{bottom}}{How many times the player picked a champion whose main role is bottom lane.}
-  \item{\code{support}}{How many times the player picked a champion whose main role is support.}
-  \item{\code{lgb}}{How many times the player picked a one of Diana, Leona, Nami, or Neeko.}
+  \item{\code{top}}{How many times the player picked a champion whose main role is top lane (not in rates).}
+  \item{\code{jungle}}{How many times the player picked a champion whose main role is jungle (not in rates).}
+  \item{\code{mid}}{How many times the player picked a champion whose main role is middle lane (not in rates).}
+  \item{\code{bottom}}{How many times the player picked a champion whose main role is bottom lane (not in rates).}
+  \item{\code{support}}{How many times the player picked a champion whose main role is support (not in rates).}
+  \item{\code{lgb}}{How many times the player picked a one of Diana, Leona, Nami, or Neeko (not in rates).}
   \item{\code{win_rate}}{How often the player won a match in that \code{day}.}
  \item{\code{gold_avg}}{Average gold earned by the player in that \code{day}.}
  \item{\code{kills_avg}}{Average number of kills achieved by the player in that \code{day}.}
