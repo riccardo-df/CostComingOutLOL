@@ -32,25 +32,42 @@ backdate <- 10
 
 covariates_pool <- c()
 
-## Select most played champions.
-choose_n <- 30
+# ## Select most played champions.
+# choose_n <- lol_champ_pool_dta %>%
+#   filter(day < treatment_date) %>%
+#   pull(champion) %>%
+#   unique() %>%
+#   length()
+#
+# champions <- lol_champ_pool_dta %>%
+#   filter(champion != "Graves" & day < treatment_date) %>%
+#   group_by(champion) %>%
+#   mutate(avg_pick_pre = mean(pick_rate_pooled)) %>%
+#   ungroup() %>%
+#   select(champion, avg_pick_pre) %>%
+#   distinct(champion, .keep_all = TRUE) %>%
+#   arrange(desc(avg_pick_pre)) %>%
+#   top_n(choose_n) %>%
+#   pull(champion) %>%
+#   sort()
 
-champions <- lol_champ_pool_dta %>%
-  filter(champion != "Graves" & day < treatment_date) %>%
-  group_by(champion) %>%
-  mutate(avg_pick_pre = mean(pick_rate_pooled)) %>%
-  ungroup() %>%
-  select(champion, avg_pick_pre) %>%
-  distinct(champion, .keep_all = TRUE) %>%
-  arrange(desc(avg_pick_pre)) %>%
-  top_n(choose_n) %>%
-  pull(champion) %>%
-  sort()
+## Select all champions released before the treatment date.
+champions <- setdiff(sort(unique(lol_champ_pool_dta$champion)), c("Naafiri", "Milio", "KSante", "Nilah", "Belveth"))
 
 ## Estimation.
-pooled_results <- run_main_pooled(c("Graves", champions), outcome_colname_pool, champions, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
+pooled_results <- run_main_pooled(champions, outcome_colname_pool, champions, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
 
 # Plot -------------------------------------------------------------------
+## Plot and save.
 save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
-rmses <- produce_plot_placebo(pooled_results, "Graves", to_plot_n = 20, ylims = c(-20, 20), save_here)
+rmses <- produce_plot_placebo(pooled_results, "Graves", to_plot_n = 50, ylims = c(-20, 20), save_here)
+
+## Investigate distribution of placebo effects. First remove champions with zero fit.
+rmses$pre %>%
+  print(n = 1000)
+
+rmses$post %>%
+  print(n = 1000)
+
+## Select best 50 fits

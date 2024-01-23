@@ -272,7 +272,7 @@ construct_synth_outcome <- function(object, dta, unit_colname, outcome_colname, 
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
-#' Save some nice plots and returns a tibble storing the pre-treatment root mean squared errors of all fits.
+#' Save some nice plots and returns a list storing two tibbles, one with the pre-treatment and one with the post-treatment root mean squared errors of all fits.
 #'
 #' @import dplyr ggplot2 ggsci grDevices
 #' @importFrom stats reorder
@@ -328,7 +328,7 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
     y_label <- "Kills/deaths"
   }
 
-  ## 1.) Construct synthetic outcomes and compute pre-treatment RMSE.
+  ## 1.) Construct synthetic outcomes and compute RMSEs.
   synth_outcomes <- lapply(pooled_results[!(names(pooled_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))], function(x) { construct_synth_outcome(x$tau_hat, x$dta, "champion", "smooth_outcome", "day")$synth_outcome })
   synth_outcomes <- mapply(function(x, y) { x %>% mutate(champion = y) }, synth_outcomes, names(synth_outcomes), SIMPLIFY = FALSE) %>%
     dplyr::bind_rows()
@@ -338,8 +338,17 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
     dplyr::left_join(synth_outcomes, by = c("day", "champion")) %>%
     dplyr::mutate(gaps = smooth_outcome - synth_outcome)
 
-  rmses <- dta %>%
+  rmses_pre <- dta %>%
     dplyr::filter(day < treatment_date) %>%
+    dplyr::group_by(champion) %>%
+    dplyr::mutate(rmse = Metrics::rmse(smooth_outcome, synth_outcome)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(champion, .keep_all = TRUE) %>%
+    dplyr::select(champion, rmse) %>%
+    dplyr::arrange(rmse)
+
+  rmses_post <- dta %>%
+    dplyr::filter(day > treatment_date) %>%
     dplyr::group_by(champion) %>%
     dplyr::mutate(rmse = Metrics::rmse(smooth_outcome, synth_outcome)) %>%
     dplyr::ungroup() %>%
@@ -383,5 +392,5 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 
-  return(rmses)
+  return(list("pre" = rmses_pre, "post" = rmses_post))
 }
