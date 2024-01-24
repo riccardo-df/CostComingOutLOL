@@ -29,10 +29,10 @@ min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
 ## Set SC estimator.
-donor_pools <- c("all", "support_adc", "top_jungle_middle")
+donor_pools <- c("all", "support_adc")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- FALSE
+inference <- TRUE
 n_boot <- 200
 backdate <- 10
 
@@ -92,4 +92,3 @@ this_fit$Graves$tau_hat_drop$Ezreal # This is the series that diverges from the 
 this_fit$Graves$tau_hat_drop$Ahri
 this_fit$Graves$tau_hat_drop$Nautilus
 this_fit$Graves$tau_hat_drop$Jinx
-
