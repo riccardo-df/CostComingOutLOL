@@ -341,26 +341,26 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
   rmses_pre <- dta %>%
     dplyr::filter(day < treatment_date) %>%
     dplyr::group_by(champion) %>%
-    dplyr::mutate(rmse = Metrics::rmse(smooth_outcome, synth_outcome)) %>%
+    dplyr::mutate(rmse_pre = Metrics::rmse(smooth_outcome, synth_outcome)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(champion, .keep_all = TRUE) %>%
-    dplyr::select(champion, rmse) %>%
-    dplyr::arrange(rmse)
+    dplyr::select(champion, rmse_pre) %>%
+    dplyr::arrange(rmse_pre)
 
   rmses_post <- dta %>%
     dplyr::filter(day > treatment_date) %>%
     dplyr::group_by(champion) %>%
-    dplyr::mutate(rmse = Metrics::rmse(smooth_outcome, synth_outcome)) %>%
+    dplyr::mutate(rmse_post = Metrics::rmse(smooth_outcome, synth_outcome)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(champion, .keep_all = TRUE) %>%
-    dplyr::select(champion, rmse) %>%
-    dplyr::arrange(rmse)
+    dplyr::select(champion, rmse_post) %>%
+    dplyr::arrange(rmse_post)
 
   ## 2.) Placebo plot.
   plot_2022_rainbow <- (as.Date(min(dta$day)) < as.Date(pride_month_2022_begin) + 1) & (as.Date(max(dta$day)) > as.Date(pride_month_2022_end) + 1)
   plot_2023_rainbow <- (as.Date(min(dta$day)) < as.Date(pride_month_2023_begin) + 1) & (as.Date(max(dta$day)) > as.Date(pride_month_2023_end) + 1)
 
-  plot_these <- rmses %>%
+  plot_these <- rmses_pre %>%
     dplyr::filter(champion != main_champion) %>%
     dplyr::slice(1:to_plot_n) %>%
     pull(champion)
@@ -386,9 +386,30 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_placebo.eps"), plot_main, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_placebo.eps"), plot_main, device = cairo_ps, width = 9, height = 7)
 
-  ## 3.) Talk to the user and output.
+  ## 3. Histogram of pre- and post-treatment RMSEs.
+  rmses_ratio <- rmses_pre %>%
+    dplyr::left_join(rmses_post, by = "champion") %>%
+    dplyr::mutate(rmse_ratio = rmse_post / rmse_pre)
+
+  plot_rmses_dta <- rmses_ratio %>%
+    dplyr::arrange(desc(rmse_ratio)) %>%
+    dplyr::mutate(champion = factor(champion, levels = champion)) %>%
+    dplyr::slice(1:to_plot_n)
+
+  plot_rmses_dta %>%
+    ggplot2::ggplot(ggplot2::aes(x = champion, y = rmse_ratio)) +
+    ggplot2::geom_segment(ggplot2::aes(xend = champion, yend = 0),
+                          color = ifelse(plot_rmses_dta$champion == main_champion , "orange", "grey"),
+                          linewidth = ifelse(plot_rmses_dta$champion == main_champion, 1.3, 0.7)) +
+    ggplot2::geom_point(color = ifelse(plot_rmses_dta$champion == main_champion , "orange", "grey"),
+                        size = ifelse(plot_rmses_dta$champion == main_champion, 5, 2)) +
+    ggplot2::xlab("") + ggplot2::ylab("Post RMSE") +
+    ggplot2::coord_flip() +
+    ggplot2::theme_bw()
+
+  ## 4.) Talk to the user and output.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 
