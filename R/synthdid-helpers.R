@@ -267,7 +267,7 @@ construct_synth_outcome <- function(object, dta, unit_colname, outcome_colname, 
 #'
 #' @param pooled_results Output of \code{\link{run_main_pooled}} called on several distinct characters.
 #' @param main_champion String denoting the actual treated champion.
-#' @param to_plot_n Plot only results for the characters with the lowest pre-treatment RMSE.
+#' @param drop_overfit Pre-treatment RMSE threshold. Drop characters that feature a pre-treatment RMSE lower than this to omit overfit specifications.
 #' @param ylims Vector storing lower and upper limit for the y-axis.
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -285,7 +285,7 @@ construct_synth_outcome <- function(object, dta, unit_colname, outcome_colname, 
 #' @seealso \code{\link{produce_plots_regional}} \code{\link{produce_latex_pooled}} \code{\link{produce_latex_regional}}
 #'
 #' @export
-produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims = c(0, 100), save_here = getwd()) {
+produce_plot_placebo <- function(pooled_results, main_champion, drop_overfit = 1, ylims = c(0, 100), save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   day_no <- NULL
@@ -304,7 +304,7 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
   champions <- names(pooled_results)[!(names(pooled_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))]
 
   if (!(main_champion %in% champions)) stop("Invalid 'main_champion'. This is not found among 'pooled_results'.", call. = FALSE)
-  if (to_plot_n > length(champions)) stop("Invalid 'to_plot_n'. This number exceeds that of champions analyzed.", call. = FALSE)
+  if (!as.numeric(drop_overfit)) stop("Invalid 'drop_overfit'. This must be numeric", call. = FALSE)
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
@@ -356,20 +356,21 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
     dplyr::select(champion, rmse_post) %>%
     dplyr::arrange(rmse_post)
 
+  ## 2.) Drop champions with a too low pre-RMSE.
+  to_keep <- rmses_pre %>%
+    dplyr::mutate(drop = ifelse(rmse_pre < drop_overfit, 1, 0)) %>%
+    dplyr::filter(!drop) %>%
+    dplyr::pull(champion)
+
   ## 2.) Placebo plot.
   plot_2022_rainbow <- (as.Date(min(dta$day)) < as.Date(pride_month_2022_begin) + 1) & (as.Date(max(dta$day)) > as.Date(pride_month_2022_end) + 1)
   plot_2023_rainbow <- (as.Date(min(dta$day)) < as.Date(pride_month_2023_begin) + 1) & (as.Date(max(dta$day)) > as.Date(pride_month_2023_end) + 1)
-
-  plot_these <- rmses_pre %>%
-    dplyr::filter(champion != main_champion) %>%
-    dplyr::slice(1:to_plot_n) %>%
-    pull(champion)
 
   plot_dta_main <- dta %>%
     dplyr::filter(champion == main_champion)
 
   plot_dta_aux <- dta %>%
-    dplyr::filter(champion %in% plot_these)
+    dplyr::filter(champion %in% to_keep & champion != main_champion)
 
   plot_main <- plot_dta_aux %>%
     ggplot2::ggplot(ggplot2::aes(x = day, y = gaps, group = champion, color = "Controls")) +
@@ -390,24 +391,25 @@ produce_plot_placebo <- function(pooled_results, main_champion, to_plot_n, ylims
 
   ## 3. Histogram of pre- and post-treatment RMSEs.
   rmses_ratio <- rmses_pre %>%
+    dplyr::filter(champion %in% to_keep) %>%
     dplyr::left_join(rmses_post, by = "champion") %>%
     dplyr::mutate(rmse_ratio = rmse_post / rmse_pre)
 
   plot_rmses_dta <- rmses_ratio %>%
     dplyr::arrange(desc(rmse_ratio)) %>%
-    dplyr::mutate(champion = factor(champion, levels = champion)) %>%
-    dplyr::slice(1:to_plot_n)
+    dplyr::mutate(champion = factor(champion, levels = champion))
 
-  plot_rmses_dta %>%
+  plot_ratios <- plot_rmses_dta %>%
     ggplot2::ggplot(ggplot2::aes(x = champion, y = rmse_ratio)) +
     ggplot2::geom_segment(ggplot2::aes(xend = champion, yend = 0),
                           color = ifelse(plot_rmses_dta$champion == main_champion , "orange", "grey"),
                           linewidth = ifelse(plot_rmses_dta$champion == main_champion, 1.3, 0.7)) +
     ggplot2::geom_point(color = ifelse(plot_rmses_dta$champion == main_champion , "orange", "grey"),
                         size = ifelse(plot_rmses_dta$champion == main_champion, 5, 2)) +
-    ggplot2::xlab("") + ggplot2::ylab("Post RMSE") +
+    ggplot2::xlab("") + ggplot2::ylab("RMSE ratio") +
     ggplot2::coord_flip() +
     ggplot2::theme_bw()
+  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_rmses_ratios.eps"), plot_ratios, device = cairo_ps, width = 9, height = 7)
 
   ## 4.) Talk to the user and output.
   cat("\n")
