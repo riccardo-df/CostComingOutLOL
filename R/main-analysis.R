@@ -243,6 +243,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' @param donors Which units to include in the donor pool. See the details section below.
 #' @param estimator Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
+#' @param backdate How many periods to backdate the treatment for a robustness check.
 #' @param inference Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.
 #' @param n_boot Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.
 #' @param bandwidth Parameter controlling the amount of smoothing.
@@ -303,7 +304,7 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
 #' @seealso \code{\link{run_main_pooled}}
 #'
 #' @export
-run_main_regional <- function(champions, outcome_colname, donors, estimator, treatment_date,
+run_main_regional <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
                               inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
   ## Handling inputs and checks.
   lol_champ_pool_dta <- lol_champ_pool_dta
@@ -328,6 +329,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
 
   if (!(estimator %in% c("sc", "sc_reg", "sdid"))) stop("Invalid 'estimator'. This must be one of 'sc', 'sc_reg', 'sdid'.", call. = FALSE)
   if (!inherits(treatment_date, "POSIXct")) stop("Invalid 'treatment_date'. This must of class 'POSIXct'.", call. = FALSE)
+  if (backdate < 0 | backdate %% 1 != 0) stop("Invalid 'backdate'. This must be a positive integer.", call. = FALSE)
   if (!is.logical(inference)) stop("Invalid 'inference'. This must be either 'TRUE' or 'FALSE.", call. = FALSE)
   if (n_boot <= 1 | n_boot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
@@ -349,7 +351,7 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
     ## 0.) Keep track of the loop.
     cat("Constructing synthetic controls for ", my_champion, ": \n", sep = "")
 
-    ## 2.) Generate treatment variable. Smooth the outcome series.
+    ## 1.) Generate treatment variable. Smooth the outcome series.
     cat("    1.) Generating treatment variable; \n")
     if (my_champion == "LGB") {
       lgb_avg_outcome <- lapply(regional_panels, function(x) {
@@ -380,16 +382,17 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
 
     temp_regional_panels <- lapply(temp_regional_panels, function(x) { x %>% dplyr::group_by(champion) %>% dplyr::mutate(smooth_outcome = stats::ksmooth(stats::time(selected_outcome), selected_outcome, "normal", bandwidth = bandwidth)$y) %>% dplyr::select(region, day, day_no, champion, treatment, smooth_outcome, all_of(covariate_colnames), main_role, aux_role) %>% dplyr::ungroup()})
 
-    ## 2.) Construct donor pools.
+    ## 2.) Construct donor pools, the latter for the backdating exercise.
     cat("    2.) Constructing donor pools; \n")
     regional_donor_pools <- lapply(temp_regional_panels, function(x) { construct_donor_pool(x, donors, my_champion) })
+    regional_donor_pools_back <- lapply(regional_donor_pools, function(x) { x %>% mutate(treatment = as.logical(ifelse(champion == my_champion & day >= as.Date(treatment_date) - backdate, 1, 0))) })
 
     ## 3.) Construct synthetic controls.
     cat("    3.) Constructing weights; \n")
     tau_hat <- lapply(regional_donor_pools, function(x) { call_synthdid(x, "smooth_outcome", estimator, covariate_colnames) })
 
     ## 4.) Estimate standard errors.
-    cat("    4.) Estimating standard error. \n")
+    cat("    4.) Estimating standard error; \n")
     if (inference) {
       ses <- lapply(tau_hat, function(x) { as.numeric(sqrt(stats::vcov(x, method = "placebo", replications = n_boot))) })
     } else {
@@ -397,10 +400,14 @@ run_main_regional <- function(champions, outcome_colname, donors, estimator, tre
       ses <- list()
     }
 
+    ## 5.) Backdate.
+    cat("    5.) Backdating exercise. \n")
+    tau_hats_back <- lapply(regional_donor_pools_back, function(x) { call_synthdid(x, "smooth_outcome", estimator, covariate_colnames) })
+
     cat("\n")
 
-    ## 5.) Save synthdid object.
-    output[[counter]] <- list("tau_hats" = tau_hat, "ses" = ses, "dtas" = temp_regional_panels)
+    ## 6.) Save synthdid object.
+    output[[counter]] <- list("tau_hats" = tau_hat, "ses" = ses, "tau_hats_back" = tau_hats_back, "dtas" = temp_regional_panels)
     counter <- counter + 1
   }
 

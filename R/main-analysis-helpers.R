@@ -215,6 +215,8 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
   estimator <- regional_results$estimator
   donors <- regional_results$donors
   treatment_date <- regional_results$treatment_date
+  n_back_days <- as.numeric(summary(regional_results[[1]]$tau_hats$Europe)$dimensions["T0"] - summary(regional_results[[1]]$tau_hats_back$Europe)$dimensions["T0"] - 1)
+  treatment_date_back <- as.Date(treatment_date) - n_back_days
   year <- lubridate::year(treatment_date)
   champions <- names(regional_results)[!(names(regional_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))]
 
@@ -232,6 +234,10 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
   ## 1.) Construct synthetic outcomes.
   synth_outcomes <- lapply(regional_results[!(names(regional_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))], function(x) {
     mapply(function(y, z) { construct_synth_outcome(y, z, "champion", "smooth_outcome", "day") }, y = x$tau_hats, z = x$dtas, SIMPLIFY = FALSE)
+  })
+
+  synth_outcomes_back <- lapply(regional_results[!(names(regional_results) %in% c("outcome_colname", "estimator", "donors", "treatment_date", "bandwidth"))], function(x) {
+    mapply(function(y, z) { construct_synth_outcome(y, z, "champion", "smooth_outcome", "day") }, y = x$tau_hats_back, z = x$dtas, SIMPLIFY = FALSE)
   })
 
   ## 2.) Plot.
@@ -276,6 +282,11 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
     colnames(plot_synth_outcomes)[1] <- "region"
     plot_synth_outcomes$region <- factor(plot_synth_outcomes$region, levels = c("Europe", "Korea", "Latin_America", "North_America"), labels = c("Europe", "Korea", "Latin America", "North America"))
 
+    plot_synth_outcome_back <- lapply(synth_outcomes_back[[my_champion]], function(x) { x$synth_outcome }) %>%
+      dplyr::bind_rows(.id = "groups")
+    colnames(plot_synth_outcome_back)[1] <- "region"
+    plot_synth_outcome_back$region <- factor(plot_synth_outcome_back$region, levels = c("Europe", "Korea", "Latin_America", "North_America"), labels = c("Europe", "Korea", "Latin America", "North America"))
+
     plot_main <- plot_dta %>%
       dplyr::mutate(region = factor(region, levels = c("Europe", "Korea", "Latin_America", "North_America"), labels = c("Europe", "Korea", "Latin America", "North America"))) %>%
       ggplot2::ggplot(ggplot2::aes(x = day, y = smooth_outcome, color = "Actual")) +
@@ -291,6 +302,23 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"),
                      legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".eps"), plot_main, device = cairo_ps, width = 13, height = 7)
+
+    plot_back <- plot_dta %>%
+      dplyr::mutate(region = factor(region, levels = c("Europe", "Korea", "Latin_America", "North_America"), labels = c("Europe", "Korea", "Latin America", "North America"))) %>%
+      ggplot2::ggplot(ggplot2::aes(x = day, y = smooth_outcome, color = "Actual")) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::geom_line(linewidth = 0.6) +
+      ggplot2::geom_line(data = plot_synth_outcome_back, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 0.6) +
+      ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
+      ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
+      ggplot2::facet_wrap(~region, ncol = 2) +
+      ggplot2::xlab("") + ggplot2::ylab(y_label) +
+      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
+      ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
+      ggplot2::theme_bw() +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"),
+                     legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_back", year, ".eps"), plot_back, device = cairo_ps, width = 13, height = 7)
   }
 
   ## 3.) Talk to the user.
