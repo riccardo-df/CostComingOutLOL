@@ -4,12 +4,13 @@
 #'
 #' @param pooled_results Output of \code{\link{run_main_pooled}}
 #' @param ylims Vector storing lower and upper limit for the y-axis.
+#' @param palette String vector with hexadecimal codes. It controls the colors for the weight plot.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
 #' Save some nice plots.
 #'
-#' @import dplyr ggplot2 ggsci grDevices
+#' @import dplyr ggplot2 grDevices
 #' @importFrom stats reorder
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom lubridate year
@@ -19,7 +20,7 @@
 #' @seealso \code{\link{produce_plots_regional}} \code{\link{produce_latex_pooled}} \code{\link{produce_latex_regional}}
 #'
 #' @export
-produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = getwd()) {
+produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NULL, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   day_no <- NULL
@@ -120,7 +121,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = 
       ggplot2::ggplot(ggplot2::aes(x = stats::reorder(champion, -sort(weight)), y = weight, fill = champion)) +
       ggplot2::geom_bar(position = "dodge", stat = "identity") +
       ggplot2::coord_flip() +
-      ggsci::scale_fill_jco() +
+      ggplot2::scale_fill_manual(values = palette) +
       ggplot2::facet_wrap(vars(wrap)) +
       ggplot2::xlab("") + ggplot2::ylab("Weight") +
       ggplot2::theme_bw() +
@@ -189,12 +190,13 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = 
 #' Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_regional}}.
 #'
 #' @param regional_results Output of \code{\link{run_main_regional}}.
+#' @param palette String vector with hexadecimal codes. It controls the colors for the weight plot.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
 #' Save some nice plots.
 #'
-#' @import dplyr ggplot2 ggsci grDevices Cairo
+#' @import dplyr ggplot2 grDevices Cairo
 #' @importFrom lubridate year
 #'
 #' @author Riccardo Di Francesco
@@ -202,7 +204,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), save_here = 
 #' @seealso \code{\link{produce_plots_pooled}} \code{\link{produce_latex_pooled}} \code{\link{produce_latex_regional}}
 #'
 #' @export
-produce_plots_regional <- function(regional_results, save_here = getwd()) {
+produce_plots_regional <- function(regional_results, palette, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   day_no <- NULL
@@ -313,7 +315,7 @@ produce_plots_regional <- function(regional_results, save_here = getwd()) {
       ggplot2::ggplot(ggplot2::aes(x = stats::reorder(champion, -sort(weight)), y = weight, fill = champion)) +
       ggplot2::geom_bar(position = "dodge", stat = "identity") +
       ggplot2::coord_flip() +
-      ggsci::scale_fill_jco() +
+      ggplot2::scale_fill_manual(values = palette) +
       ggplot2::facet_wrap(~region, ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab("Weight") +
       ggplot2::theme_bw() +

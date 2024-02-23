@@ -7,7 +7,7 @@
 produce_plot_placebo(
   pooled_results,
   main_champion,
-  to_plot_n,
+  drop_overfit = 1,
   ylims = c(0, 100),
   save_here = getwd()
 )
@@ -17,14 +17,14 @@ produce_plot_placebo(
 
 \item{main_champion}{String denoting the actual treated champion.}
 
-\item{to_plot_n}{Plot only results for the characters with the lowest pre-treatment RMSE.}
+\item{drop_overfit}{Pre-treatment RMSE threshold. Drop characters that feature a pre-treatment RMSE lower than this to omit overfit specifications.}
 
 \item{ylims}{Vector storing lower and upper limit for the y-axis.}
 
 \item{save_here}{String denoting the path where to save the figures.}
 }
 \value{
-Save some nice plots and returns a tibble storing the pre-treatment root mean squared errors of all fits.
+Save some nice plots and returns a list storing two tibbles, one with the pre-treatment and one with the post-treatment root mean squared errors of all fits.
 }
 \description{
 Produced a placebo plot for synthetic control estimators.

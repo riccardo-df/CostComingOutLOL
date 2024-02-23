@@ -36,6 +36,7 @@ construct_donor_pool <- function(dta, donors, my_champion) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   main_role <- NULL
+  aux_role <- NULL
 
   if (length(donors) == 1) {
     if (!(donors %in% c("all", "non_lgb", "main_role", "aux_role", "jungle", "middle", "top", "support", "adc", "support_adc", "top_jungle_middle", "non_main_role", "non_aux_role", "non_jungle", "non_middle", "non_top", "non_support", "non_adc"))) stop("Invalid 'donors'. Call 'help(run_main_pooled)' to check valid inputs.", call. = FALSE)

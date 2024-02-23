@@ -10,6 +10,7 @@ run_main_regional(
   donors,
   estimator,
   treatment_date,
+  backdate,
   inference = FALSE,
   n_boot = 100,
   bandwidth = 0.01,
@@ -28,6 +29,8 @@ run_main_regional(
 \item{estimator}{Which estimator to use. Must be one of "sc" (standard synthetic control), "sc_reg" (sc plus a ridge penalty), "synthdid" (synthetic diff-in-diff).}
 
 \item{treatment_date}{Object of class \code{POSIXct}. When the treatment took place.}
+
+\item{backdate}{How many periods to backdate the treatment for a robustness check.}
 
 \item{inference}{Logical, whether to estimate standard errors. If \code{TRUE}, the placebo method described in Section 5 of Arkhangelsky et al. is used.}
 

@@ -60,11 +60,20 @@ for (estimator in estimators) {
 }
 
 # Plots -------------------------------------------------------------------
+## Extract "active" champions and construct palette for weights plots.
+pooled_actives <- rownames(summary(pooled_result_list[[1]]$Graves$tau_hat)$controls)
+regional_actives <- unlist(lapply(regional_result_list[[1]]$Graves$tau_hats, function(y) { rownames(summary(y)$controls) }))
+unique_actives <- sort(unique(c(pooled_actives, regional_actives)))
+
+palette <- pal_jco()(length(unique_actives))
+names(palette) <- unique_actives
+
+## Decide where to save the plots and call functions.
 save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
 for (i in seq_len(length(regional_result_list))) {
-  produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), save_here)
-  produce_plots_regional(regional_result_list[[i]], save_here)
+  produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), palette, save_here)
+  produce_plots_regional(regional_result_list[[i]], palette, save_here)
 }
 
 # LATEX -------------------------------------------------------------------
