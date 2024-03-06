@@ -69,7 +69,7 @@ palette <- pal_jco()(length(unique_actives))
 names(palette) <- unique_actives
 
 ## Decide where to save the plots and call functions.
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
 for (i in seq_len(length(regional_result_list))) {
   produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), palette, save_here)

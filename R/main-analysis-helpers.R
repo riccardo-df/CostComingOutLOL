@@ -113,7 +113,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
                      legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".eps"), plot_main, device = cairo_ps, width = 13, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".pdf"), plot_main, width = 13, height = 7)
 
     # 2b.) Weights for the main fit.
     plot_weights <- synth_outcomes[[my_champion]]$weights %>%
@@ -127,7 +127,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".eps"), plot_weights, device = cairo_ps, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
 
     # 2d.) Backdate exercise.
     plot_back <- plot_dta %>%
@@ -176,7 +176,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       plot_robustness <- plot_back
     }
 
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_robustness", year, ".eps"), plot_robustness, device = cairo_ps, width = 10, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_robustness", year, ".pdf"), plot_robustness, width = 10, height = 7)
   }
 
   ## 4.) Talk to the user.
@@ -308,7 +308,7 @@ produce_plots_regional <- function(regional_results, palette, save_here = getwd(
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"),
                      legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".eps"), plot_main, device = cairo_ps, width = 13, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".pdf"), plot_main, width = 13, height = 7)
 
     plot_weights <- plot_weights_dta %>%
       mutate(wrap = my_champion) %>%
@@ -321,7 +321,7 @@ produce_plots_regional <- function(regional_results, palette, save_here = getwd(
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_weights", year, ".eps"), plot_weights, device = cairo_ps, width = 7, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
 
     plot_back <- plot_dta %>%
       dplyr::mutate(region = factor(region, levels = c("Europe", "Korea", "Latin_America", "North_America"), labels = c("Europe", "Korea", "Latin America", "North America"))) %>%
@@ -338,7 +338,7 @@ produce_plots_regional <- function(regional_results, palette, save_here = getwd(
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"),
                      legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_back", year, ".eps"), plot_back, device = cairo_ps, width = 13, height = 7)
+    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_back", year, ".pdf"), plot_back, width = 13, height = 7)
   }
 
   ## 3.) Talk to the user.

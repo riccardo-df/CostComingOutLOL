@@ -39,9 +39,14 @@ covariates <- c()
 pooled_result <- run_main_pooled(champions, outcome_colname, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
 
 # Plots -------------------------------------------------------------------
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
+unique_actives <- sort(rownames(summary(pooled_result$LGB$tau_hat)$controls))
 
-produce_plots_pooled(pooled_result, ylims = c(0, 40), save_here)
+palette <- pal_jco()(length(unique_actives))
+names(palette) <- unique_actives
+
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
+
+produce_plots_pooled(pooled_result, ylims = c(0, 40), palette, save_here)
 
 # Point estimate and confidence intervals ---------------------------------
 tau_hat <-  summary(pooled_result$LGB$tau_hat)$estimate

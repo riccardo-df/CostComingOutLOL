@@ -388,7 +388,7 @@ produce_plot_placebo <- function(pooled_results, main_champion, drop_overfit = 1
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_placebo.eps"), plot_main, device = cairo_ps, width = 9, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_placebo.pdf"), plot_main, width = 9, height = 7)
 
   ## 3. Histogram of pre- and post-treatment RMSEs.
   rmses_ratio <- rmses_pre %>%
@@ -410,7 +410,7 @@ produce_plot_placebo <- function(pooled_results, main_champion, drop_overfit = 1
     ggplot2::xlab("") + ggplot2::ylab("RMSE ratio") +
     ggplot2::coord_flip() +
     ggplot2::theme_bw()
-  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_rmses_ratios.eps"), plot_ratios, device = cairo_ps, width = 9, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", tolower(main_champion), "_rmses_ratios.pdf"), plot_ratios, width = 9, height = 7)
 
   ## 4.) Talk to the user and output.
   cat("\n")

@@ -35,26 +35,12 @@ covariates_pool <- c()
 ## Select all champions released before the treatment date.
 champions <- setdiff(sort(unique(lol_champ_pool_dta$champion)), c("Naafiri", "Milio", "KSante", "Nilah", "Belveth"))
 
-# ## Select top used champions pre-treatment.
-# select_n <- 50
-#
-# champions <- lol_champ_pool_dta %>%
-#   filter(day < treatment_date) %>%
-#   group_by(champion) %>%
-#   mutate(avg_preference_pre = mean(pick_rate_pooled)) %>%
-#   ungroup() %>%
-#   distinct(champion, .keep_all = TRUE) %>%
-#   arrange(desc(avg_preference_pre)) %>%
-#   slice(1:select_n) %>%
-#   pull(champion) %>%
-#   sort()
-
 ## Estimation.
 pooled_results <- run_main_pooled(champions, outcome_colname_pool, champions, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
 
 # Plot -------------------------------------------------------------------
 ## Plot and save.
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 drop_overfit <- 1
 
 rmses <- produce_plot_placebo(pooled_results, "Graves", drop_overfit = drop_overfit, ylims = c(-40, 40), save_here)

@@ -716,9 +716,9 @@ players_performance_plots_lol <- function(n_pre_matches,
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
   ## 6.) Export plots.
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.eps"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), device = cairo_ps, width = 7, height = 7)
-  ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group.eps"), plot_positions_buckets, device = cairo_ps, width = 7, height = 7)
-  ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group_reductions.eps"), plot_positions_reductions_buckets, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.pdf"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group.pdf"), plot_positions_buckets, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group_reductions.pdf"), plot_positions_reductions_buckets, width = 7, height = 7)
 
   ## 7.) Talk to the user.
   cat("\n")
@@ -1129,7 +1129,7 @@ plot_did <- function(did_results, save_here = getwd()) {
     ggplot2::theme_bw() +
     theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"), strip.text.y = ggplot2::element_text(size = 10, face = "italic"),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_pre.eps"), plot_pre, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_pre.pdf"), plot_pre, width = 7, height = 7)
 
   plot_post <- results_any_reduction %>%
     dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
@@ -1147,7 +1147,7 @@ plot_did <- function(did_results, save_here = getwd()) {
     ggplot2::theme_bw() +
     theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"), strip.text.y = ggplot2::element_text(size = 10, face = "italic"),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
-  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_post.eps"), plot_post, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_post.pdf"), plot_post, width = 7, height = 7)
 
   ## 6.) Talk to the user.
   cat("\n")

@@ -161,7 +161,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_pooled.eps"), plot_pick_level_pooled, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_pooled.pdf"), plot_pick_level_pooled, width = 7, height = 7)
 
   plot_pick_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -178,7 +178,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_pooled.eps"), plot_pick_rate_pooled, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_pooled.pdf"), plot_pick_rate_pooled, width = 7, height = 7)
 
   # 3b.) Bans.
   plot_ban_level_pooled <- lol_champ_pool_dta %>%
@@ -196,7 +196,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_pooled.eps"), plot_ban_level_pooled, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_pooled.pdf"), plot_ban_level_pooled, width = 7, height = 7)
 
   plot_ban_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -213,7 +213,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_pooled.eps"), plot_ban_rate_pooled, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_pooled.pdf"), plot_ban_rate_pooled, width = 7, height = 7)
 
   # 3c.) Wins.
   plot_win_level_pooled <- lol_champ_pool_dta %>%
@@ -231,7 +231,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_pooled.eps"), plot_win_level_pooled, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_pooled.pdf"), plot_win_level_pooled, width = 7, height = 7)
 
   plot_win_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -248,7 +248,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_pooled.eps"), plot_win_rate_pooled, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_pooled.pdf"), plot_win_rate_pooled, width = 7, height = 7)
 
   ## 4.) Regional plots.
   # 4a.) Picks.
@@ -266,7 +266,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_regional.eps"), plot_pick_level_regional, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_regional.pdf"), plot_pick_level_regional, width = 7, height = 7)
 
   plot_pick_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -282,7 +282,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_regional.eps"), plot_pick_rate_regional, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_regional.pdf"), plot_pick_rate_regional, width = 7, height = 7)
 
   # 4b.) Bans.
   plot_ban_level_regional <- lol_champ_dta %>%
@@ -299,7 +299,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_regional.eps"), plot_ban_level_regional, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_regional.pdf"), plot_ban_level_regional, width = 7, height = 7)
 
   plot_ban_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -315,7 +315,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_regional.eps"), plot_ban_rate_regional, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_regional.pdf"), plot_ban_rate_regional, width = 7, height = 7)
 
   # 4c.) Wins.
   plot_win_level_regional <- lol_champ_dta %>%
@@ -332,7 +332,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_regional.eps"), plot_win_level_regional, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_regional.pdf"), plot_win_level_regional, width = 7, height = 7)
 
   plot_win_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
@@ -348,7 +348,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_regional.eps"), plot_win_rate_regional, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_regional.pdf"), plot_win_rate_regional, width = 7, height = 7)
 
   ## 5.) Talk to the user.
   cat("\n")
@@ -442,7 +442,7 @@ champions_performance_plots_lol <- function(champions,
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
 
-    ggsave(paste0(save_here, "/", tolower(my_champion), "_performance_pooled.eps"), plot = plot, device = cairo_ps, width = 7, height = 7)
+    ggsave(paste0(save_here, "/", tolower(my_champion), "_performance_pooled.pdf"), plot = plot, width = 7, height = 7)
   }
 
   ## 2.) Talk to the user.
@@ -524,7 +524,7 @@ players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), m
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
                    legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-  ggplot2::ggsave(paste0(save_here, "/", "n_matches_players.eps"), plot, device = cairo_ps, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "n_matches_players.pdf"), plot, width = 7, height = 7)
 
   ## 2.) Talk to the user.
   cat("\n")

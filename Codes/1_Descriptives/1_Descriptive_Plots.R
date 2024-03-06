@@ -27,8 +27,8 @@ max_date <- as.POSIXct("2022-07-13")
 treatment_date1 <- NULL
 treatment_date2 <- NULL
 
-save_here_champions <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
-save_here_players <- "C:/Users/difra/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
+save_here_champions <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
+save_here_players <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
 
 ## Produce plots.
 champions_descriptive_plots_lol(champions, treatment_date1 = treatment_date1, treatment_date2 = treatment_date2, min_date = min_date, max_date = max_date, bandwidth = bandwidth_champions, ylims_rates = c(0, 40), save_here = save_here_champions)

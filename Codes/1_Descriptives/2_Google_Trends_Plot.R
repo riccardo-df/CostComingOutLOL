@@ -23,46 +23,7 @@ wc_2022_begin <- as.POSIXct("2022-09-29", tryFormats = "%Y-%m-%d")
 wc_2022_end <- as.POSIXct("2022-11-05", tryFormats = "%Y-%m-%d")
 
 ## Set path to save plot.
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/LoL/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
-
-# Google trends ----------------------------------------------------------- NOTE: the gtrendsR package does not longer work as of 07-Jan-2024. Get the data manually in the next section.
-# ## Extract trends.
-# search_interest <- gtrends(c("League of Legends Graves", "League of Legends Twisted Fate"), time = "2022-01-01 2022-12-31", gprop = "web", geo = "", onlyInterest = TRUE)$interest_over_time
-# search_interest_gay <- gtrends(c("Graves gay", "Twisted Fate gay"), time = "2022-01-01 2022-12-31", gprop = "web", geo = "", onlyInterest = TRUE)$interest_over_time
-#
-# ## Plot and save.
-# plot_dta <- search_interest %>%
-#   bind_rows(search_interest_gay) %>%
-#   mutate(graves = factor(grepl("Graves", keyword), levels = c(TRUE, FALSE), labels = c("Graves", "Twisted Fate")),
-#          gay_query = factor(grepl("gay", keyword), levels = c(TRUE, FALSE), labels = c("[champion] gay", "lol [champion]")))
-#
-# plot_graves <- plot_dta %>%
-#   ggplot(aes(x = date, y = hits, color = graves)) +
-#   geom_line(linewidth = 1.2) +
-#   geom_vline(xintercept = as.POSIXct(treatment_week), linetype = 4) +
-#   annotate(geom = "rect", xmin = as.POSIXct(wc_2022_begin), xmax = as.POSIXct(wc_2022_end), ymin = -Inf, ymax = Inf, fill = "black", alpha = 0.2) +
-#   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
-#   scale_color_brewer(palette = "Set2") +
-#   facet_wrap(vars(gay_query), nrow = 2) +
-#   xlab("") + ylab("Search interest") +
-#   theme_bw() +
-#   theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 10, face = "italic"),
-#         legend.position = c(0.12, 0.92), legend.title = element_blank())
-#
-# plot_graves_twisted <- plot_dta %>%
-#   ggplot(aes(x = date, y = hits, color = graves)) +
-#   geom_line(linewidth = 1.2) +
-#   geom_vline(xintercept = as.POSIXct(treatment_week), linetype = 4) +
-#   annotate(geom = "rect", xmin = as.POSIXct(wc_2022_begin), xmax = as.POSIXct(wc_2022_end), ymin = -Inf, ymax = Inf, fill = "black", alpha = 0.2) +
-#   scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
-#   scale_color_brewer(palette = "Set2") +
-#   facet_wrap(vars(gay_query), nrow = 2) +
-#   xlab("") + ylab("Search interest") +
-#   theme_bw() +
-#   theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 10, face = "italic"),
-#         legend.position = c(0.12, 0.92), legend.title = element_blank())
-#
-# ggsave(paste0(save_here, "/", "google_trends_time_grid_graves_twisted.eps"), plot = plot_graves_twisted, device = cairo_ps, width = 7, height = 7)
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
 
 # Manual collection -------------------------------------------------------
 ## Import and handle data.
@@ -118,5 +79,5 @@ plot_graves_twisted <- plot_dta %>%
   theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 10, face = "italic"),
         legend.position = c(0.12, 0.92), legend.title = element_blank())
 
-ggsave(paste0(save_here, "/", "google_trends_time_grid_graves.eps"), plot = plot_graves, device = cairo_ps, width = 7, height = 7)
-ggsave(paste0(save_here, "/", "google_trends_time_grid_graves_twisted.eps"), plot = plot_graves_twisted, device = cairo_ps, width = 7, height = 7)
+ggsave(paste0(save_here, "/", "google_trends_time_grid_graves.pdf"), plot = plot_graves, width = 7, height = 7)
+ggsave(paste0(save_here, "/", "google_trends_time_grid_graves_twisted.pdf"), plot = plot_graves_twisted, width = 7, height = 7)
