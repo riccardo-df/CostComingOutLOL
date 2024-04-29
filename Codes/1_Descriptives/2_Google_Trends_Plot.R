@@ -11,7 +11,7 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("gtrendsR", "dplyr", "ggplot2", "viridis")
+pkgs <- c("dplyr", "ggplot2")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Define time events.
@@ -63,7 +63,7 @@ plot_graves <- plot_dta %>%
   facet_wrap(vars(gay_query), nrow = 2) +
   xlab("") + ylab("Search interest") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 10, face = "italic"),
+  theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 15, face = "italic"),
         legend.position = "none")
 
 plot_graves_twisted <- plot_dta %>%
@@ -76,7 +76,7 @@ plot_graves_twisted <- plot_dta %>%
   facet_wrap(vars(gay_query), nrow = 2) +
   xlab("") + ylab("Search interest") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 10, face = "italic"),
+  theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 15, face = "italic"),
         legend.position = c(0.12, 0.92), legend.title = element_blank())
 
 ggsave(paste0(save_here, "/", "google_trends_time_grid_graves.pdf"), plot = plot_graves, width = 7, height = 7)

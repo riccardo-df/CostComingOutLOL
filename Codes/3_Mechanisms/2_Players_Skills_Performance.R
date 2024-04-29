@@ -23,7 +23,7 @@ treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Players_Performance"
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Players_Skills_Performance"
 
 # Players' performance ----------------------------------------------------
 ## Compare prior and non-prior users.

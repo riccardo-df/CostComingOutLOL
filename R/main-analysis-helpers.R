@@ -111,8 +111,8 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                     legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
+                     legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".pdf"), plot_main, width = 13, height = 7)
 
     # 2b.) Weights for the main fit.
@@ -125,7 +125,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::facet_wrap(vars(wrap)) +
       ggplot2::xlab("") + ggplot2::ylab("Weight") +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
 
@@ -144,8 +144,8 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                     legend.position = c(0.13, 0.82), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
+                     legend.position = c(0.13, 0.82), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
 
     # 2e.) Leave-one-out exercise.
     if (length(pooled_results[[my_champion]]$tau_hat_drop) != 0) {
@@ -168,8 +168,8 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
         ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                       legend.position = c(0.15, 0.78), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
+                       legend.position = c(0.15, 0.78), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
 
       plot_robustness <- gridExtra::arrangeGrob(plot_back, plot_drop, ncol = 1)
     } else {
@@ -306,8 +306,8 @@ produce_plots_regional <- function(regional_results, palette, save_here = getwd(
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"),
-                     legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15, face = "bold"),
+                     legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".pdf"), plot_main, width = 13, height = 7)
 
     plot_weights <- plot_weights_dta %>%
@@ -319,7 +319,7 @@ produce_plots_regional <- function(regional_results, palette, save_here = getwd(
       ggplot2::facet_wrap(~region, ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab("Weight") +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 10, face = "bold"),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
                      legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
 
@@ -703,6 +703,8 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   synth_outcomes_pooled <- lapply(synth_outcomes_dta_pooled, function(x) { x[[my_champion_pooled]]$synth_outcome %>% dplyr::filter(day < treatment_date_pooled) })
   n_donors_pooled <- sapply(synth_outcomes_dta_pooled, function(x) { x[[my_champion_pooled]]$weights %>% nrow()})
 
+  pre_avg_pooled <- dtas_pooled[[1]] %>% filter(day < treatment_date_pooled & champion == my_champion_pooled) %>% pull(smooth_outcome) %>% mean() %>% round(3)
+
   # Regional.
   outcome_colnames_regional <- sapply(regional_result_list, function(x) { x$outcome_colname })
   outcome_colname_regional <- if (outcome_colnames_regional[1] == "pick_level") "Pick level" else if (outcome_colnames_regional[1] == "pick_rate") "Pick rate"
@@ -734,6 +736,12 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   synth_outcomes_regional <- lapply(synth_outcomes_dta_regional, function(x) { lapply(x[[my_champion_regional]], function(y) { y$synth_outcome %>% dplyr::filter(day < treatment_date_regional) }) %>% dplyr::bind_rows(.id = "groups") })
   synth_outcomes_regional <- lapply(synth_outcomes_regional, stats::setNames, c("region", "day", "synth_outcome"))
   n_donors_regional <- lapply(synth_outcomes_dta_regional, function(x) { lapply(x[[my_champion_regional]], function(y) { y$weights %>% nrow() }) %>% unlist() })
+
+  pre_avg_regional <- dtas_regional[[1]] %>% filter(day < treatment_date_regional & champion == my_champion_regional) %>% group_by(region) %>% mutate(avg = mean(smooth_outcome)) %>% distinct(region, .keep_all = TRUE) %>% select(region, avg)
+  pre_avg_regional_europe <- pre_avg_regional %>% filter(region == "Europe") %>% pull(avg) %>% round(3)
+  pre_avg_regional_korea <- pre_avg_regional %>% filter(region == "Korea") %>% pull(avg) %>% round(3)
+  pre_avg_regional_la <- pre_avg_regional %>% filter(region == "Latin_America") %>% pull(avg) %>% round(3)
+  pre_avg_regional_na <- pre_avg_regional %>% filter(region == "North_America") %>% pull(avg) %>% round(3)
 
   # Pooled/Regional.
   if (length(pooled_result_list) != length(regional_result_list)) stop("'pooled_result_list' and 'regional_result_list' are of different lengths.", call. = FALSE)
@@ -841,31 +849,36 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_pooled, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_pooled, ", ", cius_pooled, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_pooled, " &"), collapse = " "), end = -3), " \\\\
-      RMSE & ", stringr::str_sub(paste(paste0(rmses_pooled, " &"), collapse = " "), end = -3), " \\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
+      RMSE & ", stringr::str_sub(paste(paste0(rmses_pooled, " &"), collapse = " "), end = -3), " \\\\
+      Pre-treatment average & ", stringr::str_sub(paste(paste0(rep(pre_avg_pooled, n_col - 1), " &"), collapse = " "), end = -3), "\\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 2: \\textit{Europe}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_europe, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_europe, ", ", cius_europe, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_europe, " &"), collapse = " "), end = -3), " \\\\
-      RMSE & ", stringr::str_sub(paste(paste0(rmses_europe, " &"), collapse = " "), end = -3), " \\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
+      RMSE & ", stringr::str_sub(paste(paste0(rmses_europe, " &"), collapse = " "), end = -3), " \\\\
+      Pre-treatment average & ", stringr::str_sub(paste(paste0(rep(pre_avg_regional_europe, n_col - 1), " &"), collapse = " "), end = -3), " \\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 3: \\textit{Korea}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_korea, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_korea, ", ", cius_korea, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_korea, " &"), collapse = " "), end = -3), " \\\\
-      RMSE & ", stringr::str_sub(paste(paste0(rmses_korea, " &"), collapse = " "), end = -3), " \\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
+      RMSE & ", stringr::str_sub(paste(paste0(rmses_korea, " &"), collapse = " "), end = -3), " \\\\
+      Pre-treatment average & ", stringr::str_sub(paste(paste0(rep(pre_avg_regional_korea, n_col - 1), " &"), collapse = " "), end = -3), " \\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 4: \\textit{Latin America}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_latin_am, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_latin_am, ", ", cius_latin_am, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_latin_am, " &"), collapse = " "), end = -3), " \\\\
-      RMSE & ", stringr::str_sub(paste(paste0(rmses_latin_am, " &"), collapse = " "), end = -3), " \\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
+      RMSE & ", stringr::str_sub(paste(paste0(rmses_latin_am, " &"), collapse = " "), end = -3), " \\\\
+      Pre-treatment average & ", stringr::str_sub(paste(paste0(rep(pre_avg_regional_la, n_col - 1), " &"), collapse = " "), end = -3), " \\\\ \\cmidrule{", 1, "-", n_col, "} \n\n", sep = "")
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 5: \\textit{North America}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_north_am, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_north_am, ", ", cius_north_am, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_north_am, " &"), collapse = " "), end = -3), " \\\\
-      RMSE & ", stringr::str_sub(paste(paste0(rmses_north_am, " &"), collapse = " "), end = -3), " \\\\ \n", sep = "")
+      RMSE & ", stringr::str_sub(paste(paste0(rmses_north_am, " &"), collapse = " "), end = -3), " \\\\
+      Pre-treatment average & ", stringr::str_sub(paste(paste0(rep(pre_avg_regional_na, n_col - 1), " &"), collapse = " "), end = -3), " \\\\ \n", sep = "")
 
   cat("\n      \\addlinespace[3pt]
       \\\\[-1.8ex]\\hline

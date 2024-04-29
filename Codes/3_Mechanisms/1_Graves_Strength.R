@@ -29,7 +29,7 @@ max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
 donors <- "all"
 estimator <- "sc"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- FALSE
+inference <- TRUE
 n_boot <- 200
 backdate <- 10
 
@@ -44,7 +44,7 @@ unique_actives <- sort(rownames(summary(pooled_result$Graves$tau_hat)$controls))
 palette <- pal_jco()(length(unique_actives))
 names(palette) <- unique_actives
 
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Performance"
+save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Strength"
 
 produce_plots_pooled(pooled_result, ylims = c(20, 80), palette, save_here)
 

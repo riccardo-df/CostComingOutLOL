@@ -81,14 +81,28 @@ for (i in seq_len(length(regional_result_list))) {
 produce_latex(pooled_result_list, regional_result_list)
 
 ## Compute percentages.
-graves_pre_avg <- lol_champ_pool_dta %>%
+# Pooled.
+graves_pre_avg_pooled <- lol_champ_pool_dta %>%
   filter(champion == "Graves" & day < treatment_date) %>%
   pull(pick_rate_pooled) %>%
   mean()
 
-effects <- sapply(pooled_result_list, function(x) { as.numeric(x$Graves$tau_hat) })
+effects_pooled <- sapply(pooled_result_list, function(x) { as.numeric(x$Graves$tau_hat) })
 
-percentages <- effects / graves_pre_avg * 100
+percentages_pooled <- effects_pooled / graves_pre_avg_pooled * 100
+
+# Regional (only for main specification).
+graves_pre_avg_regional <- lol_champ_dta %>%
+  filter(champion == "Graves" & day < treatment_date) %>%
+  group_by(region) %>%
+  mutate(avg = mean(pick_rate)) %>%
+  distinct(region, .keep_all = TRUE) %>%
+  select(region, avg)
+
+effects_regional <- sapply(regional_result_list, function(x) { as.numeric(x$Graves$tau_hats) })
+
+percentages_regional <- effects_regional[, 1] / graves_pre_avg_regional$avg * 100
+names(percentages_regional) <- graves_pre_avg_regional$region
 
 # Check LOO ---------------------------------------------------------------
 ## Extract main specification.
