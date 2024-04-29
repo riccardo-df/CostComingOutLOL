@@ -73,7 +73,7 @@ save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Com
 
 for (i in seq_len(length(regional_result_list))) {
   produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), palette, save_here)
-  produce_plots_regional(regional_result_list[[i]], palette, save_here)
+  produce_plots_regional(regional_result_list[[i]], ylims = c(0, 60), palette, save_here)
 }
 
 # LATEX -------------------------------------------------------------------

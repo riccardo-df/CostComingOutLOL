@@ -4,10 +4,17 @@
 \alias{produce_plots_regional}
 \title{Cost of Coming Out - Main Analysis}
 \usage{
-produce_plots_regional(regional_results, palette, save_here = getwd())
+produce_plots_regional(
+  regional_results,
+  ylims = c(0, 100),
+  palette,
+  save_here = getwd()
+)
 }
 \arguments{
 \item{regional_results}{Output of \code{\link{run_main_regional}}.}
+
+\item{ylims}{Vector storing lower and upper limit for the y-axis.}
 
 \item{palette}{String vector with hexadecimal codes. It controls the colors for the weight plot.}
 

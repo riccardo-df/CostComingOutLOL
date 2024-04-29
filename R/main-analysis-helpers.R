@@ -190,6 +190,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
 #' Produced plots displaying the results of the main analysis of the Cost of Coming Out paper performed by \code{\link{run_main_regional}}.
 #'
 #' @param regional_results Output of \code{\link{run_main_regional}}.
+#' @param ylims Vector storing lower and upper limit for the y-axis.
 #' @param palette String vector with hexadecimal codes. It controls the colors for the weight plot.
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -204,7 +205,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
 #' @seealso \code{\link{produce_plots_pooled}} \code{\link{produce_latex_pooled}} \code{\link{produce_latex_regional}}
 #'
 #' @export
-produce_plots_regional <- function(regional_results, palette, save_here = getwd()) {
+produce_plots_regional <- function(regional_results, ylims = c(0, 100), palette, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   day_no <- NULL
@@ -303,6 +304,7 @@ produce_plots_regional <- function(regional_results, palette, save_here = getwd(
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(~region, ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) +
+      ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
@@ -333,6 +335,7 @@ produce_plots_regional <- function(regional_results, palette, save_here = getwd(
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
       ggplot2::facet_wrap(~region, ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) +
+      ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
       ggplot2::theme_bw() +
