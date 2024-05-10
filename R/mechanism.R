@@ -1153,3 +1153,142 @@ plot_did <- function(did_results, save_here = getwd()) {
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }
+
+
+#' LoL Belveth
+#'
+#' Check whether Graves' prior-users switch to Belveth.
+#'
+#' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
+#' @param min_date Object of class \code{POSIXct}. Where to start the series.
+#' @param max_date Object of class \code{POSIXct}. Where to end the series.
+#' @param save_here String denoting the path where to save the figures.
+#'
+#' @return
+#' None. It produces nice plots.
+#'
+#' @details
+#' We consider only Graves' prior users, that is, only players that used to play Graves before his disclosure. We define four versions of Graves' prior-users.
+#'
+#' \describe{
+#'    \item{\code{All}}{All prior-users.}
+#'    \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
+#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50\% following his disclosure are considered treated.}
+#'    \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
+#' }
+#'
+#' \code{min_date} and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#'
+#' Players that have played less than \code{n_pre_matches} before Belveth's release date (09 June 2022) or that never played after are dropped. The number of players remaining in the data set is printed in the console.
+#'
+#' @import dplyr fixest did
+#' @importFrom lubridate month
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @export
+belveth <- function(n_pre_matches,
+                    min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
+                    save_here = getwd()) {
+  ## 0.) Handling inputs and checks.
+  n_matches <- NULL
+  n_matches_pre <- NULL
+  n_matches_post <- NULL
+  graves_rate <- NULL
+  graves_ban_rate <- NULL
+  belveth_rate <- NULL
+  belveth_ban_rate <- NULL
+  win_rate <- NULL
+  gold_avg <- NULL
+  kills_avg <- NULL
+  assists_avg <- NULL
+  deaths_avg <- NULL
+  avg_graves_rate_post <- NULL
+  avg_graves_rate_pre <- NULL
+  any_reduction <- NULL
+  complete_abandonment <- NULL
+  mean_n_matches_pre <- NULL
+  mean_gold_pre <- NULL
+  mean_kills_pre <- NULL
+  mean_assists_pre <- NULL
+  mean_deaths_pre <- NULL
+
+  belveth_date <- as.POSIXct("2022-06-09")
+  coming_out_date <- as.POSIXct("2022-06-01")
+
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::filter(min_date < day & day < max_date) %>%
+    dplyr::mutate(belveth_released = ifelse(day >= belveth_date, 1, 0),
+                  disclosure = ifelse(day >= coming_out_date, 1, 0))
+
+  keep_these_players <- lol_player_dta %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
+                  n_matches_post = sum(n_matches * disclosure),
+                  prior_user = sum(graves_rate * (1 - disclosure)) != 0) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0 & prior_user) %>%
+    dplyr::distinct(id, .keep_all = TRUE)
+
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::filter(id %in% keep_these_players$id) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(belveth_released = ifelse(day > belveth_date, 1, 0)) %>%
+    dplyr::select(day, belveth_released, disclosure, id, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
+    dplyr::ungroup()
+
+  ## 1.) Assign "treatment" status.
+  treated_controls <- lol_player_dta %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
+                  avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
+                  any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
+                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre),
+                  complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(id, .keep_all = TRUE) %>%
+    dplyr::select(id, any_reduction, substantial_reduction, complete_abandonment)
+
+  cat("N. observations is ", dim(lol_player_dta)[1], "
+N. players is ", length(unique(lol_player_dta$id)), " of which:
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(any_reduction) %>% sum(), " reduced their pick rates for Graves by any amount
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by a substantial amount
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(complete_abandonment) %>% sum(), " completely stopped playing Graves \n\n", sep = "")
+
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::left_join(treated_controls, by = "id") %>%
+    dplyr::select(day, id, belveth_released, disclosure, any_reduction, substantial_reduction, complete_abandonment, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+
+  ## 2.) Plot.
+  # plot_belveth_buckets_dta_pre <- lol_player_dta %>%
+  #   dplyr::filter(belveth_released == 0) %>%
+  #   dplyr::mutate(treatment_status = any_reduction + substantial_reduction + complete_abandonment) %>%
+  #   dplyr::group_by(treatment_status) %>%
+  #   dplyr::mutate(avg_belveth_rate = mean(belveth_rate),
+  #                 avg_belveth_ban_rate = mean(belveth_ban_rate)) %>%
+  #   dplyr::select(treatment_status, belveth_released, avg_belveth_rate, avg_belveth_ban_rate) %>%
+  #   dplyr::distinct() %>%
+  #   reshape2::melt(id.vars = c("treatment_status", "belveth_released"), variable.name = "variable", value.name = "value")
+
+  plot_belveth_buckets_dta_post <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1) %>%
+    dplyr::mutate(treatment_status = any_reduction + substantial_reduction + complete_abandonment) %>%
+    dplyr::group_by(treatment_status) %>%
+    dplyr::mutate(avg_belveth_rate = mean(belveth_rate),
+                  avg_belveth_ban_rate = mean(belveth_ban_rate)) %>%
+    dplyr::select(treatment_status, belveth_released, avg_belveth_rate, avg_belveth_ban_rate) %>%
+    dplyr::distinct() %>%
+    reshape2::melt(id.vars = c("treatment_status", "belveth_released"), variable.name = "variable", value.name = "value")
+
+  # plot_belveth_buckets_dta <- plot_belveth_buckets_dta_pre %>%
+  #   dplyr::bind_rows(plot_belveth_buckets_dta_post)
+
+  plot_belveth_buckets <- plot_belveth_buckets_dta_post %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(variable, levels = c("avg_belveth_rate", "avg_belveth_ban_rate"), labels = c("Pick rate", "Ban rate")), y = value)) +
+    ggplot2::geom_bar(position = "dodge", stat = "identity") +
+    ggplot2::facet_wrap(vars(factor(treatment_status, levels = c(0, 1, 2, 3), labels = c("No reduction", "Any reduction", "Substantial reduction", "Complete abandonment"))), nrow = 2) +
+    ggplot2::xlab("") + ggplot2::ylab("") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
+                   legend.direction = "vertical", legend.justification = c("left", "top"))
+}
