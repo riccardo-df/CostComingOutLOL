@@ -15,7 +15,7 @@ pkgs <- c("CostComingOutLOL", "data.table")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Loading data.
-clean_dta <- fread("C:/Users/difra/Dropbox/University/Data_Sets/LoL/Clean/lol_cleaned.csv")
+clean_dta <- fread("C:/Users/riccardo-df/Dropbox/University/Research/Data_Sets/LoL/Clean/lol_cleaned.csv")
 
 ## Descriptives.
 cat("N. players is ", length(unique(clean_dta$player_puiid)), "\n", sep = "")
