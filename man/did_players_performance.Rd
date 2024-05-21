@@ -38,6 +38,9 @@ We define three versions of the treatment.
    \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
 }
 
+Notice that the categories are not mutually exclusive: those that are considered treated under \code{Complete abandomnent} are also treated under \code{Any reduction} (the opposite is not true).
+We keep the control group fixed as it is always composed of those prior-users that do not reduce their pick rates for Graves at all.\cr
+
 The estimators of Callaway and Sant’Anna (2021) are employed to estimate the impact of the coming-out event on the performance of treated players. This is implemented using the \code{\link[did]{att_gt}} function.
 Technical details are given in the associated documentation. To summarize, we identify and estimate the average treatment effect on the treated for all time t > \code{treatment_date}. "Effects" before that date are
 also estimated and are useful to check the plausibility of the parallel trend assumption. We consider both the unconditional estimator and the doubly-robust estimator that conditions on pre-treatment covariates

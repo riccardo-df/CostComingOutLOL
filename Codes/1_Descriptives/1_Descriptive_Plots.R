@@ -16,7 +16,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Plots -------------------------------------------------------------------
 ## Settings.
-champions <- c("Graves", "TwistedFate")
+champions <- c("Belveth")
 
 bandwidth_champions <- 5
 bandwidth_players <- 3
