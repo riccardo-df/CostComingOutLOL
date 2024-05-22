@@ -333,394 +333,11 @@ players_performance_plots_lol <- function(n_pre_matches,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.04, 0.98), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
                    legend.direction = "vertical", legend.justification = c("left", "top"))
 
-  ## 6.) Same as 5, but only for those prior users that reduced their pick rates of Graves.
-  reductions <- lol_player_dta %>%
-    dplyr::filter(prior_user) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
-                  avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
-                  any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
-                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre),
-                  complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE)
-
-  plot_positions_prior_buckets_dta_pre_any_reduction <- reductions %>%
-    dplyr::filter(disclosure == 0 & any_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
-                  jungle_lane = mean(avg_jungle_rate_pre),
-                  mid_lane = mean(avg_mid_rate_pre),
-                  bottom_lane = mean(avg_bottom_rate_pre),
-                  support_lane = mean(avg_support_rate_pre),
-                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
-  plot_positions_prior_buckets_dta_pre_any_reduction$treatment <- "any_reduction"
-
-  plot_positions_prior_buckets_dta_post_any_reduction <- reductions %>%
-    dplyr::filter(disclosure == 1 & any_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
-                  jungle_lane = mean(avg_jungle_rate_pre),
-                  mid_lane = mean(avg_mid_rate_pre),
-                  bottom_lane = mean(avg_bottom_rate_pre),
-                  support_lane = mean(avg_support_rate_pre),
-                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
-  plot_positions_prior_buckets_dta_post_any_reduction$treatment <- "any_reduction"
-
-  plot_positions_prior_buckets_dta_pre_substantial_reduction <- reductions %>%
-    dplyr::filter(disclosure == 0 & substantial_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
-                  jungle_lane = mean(avg_jungle_rate_pre),
-                  mid_lane = mean(avg_mid_rate_pre),
-                  bottom_lane = mean(avg_bottom_rate_pre),
-                  support_lane = mean(avg_support_rate_pre),
-                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
-  plot_positions_prior_buckets_dta_pre_substantial_reduction$treatment <- "substantial_reduction"
-
-  plot_positions_prior_buckets_dta_post_substantial_reduction <- reductions %>%
-    dplyr::filter(disclosure == 1 & substantial_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
-                  jungle_lane = mean(avg_jungle_rate_pre),
-                  mid_lane = mean(avg_mid_rate_pre),
-                  bottom_lane = mean(avg_bottom_rate_pre),
-                  support_lane = mean(avg_support_rate_pre),
-                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
-  plot_positions_prior_buckets_dta_post_substantial_reduction$treatment <- "substantial_reduction"
-
-  plot_positions_prior_buckets_dta_pre_complete_abandonment <- reductions %>%
-    dplyr::filter(disclosure == 0 & complete_abandonment) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
-                  jungle_lane = mean(avg_jungle_rate_pre),
-                  mid_lane = mean(avg_mid_rate_pre),
-                  bottom_lane = mean(avg_bottom_rate_pre),
-                  support_lane = mean(avg_support_rate_pre),
-                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
-  plot_positions_prior_buckets_dta_pre_complete_abandonment$treatment <- "complete_abandonment"
-
-  plot_positions_prior_buckets_dta_post_complete_abandonment <- reductions %>%
-    dplyr::filter(disclosure == 1 & complete_abandonment) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = mean(avg_top_rate_pre),
-                  jungle_lane = mean(avg_jungle_rate_pre),
-                  mid_lane = mean(avg_mid_rate_pre),
-                  bottom_lane = mean(avg_bottom_rate_pre),
-                  support_lane = mean(avg_support_rate_pre),
-                  lgb_lane = mean(avg_lgb_rate_pre)) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "mean")
-  plot_positions_prior_buckets_dta_post_complete_abandonment$treatment <- "complete_abandonment"
-
-  plot_positions_prior_buckets_dta <- plot_positions_prior_buckets_dta_pre_any_reduction %>%
-    dplyr::bind_rows(plot_positions_prior_buckets_dta_post_any_reduction,
-                     plot_positions_prior_buckets_dta_pre_substantial_reduction, plot_positions_prior_buckets_dta_post_substantial_reduction,
-                     plot_positions_prior_buckets_dta_pre_complete_abandonment, plot_positions_prior_buckets_dta_post_complete_abandonment)
-
-  plot_positions_prior_se_buckets_dta_pre_any_reduction <- reductions %>%
-    dplyr::filter(disclosure == 0 & any_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = stats::sd(avg_top_rate_pre) / sqrt(n()),
-                  jungle_lane = stats::sd(avg_jungle_rate_pre) / sqrt(n()),
-                  mid_lane = stats::sd(avg_mid_rate_pre) / sqrt(n()),
-                  bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
-                  support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
-                  lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
-  plot_positions_prior_se_buckets_dta_pre_any_reduction$treatment <- "any_reduction"
-
-  plot_positions_prior_se_buckets_dta_post_any_reduction <- reductions %>%
-    dplyr::filter(disclosure == 1 & any_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_post = mean(top_rate),
-                  avg_jungle_rate_post = mean(jungle_rate),
-                  avg_mid_rate_post = mean(mid_rate),
-                  avg_bottom_rate_post = mean(bottom_rate),
-                  avg_support_rate_post = mean(support_rate),
-                  avg_lgb_rate_post = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = stats::sd(avg_top_rate_post) / sqrt(n()),
-                  jungle_lane = stats::sd(avg_jungle_rate_post) / sqrt(n()),
-                  mid_lane = stats::sd(avg_mid_rate_post) / sqrt(n()),
-                  bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
-                  support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
-                  lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
-  plot_positions_prior_se_buckets_dta_post_any_reduction$treatment <- "any_reduction"
-
-  plot_positions_prior_se_buckets_dta_pre_substantial_reduction <- reductions %>%
-    dplyr::filter(disclosure == 0 & substantial_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = stats::sd(avg_top_rate_pre) / sqrt(n()),
-                  jungle_lane = stats::sd(avg_jungle_rate_pre) / sqrt(n()),
-                  mid_lane = stats::sd(avg_mid_rate_pre) / sqrt(n()),
-                  bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
-                  support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
-                  lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
-  plot_positions_prior_se_buckets_dta_pre_substantial_reduction$treatment <- "substantial_reduction"
-
-  plot_positions_prior_se_buckets_dta_post_substantial_reduction <- reductions %>%
-    dplyr::filter(disclosure == 1 & substantial_reduction) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_post = mean(top_rate),
-                  avg_jungle_rate_post = mean(jungle_rate),
-                  avg_mid_rate_post = mean(mid_rate),
-                  avg_bottom_rate_post = mean(bottom_rate),
-                  avg_support_rate_post = mean(support_rate),
-                  avg_lgb_rate_post = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = stats::sd(avg_top_rate_post) / sqrt(n()),
-                  jungle_lane = stats::sd(avg_jungle_rate_post) / sqrt(n()),
-                  mid_lane = stats::sd(avg_mid_rate_post) / sqrt(n()),
-                  bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
-                  support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
-                  lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
-  plot_positions_prior_se_buckets_dta_post_substantial_reduction$treatment <- "substantial_reduction"
-
-  plot_positions_prior_se_buckets_dta_pre_complete_abandonment <- reductions %>%
-    dplyr::filter(disclosure == 0 & complete_abandonment) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
-                  avg_jungle_rate_pre = mean(jungle_rate),
-                  avg_mid_rate_pre = mean(mid_rate),
-                  avg_bottom_rate_pre = mean(bottom_rate),
-                  avg_support_rate_pre = mean(support_rate),
-                  avg_lgb_rate_pre = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = stats::sd(avg_top_rate_pre) / sqrt(n()),
-                  jungle_lane = stats::sd(avg_jungle_rate_pre) / sqrt(n()),
-                  mid_lane = stats::sd(avg_mid_rate_pre) / sqrt(n()),
-                  bottom_lane = stats::sd(avg_bottom_rate_pre) / sqrt(n()),
-                  support_lane = stats::sd(avg_support_rate_pre) / sqrt(n()),
-                  lgb_lane = stats::sd(avg_lgb_rate_pre) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
-  plot_positions_prior_se_buckets_dta_pre_complete_abandonment$treatment <- "complete_abandonment"
-
-  plot_positions_prior_se_buckets_dta_post_complete_abandonment <- reductions %>%
-    dplyr::filter(disclosure == 1 & complete_abandonment) %>%
-    dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_post = mean(top_rate),
-                  avg_jungle_rate_post = mean(jungle_rate),
-                  avg_mid_rate_post = mean(mid_rate),
-                  avg_bottom_rate_post = mean(bottom_rate),
-                  avg_support_rate_post = mean(support_rate),
-                  avg_lgb_rate_post = mean(lgb_rate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::group_by(prior_user) %>%
-    dplyr::mutate(top_lane = stats::sd(avg_top_rate_post) / sqrt(n()),
-                  jungle_lane = stats::sd(avg_jungle_rate_post) / sqrt(n()),
-                  mid_lane = stats::sd(avg_mid_rate_post) / sqrt(n()),
-                  bottom_lane = stats::sd(avg_bottom_rate_post) / sqrt(n()),
-                  support_lane = stats::sd(avg_support_rate_post) / sqrt(n()),
-                  lgb_lane = stats::sd(avg_lgb_rate_post) / sqrt(n())) %>%
-    dplyr::select(prior_user, disclosure, top_lane, jungle_lane, mid_lane, bottom_lane, support_lane, lgb_lane) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("prior_user", "disclosure"), variable.name = "position", value.name = "se")
-  plot_positions_prior_se_buckets_dta_post_complete_abandonment$treatment <- "complete_abandonment"
-
-  plot_positions_prior_se_buckets_dta <- plot_positions_prior_se_buckets_dta_pre_any_reduction %>%
-    dplyr::bind_rows(plot_positions_prior_se_buckets_dta_post_any_reduction,
-                     plot_positions_prior_se_buckets_dta_pre_substantial_reduction, plot_positions_prior_se_buckets_dta_post_substantial_reduction,
-                     plot_positions_prior_se_buckets_dta_pre_complete_abandonment, plot_positions_prior_se_buckets_dta_post_complete_abandonment)
-
-  plot_positions_reductions_buckets <- plot_positions_prior_buckets_dta %>%
-    dplyr::left_join(plot_positions_prior_se_buckets_dta, by = c("prior_user", "disclosure", "treatment", "position")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(position, levels = c("top_lane", "jungle_lane", "mid_lane", "bottom_lane", "support_lane", "lgb_lane"), labels = c("Top", "Jungle", "Mid", "Bottom", "Support", "LGB")), y = mean, fill = factor(disclosure, levels = c(0, 1), labels = c("Pre-treatment", "Post-treatment")))) +
-    ggplot2::geom_bar(position = "dodge", stat = "identity") +
-    ggplot2::geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se), width = 0.2, position = position_dodge(0.9)) +
-    ggplot2::scale_fill_manual(values = c("#807F7F", "#BF504D")) +
-    ggplot2::facet_wrap(vars(factor(treatment, levels = c("any_reduction", "substantial_reduction", "complete_abandonment"), labels = c("Any reduction", "Substantial reduction", "Complete abandonment"))), nrow = 2) +
-    ggplot2::xlab("") + ggplot2::ylab("") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = c(0.28, 0.98), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
-                   legend.direction = "vertical", legend.justification = c("left", "top"))
-
-  ## 6.) Export plots.
+  ## 5.) Export plots.
   ggplot2::ggsave(paste0(save_here, "/", "players_performance_by_group.pdf"), plot_avg_rates_buckets / (plot_avg_n_matches_buckets + plot_win_rate_buckets), width = 7, height = 7)
   ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group.pdf"), plot_positions_buckets, width = 7, height = 7)
-  ggplot2::ggsave(paste0(save_here, "/", "players_position_by_group_reductions.pdf"), plot_positions_reductions_buckets, width = 7, height = 7)
 
-  ## 7.) Talk to the user.
+  ## 6.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }
@@ -855,11 +472,6 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
                   mean_assists_pre = sum(assists_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_deaths_pre = sum(deaths_avg * (1 - disclosure)) / sum(1 - disclosure)) %>%
     dplyr::select(day, id, win_rate, disclosure, any_reduction, substantial_reduction, complete_abandonment, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre) %>%
-    # dplyr::mutate(n_matches_pre = mean_n_matches_pre * disclosure,
-    #               gold_pre = mean_gold_pre * disclosure,
-    #               kills_pre = mean_kills_pre * disclosure,
-    #               assists_pre = mean_assists_pre * disclosure,
-    #               deaths_pre = mean_deaths_pre * disclosure) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(day_no = as.numeric(day),
                   id_no = as.numeric(factor(id)),
@@ -1082,16 +694,6 @@ plot_did <- function(did_results, save_here = getwd()) {
   results_any_reduction$parallel_type <- "Unconditional"
   results_any_reduction$plot_post <- as.factor(1 * (results_any_reduction$year >= (as.Date(treatment_date) - 10)))
 
-  results_any_reduction_covariates$att <- did_results$dr_any_reduction_covariates$att
-  results_any_reduction_covariates$att.se <- did_results$dr_any_reduction_covariates$se
-  results_any_reduction_covariates$post <- as.factor(1 * (results_any_reduction_covariates$year >= treatment_date))
-  results_any_reduction_covariates$c <- did_results$dr_any_reduction_covariates$c
-  alp_any_reduction_covariates <- did_results$dr_any_reduction_covariates$alp
-  c.point_any_reduction_covariates <- stats::qnorm(1 - alp_any_reduction_covariates / 2)
-  results_any_reduction_covariates$treatment_type <- "Any reduction"
-  results_any_reduction_covariates$parallel_type <- "Conditional"
-  results_any_reduction_covariates$plot_post <- as.factor(1 * (results_any_reduction_covariates$year >= (as.Date(treatment_date) - 10)))
-
   results_substantial_reduction$att <- did_results$dr_substantial_reduction$att
   results_substantial_reduction$att.se <- did_results$dr_substantial_reduction$se
   results_substantial_reduction$post <- as.factor(1 * (results_substantial_reduction$year >= treatment_date))
@@ -1101,16 +703,6 @@ plot_did <- function(did_results, save_here = getwd()) {
   results_substantial_reduction$treatment_type <- "Substantial reduction"
   results_substantial_reduction$parallel_type <- "Unconditional"
   results_substantial_reduction$plot_post <- as.factor(1 * (results_substantial_reduction$year >= (as.Date(treatment_date) - 10)))
-
-  results_substantial_reduction_covariates$att <- did_results$dr_substantial_reduction_covariates$att
-  results_substantial_reduction_covariates$att.se <- did_results$dr_substantial_reduction_covariates$se
-  results_substantial_reduction_covariates$post <- as.factor(1 * (results_substantial_reduction_covariates$year >= treatment_date))
-  results_substantial_reduction_covariates$c <- did_results$dr_substantial_reduction_covariates$c
-  alp_substantial_reduction_covariates <- did_results$dr_substantial_reduction_covariates$alp
-  c.point_substantial_reduction_covariates <- stats::qnorm(1 - alp_substantial_reduction_covariates / 2)
-  results_substantial_reduction_covariates$treatment_type <- "Substantial reduction"
-  results_substantial_reduction_covariates$parallel_type <- "Conditional"
-  results_substantial_reduction_covariates$plot_post <- as.factor(1 * (results_substantial_reduction_covariates$year >= (as.Date(treatment_date) - 10)))
 
   results_complete_abandonment$att <- did_results$dr_complete_abandonment$att
   results_complete_abandonment$att.se <- did_results$dr_complete_abandonment$se
@@ -1122,27 +714,16 @@ plot_did <- function(did_results, save_here = getwd()) {
   results_complete_abandonment$parallel_type <- "Unconditional"
   results_complete_abandonment$plot_post <- as.factor(1 * (results_complete_abandonment$year >= (as.Date(treatment_date) - 10)))
 
-  results_complete_abandonment_covariates$att <- did_results$dr_complete_abandonment_covariates$att
-  results_complete_abandonment_covariates$att.se <- did_results$dr_complete_abandonment$se
-  results_complete_abandonment_covariates$post <- as.factor(1 * (results_complete_abandonment_covariates$year >= treatment_date))
-  results_complete_abandonment_covariates$c <- did_results$dr_complete_abandonment_covariates$c
-  alp_complete_abandonment_covariates <- did_results$dr_complete_abandonment_covariates$alp
-  c.point_complete_abandonment_covariates <- stats::qnorm(1 - alp_complete_abandonment_covariates / 2)
-  results_complete_abandonment_covariates$treatment_type <- "Complete abandonment"
-  results_complete_abandonment_covariates$parallel_type <- "Conditional"
-  results_complete_abandonment_covariates$plot_post <- as.factor(1 * (results_complete_abandonment_covariates$year >= (as.Date(treatment_date) - 10)))
-
   ## 1.) Produce and save plot.
   plot_pre <- results_any_reduction %>%
-    dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
+    dplyr::bind_rows(results_substantial_reduction, results_complete_abandonment) %>%
     dplyr::filter(plot_post == 0) %>%
-    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional")),
-                  treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
+    dplyr::mutate(treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
-    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_factor)) +
+    ggplot2::facet_grid(rows = vars(treatment_factor)) +
     ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
     ggplot2::xlab("") + ggplot2::ylab(expression(italic("ATT ( t )"))) +
@@ -1152,15 +733,14 @@ plot_did <- function(did_results, save_here = getwd()) {
   ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_pre.pdf"), plot_pre, width = 7, height = 7)
 
   plot_post <- results_any_reduction %>%
-    dplyr::bind_rows(results_any_reduction_covariates, results_substantial_reduction, results_substantial_reduction_covariates, results_complete_abandonment, results_complete_abandonment_covariates) %>%
+    dplyr::bind_rows(results_substantial_reduction, results_complete_abandonment) %>%
     dplyr::filter(plot_post == 1) %>%
-    dplyr::mutate(parallel_factor = factor(parallel_type, levels = c("Unconditional", "Conditional")),
-                  treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
+    dplyr::mutate(treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
     ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
-    ggplot2::facet_grid(cols = vars(parallel_factor), rows = vars(treatment_factor)) +
+    ggplot2::facet_grid(rows = vars(treatment_factor)) +
     ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
     ggplot2::xlab("") + ggplot2::ylab(expression(italic("ATT ( t )"))) +
@@ -1180,7 +760,7 @@ plot_did <- function(did_results, save_here = getwd()) {
 #' Check whether Graves' prior and non-prior users switched to Belveth.
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
-#' @param filter Which players to retain for the analysis.
+#' @param jungle_threshold Only players that played an average of \code{jungle_threshold}% of their matches in jungle position are considered. Useful to avoid measuring differences in preferences for positions.
 #' @param min_date Object of class \code{POSIXct}. Where to start the series.
 #' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #' @param save_here String denoting the path where to save the figures.
@@ -1205,13 +785,12 @@ plot_did <- function(did_results, save_here = getwd()) {
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #'
-#' @import dplyr fixest did
-#' @importFrom lubridate month
+#' @import dplyr patchwork ggplot2
 #'
 #' @author Riccardo Di Francesco
 #'
 #' @export
-belveth <- function(n_pre_matches,
+belveth <- function(n_pre_matches, jungle_threshold = 20,
                     min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                     save_here = getwd()) {
   ## 0.) Handling inputs and checks.
@@ -1245,61 +824,125 @@ belveth <- function(n_pre_matches,
     dplyr::mutate(belveth_released = ifelse(day >= belveth_date, 1, 0),
                   disclosure = ifelse(day > coming_out_date, 1, 0))
 
-    keep_these_players <- lol_player_dta %>%
-      dplyr::group_by(id) %>%
-      dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
-                    n_matches_post = sum(n_matches * disclosure)) %>%
-      dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
-      dplyr::distinct(id)
+  keep_these_players <- lol_player_dta %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
+                  n_matches_post = sum(n_matches * disclosure)) %>%
+    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
+    dplyr::distinct(id)
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(id %in% keep_these_players$id) %>%
-    dplyr::select(day, belveth_released, disclosure, id, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg) %>%
+    dplyr::select(day, belveth_released, disclosure, id, graves_rate, belveth_rate, n_matches, jungle) %>%
     dplyr::ungroup()
 
   ## 1.) Assign "treatment" status.
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::mutate(jungle_rate = jungle / n_matches * 100) %>%
+    dplyr::select(day, belveth_released, disclosure, id, graves_rate, belveth_rate, jungle_rate)
+
   treated_controls <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(prior_user = sum(graves_rate * (1 - disclosure)) != 0,
+    dplyr::mutate(avg_jungle_rate_pre = sum(jungle_rate * (1 - disclosure)) / sum(1 - disclosure),
+                  jungle_user = avg_jungle_rate_pre >= jungle_threshold,
+                  prior_user = sum(graves_rate * (1 - disclosure)) != 0,
                   avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
                   avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
-                  any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
+                  no_reduction = as.numeric(avg_graves_rate_post >= avg_graves_rate_pre),
                   any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
                   substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre),
                   complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(id, prior_user, any_reduction, substantial_reduction, complete_abandonment)
-
-  cat("N. observations is ", dim(lol_player_dta)[1], "
-N. players is ", length(unique(lol_player_dta$id)), " of which:
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " was playing Graves before the disclosure (prior users)
-  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has never played Graves before the disclosure (non-prior users)
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(any_reduction) %>% sum(), " reduced their pick rates for Graves by any amount
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by a substantial amount
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(complete_abandonment) %>% sum(), " completely stopped playing Graves \n\n", sep = "")
+    dplyr::select(id, jungle_user, prior_user, no_reduction, any_reduction, substantial_reduction, complete_abandonment)
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, belveth_released, disclosure, prior_user, any_reduction, substantial_reduction, complete_abandonment, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, belveth_released, disclosure, jungle_user, prior_user, no_reduction, any_reduction, substantial_reduction, complete_abandonment, graves_rate, belveth_rate)
 
-  ## 2.) Plot.
-  plot_belveth_buckets_dta_post <- lol_player_dta %>%
-    dplyr::filter(belveth_released == 1) %>%
-    dplyr::mutate(treatment_status = as.numeric(prior_user),
-                  treatment_status = treatment_status + substantial_reduction + complete_abandonment) %>%
-    dplyr::group_by(treatment_status) %>%
-    dplyr::mutate(avg_belveth_rate = mean(belveth_rate)) %>%
+  ## 2.) Focus on jungle users.
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::filter(jungle_user)
+
+  cat("N. observations is ", dim(lol_player_dta)[1], "
+
+N. jungle users is ", length(unique(lol_player_dta$id)), " of which:
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(prior_user) %>% sum(), " was playing Graves before the disclosure (prior users)
+  ", length(unique(lol_player_dta$id))- treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(prior_user) %>% sum(), " has never played Graves before the disclosure (non-prior users).
+
+Among prior-users:
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::filter(prior_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(no_reduction) %>% sum(), " did not reduce their pick rates for Graves
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(any_reduction) %>% sum(), " reduced their pick rates for Graves by any amount
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by a substantial amount
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(complete_abandonment) %>% sum(), " completely stopped playing Graves \n", sep = "")
+
+  ## 3.) Plot.
+  non_prior_users_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == FALSE) %>%
+    dplyr::mutate(treatment_status = "non_prior_users",
+                  avg_belveth_rate = mean(belveth_rate)) %>%
     dplyr::select(treatment_status, avg_belveth_rate) %>%
-    dplyr::distinct() %>%
-    reshape2::melt(id.vars = c("treatment_status"), variable.name = "variable", value.name = "value") ## THIS REFERS TO PRIOR AND NON-PRIOR USERS AFTER BELVETH RELEASE (AND SO AFTER DISCLOSURE).
+    dplyr::distinct()
 
-  plot_belveth_buckets <- plot_belveth_buckets_dta_post %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treatment_status, levels = c(0, 1, 2, 3), labels = c("Non-prior users", "Any reduction", "Substantial reduction", "Complete abandonment")), y = value)) +
+  prior_users_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == TRUE) %>%
+    dplyr::mutate(treatment_status = "prior_users",
+                  avg_belveth_rate = mean(belveth_rate)) %>%
+    dplyr::select(treatment_status, avg_belveth_rate) %>%
+    dplyr::distinct()
+
+  prior_users_no_reduction_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == TRUE & no_reduction == 1) %>%
+    dplyr::mutate(treatment_status = "prior_users_no_reduction",
+                  avg_belveth_rate = mean(belveth_rate)) %>%
+    dplyr::select(treatment_status, avg_belveth_rate) %>%
+    dplyr::distinct()
+
+  prior_users_any_reduction_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == TRUE & any_reduction == 1) %>%
+    dplyr::mutate(treatment_status = "prior_users_any_reduction",
+                  avg_belveth_rate = mean(belveth_rate)) %>%
+    dplyr::select(treatment_status, avg_belveth_rate) %>%
+    dplyr::distinct()
+
+  prior_users_substantial_reduction_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == TRUE & substantial_reduction == 1) %>%
+    dplyr::mutate(treatment_status = "prior_users_substantial_reduction",
+                  avg_belveth_rate = mean(belveth_rate)) %>%
+    dplyr::select(treatment_status, avg_belveth_rate) %>%
+    dplyr::distinct()
+
+  prior_users_complete_abandonment_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == TRUE & complete_abandonment == 1) %>%
+    dplyr::mutate(treatment_status = "prior_users_complete_abandonment",
+                  avg_belveth_rate = mean(belveth_rate)) %>%
+    dplyr::select(treatment_status, avg_belveth_rate) %>%
+    dplyr::distinct()
+
+  plot_belveth_buckets_all_players <- non_prior_users_dta %>%
+    dplyr::bind_rows(prior_users_dta) %>%
+    dplyr::mutate(players = "All players") %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(treatment_status, levels = c("non_prior_users", "prior_users"), labels = c("Non-prior users", "Prior users")), y = avg_belveth_rate)) +
     ggplot2::geom_bar(position = "dodge", stat = "identity", fill = "dodgerblue") +
-    ggplot2::xlab("") + ggplot2::ylab("") +
+    ggplot2::facet_grid(cols = vars(players)) +
+    ggplot2::xlab("") + ggplot2::ylab("Average Bel'Veth's pick rate") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
                    axis.text.x = ggplot2::element_text(angle = 0), legend.direction = "vertical", legend.justification = c("left", "top"))
-  ggplot2::ggsave(paste0(save_here, "/", "players_belveth_barplot.pdf"), plot_belveth_buckets, width = 7, height = 7)
+
+  plot_belveth_buckets_prior_users <- prior_users_no_reduction_dta %>%
+    dplyr::bind_rows(prior_users_any_reduction_dta, prior_users_substantial_reduction_dta, prior_users_complete_abandonment_dta) %>%
+    dplyr::mutate(players = "Prior users") %>%
+    ggplot2::ggplot(ggplot2::aes(x = factor(treatment_status, levels = c("prior_users_no_reduction", "prior_users_any_reduction", "prior_users_substantial_reduction", "prior_users_complete_abandonment"), labels = c("No reduction", "Any reduction", "Substantial reduction", "Complete abandonment")), y = avg_belveth_rate)) +
+    ggplot2::geom_bar(position = "dodge", stat = "identity", fill = "dodgerblue") +
+    ggplot2::facet_grid(cols = vars(players)) +
+    ggplot2::xlab("") + ggplot2::ylab("Average Bel'Veth's pick rate") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
+                   axis.text.x = ggplot2::element_text(angle = 0), legend.direction = "vertical", legend.justification = c("left", "top"))
+  ggplot2::ggsave(paste0(save_here, "/", "players_belveth_barplot.pdf"), plot_belveth_buckets_all_players / plot_belveth_buckets_prior_users, width = 7, height = 7)
+
+  ## 4.) Talk to the user.
+  cat("\n")
+  cat("Figures are saved at ", save_here, "\n", sep = "")
 }

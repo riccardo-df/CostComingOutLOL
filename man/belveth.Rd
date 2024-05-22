@@ -6,6 +6,7 @@
 \usage{
 belveth(
   n_pre_matches,
+  jungle_threshold = 20,
   min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2023-08-01"),
   save_here = getwd()
@@ -14,13 +15,13 @@ belveth(
 \arguments{
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
+\item{jungle_threshold}{Only players that played an average of \code{jungle_threshold}% of their matches in jungle position are considered. Useful to avoid measuring differences in preferences for positions.}
+
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
 \item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
 
 \item{save_here}{String denoting the path where to save the figures.}
-
-\item{filter}{Which players to retain for the analysis.}
 }
 \value{
 None. It produces nice plots.
