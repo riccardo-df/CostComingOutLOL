@@ -360,12 +360,11 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' We define three versions of the treatment.
 #'
 #' \describe{
-#'    \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
-#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50\% following his disclosure are considered treated.}
-#'    \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
+#'    \item{\code{Small reduction}}{Players that reduce their average pick rate for Graves by any amount within (0%, 25%].)}
+#'    \item{\code{Moderate reduction}}{Players that reduce their average pick rate for Graves by any amount within (25%, 50%].}
+#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by any amount within (50%, 100%].}
 #' }
 #'
-#' Notice that the categories are not mutually exclusive: those that are considered treated under \code{Complete abandomnent} are also treated under \code{Any reduction} (the opposite is not true).
 #' We keep the control group fixed as it is always composed of those prior-users that do not reduce their pick rates for Graves at all.\cr
 #'
 #' The estimators of Callaway and Sant’Anna (2021) are employed to estimate the impact of the coming-out event on the performance of treated players. This is implemented using the \code{\link[did]{att_gt}} function.
@@ -446,22 +445,24 @@ did_players_performance <- function(n_pre_matches, filter = "prior_users",
     dplyr::group_by(id) %>%
     dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
                   avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
-                  any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
-                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre),
-                  complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
+                  no_reduction = as.numeric(avg_graves_rate_post >= avg_graves_rate_pre),
+                  small_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre & avg_graves_rate_post >= 0.75 * avg_graves_rate_pre),
+                  moderate_reduction = as.numeric(avg_graves_rate_post < 0.75 * avg_graves_rate_pre & avg_graves_rate_post >= 0.5 * avg_graves_rate_pre),
+                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(id, any_reduction, substantial_reduction, complete_abandonment)
+    dplyr::select(id, no_reduction, small_reduction, moderate_reduction, substantial_reduction)
 
   cat("N. observations is ", dim(lol_player_dta)[1], "
 N. players is ", length(unique(lol_player_dta$id)), " of which:
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(any_reduction) %>% sum(), " reduced their pick rates for Graves by any amount
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by a substantial amount
-  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(complete_abandonment) %>% sum(), " completely stopped playing Graves \n\n", sep = "")
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(no_reduction) %>% sum(), " did not reduce their pick rates for Graves
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(small_reduction) %>% sum(), " reduced their pick rates for Graves by (0%, 25%]
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(moderate_reduction) %>% sum(), " reduced their pick rates for Graves by (25%, 50%]
+  ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by (50%, 100%] \n\n", sep = "")
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, disclosure, any_reduction, substantial_reduction, complete_abandonment, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, disclosure, no_reduction, small_reduction, moderate_reduction, substantial_reduction, graves_rate, graves_ban_rate, n_matches, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 2.) Arrange estimation data.
   estimation_dta <- lol_player_dta %>%
@@ -471,29 +472,43 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
                   mean_kills_pre = sum(kills_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_assists_pre = sum(assists_avg * (1 - disclosure)) / sum(1 - disclosure),
                   mean_deaths_pre = sum(deaths_avg * (1 - disclosure)) / sum(1 - disclosure)) %>%
-    dplyr::select(day, id, win_rate, disclosure, any_reduction, substantial_reduction, complete_abandonment, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre) %>%
+    dplyr::select(day, id, win_rate, disclosure, no_reduction, small_reduction, moderate_reduction, substantial_reduction, mean_n_matches_pre, mean_gold_pre, mean_kills_pre, mean_assists_pre, mean_deaths_pre) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(day_no = as.numeric(day),
                   id_no = as.numeric(factor(id)),
-                  any_reduction_no = ifelse(any_reduction == 1, as.numeric(treatment_date), 0),
-                  substantial_reduction_no = ifelse(substantial_reduction == 1, as.numeric(treatment_date), 0),
-                  complete_abandonment_no = ifelse(complete_abandonment == 1, as.numeric(treatment_date), 0))
+                  no_reduction_no = ifelse(no_reduction == 1, as.numeric(treatment_date), 0),
+                  small_reduction_no = ifelse(small_reduction == 1, as.numeric(treatment_date), 0),
+                  moderate_reduction_no = ifelse(moderate_reduction == 1, as.numeric(treatment_date), 0),
+                  substantial_reduction_no = ifelse(substantial_reduction == 1, as.numeric(treatment_date), 0))
 
   ## 3.) Doubly-robust DiD. Subset to avoid including "treated with less intensity" in the control group.
   # Any reduction.
-  estimation_dta_any_reduction <- estimation_dta
+  estimation_dta_small_reduction <- estimation_dta %>%
+    dplyr::filter(no_reduction == 1 | small_reduction == 1)
 
-  dr_results_any_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "any_reduction_no",
-                                          xformla = ~ 1,
-                                          data = estimation_dta_any_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
+  dr_results_small_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "small_reduction_no",
+                                            xformla = ~ 1,
+                                            data = estimation_dta_small_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
 
-  dr_results_any_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "any_reduction_no",
-                                                     xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-                                                     data = estimation_dta_any_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
+  dr_results_small_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "small_reduction_no",
+                                                       xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
+                                                       data = estimation_dta_small_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
+
+  # Moderate reduction.
+  estimation_dta_moderate_reduction <- estimation_dta %>%
+    dplyr::filter(no_reduction == 1 | moderate_reduction == 1)
+
+  dr_results_moderate_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "moderate_reduction_no",
+                                                  xformla = ~ 1,
+                                                  data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
+
+  dr_results_moderate_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "moderate_reduction_no",
+                                                             xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
+                                                             data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
 
   # Substantial reduction.
   estimation_dta_substantial_reduction <- estimation_dta %>%
-    dplyr::filter((substantial_reduction_no == 0 & any_reduction_no == 0) | substantial_reduction_no != 0)
+    dplyr::filter(no_reduction == 1 | substantial_reduction == 1)
 
   dr_results_substantial_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "substantial_reduction_no",
                                                   xformla = ~ 1,
@@ -503,26 +518,15 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
                                                              xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
                                                              data = estimation_dta_substantial_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
 
-  # Complete abandonment.
-  estimation_dta_complete_abandonment <- estimation_dta %>%
-    dplyr::filter((complete_abandonment_no == 0 & substantial_reduction_no == 0 & any_reduction_no == 0) | complete_abandonment_no != 0)
-
-  dr_results_complete_abandonment <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "complete_abandonment_no",
-                                                 xformla = ~ 1,
-                                                 data = estimation_dta_complete_abandonment, panel = TRUE, allow_unbalanced_panel = TRUE)
-
-  dr_results_complete_abandonment_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "complete_abandonment_no",
-                                                            xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-                                                            data = estimation_dta_complete_abandonment, panel = TRUE, allow_unbalanced_panel = TRUE)
 
   ## 5.) Output.
   return(list("treatment_date" = treatment_date,
-              "dr_any_reduction" = dr_results_any_reduction,
-              "dr_any_reduction_covariates" = dr_results_any_reduction_covariates,
+              "dr_small_reduction" = dr_results_small_reduction,
+              "dr_small_reduction_covariates" = dr_results_small_reduction_covariates,
+              "dr_moderate_reduction" = dr_results_moderate_reduction,
+              "dr_moderate_reduction_covariates" = dr_results_moderate_reduction_covariates,
               "dr_substantial_reduction" = dr_results_substantial_reduction,
-              "dr_substantial_reduction_covariates" = dr_results_substantial_reduction_covariates,
-              "dr_complete_abandonment" = dr_results_complete_abandonment,
-              "dr_complete_abandonment_covariates" = dr_results_complete_abandonment_covariates))
+              "dr_substantial_reduction_covariates" = dr_results_substantial_reduction_covariates))
 }
 
 
@@ -548,60 +552,67 @@ latex_did <- function(did_results, seed = 1986) {
   ## Aggregate time ATTs.
   set.seed(seed)
 
-  dr_any_reduction_agg <- did::aggte(did_results$dr_any_reduction, type = "simple")
-  dr_any_reduction_covariates_agg <- did::aggte(did_results$dr_any_reduction_covariates, type = "simple")
+  dr_small_reduction_agg <- did::aggte(did_results$dr_small_reduction, type = "simple")
+  dr_small_reduction_covariates_agg <- did::aggte(did_results$dr_small_reduction_covariates, type = "simple")
+  dr_moderate_reduction_agg <- did::aggte(did_results$dr_moderate_reduction, type = "simple")
+  dr_moderate_reduction_covariates_agg <- did::aggte(did_results$dr_moderate_reduction_covariates, type = "simple")
   dr_substantial_reduction_agg <- did::aggte(did_results$dr_substantial_reduction, type = "simple")
   dr_substantial_reduction_covariates_agg <- did::aggte(did_results$dr_substantial_reduction_covariates, type = "simple")
-  dr_complete_abandonment_agg <- did::aggte(did_results$dr_complete_abandonment, type = "simple")
-  dr_complete_abandonment_covariates_agg <- did::aggte(did_results$dr_complete_abandonment_covariates, type = "simple")
 
-  dr_any_reduction_point <- dr_any_reduction_agg$overall.att
-  dr_any_reduction_covariates_point <- dr_any_reduction_covariates_agg$overall.att
+  dr_small_reduction_point <- dr_small_reduction_agg$overall.att
+  dr_small_reduction_covariates_point <- dr_small_reduction_covariates_agg$overall.att
+  dr_moderate_reduction_point <- dr_moderate_reduction_agg$overall.att
+  dr_moderate_reduction_covariates_point <- dr_moderate_reduction_covariates_agg$overall.att
   dr_substantial_reduction_point <- dr_substantial_reduction_agg$overall.att
   dr_substantial_reduction_covariates_point <- dr_substantial_reduction_covariates_agg$overall.att
-  dr_complete_abandonment_point <- dr_complete_abandonment_agg$overall.att
-  dr_complete_abandonment_covariates_point <- dr_complete_abandonment_covariates_agg$overall.att
 
-  dr_any_reduction_se <- dr_any_reduction_agg$overall.se
-  dr_any_reduction_covariates_se <- dr_any_reduction_covariates_agg$overall.se
+  dr_small_reduction_se <- dr_small_reduction_agg$overall.se
+  dr_small_reduction_covariates_se <- dr_small_reduction_covariates_agg$overall.se
+  dr_moderate_reduction_se <- dr_moderate_reduction_agg$overall.se
+  dr_moderate_reduction_covariates_se <- dr_moderate_reduction_covariates_agg$overall.se
   dr_substantial_reduction_se <- dr_substantial_reduction_agg$overall.se
   dr_substantial_reduction_covariates_se <- dr_substantial_reduction_covariates_agg$overall.se
-  dr_complete_abandonment_se <- dr_complete_abandonment_agg$overall.se
-  dr_complete_abandonment_covariates_se <- dr_complete_abandonment_covariates_agg$overall.se
 
-  dr_any_reduction_cil <- dr_any_reduction_point - 1.96 * dr_any_reduction_se
-  dr_any_reduction_covariates_cil <- dr_any_reduction_covariates_point - 1.96 * dr_any_reduction_covariates_se
+  dr_small_reduction_cil <- dr_small_reduction_point - 1.96 * dr_small_reduction_se
+  dr_small_reduction_covariates_cil <- dr_small_reduction_covariates_point - 1.96 * dr_small_reduction_covariates_se
+  dr_moderate_reduction_cil <- dr_moderate_reduction_point - 1.96 * dr_moderate_reduction_se
+  dr_moderate_reduction_covariates_cil <- dr_moderate_reduction_covariates_point - 1.96 * dr_moderate_reduction_covariates_se
   dr_substantial_reduction_cil <- dr_substantial_reduction_point - 1.96 * dr_substantial_reduction_se
   dr_substantial_reduction_covariates_cil <- dr_substantial_reduction_covariates_point - 1.96 * dr_substantial_reduction_covariates_se
-  dr_complete_abandonment_cil <- dr_complete_abandonment_point - 1.96 * dr_complete_abandonment_se
-  dr_complete_abandonment_covariates_cil <- dr_complete_abandonment_covariates_point - 1.96 * dr_complete_abandonment_covariates_se
 
-  dr_any_reduction_ciu <- dr_any_reduction_point + 1.96 * dr_any_reduction_se
-  dr_any_reduction_covariates_ciu <- dr_any_reduction_covariates_point + 1.96 * dr_any_reduction_covariates_se
+  dr_small_reduction_ciu <- dr_small_reduction_point + 1.96 * dr_small_reduction_se
+  dr_small_reduction_covariates_ciu <- dr_small_reduction_covariates_point + 1.96 * dr_small_reduction_covariates_se
+  dr_moderate_reduction_ciu <- dr_moderate_reduction_point + 1.96 * dr_moderate_reduction_se
+  dr_moderate_reduction_covariates_ciu <- dr_moderate_reduction_covariates_point + 1.96 * dr_moderate_reduction_covariates_se
   dr_substantial_reduction_ciu <- dr_substantial_reduction_point + 1.96 * dr_substantial_reduction_se
   dr_substantial_reduction_covariates_ciu <- dr_substantial_reduction_covariates_point + 1.96 * dr_substantial_reduction_covariates_se
-  dr_complete_abandonment_ciu <- dr_complete_abandonment_point + 1.96 * dr_complete_abandonment_se
-  dr_complete_abandonment_covariates_ciu <- dr_complete_abandonment_covariates_point + 1.96 * dr_complete_abandonment_covariates_se
 
   ## Extract information.
-  atts <- format(round(c(dr_any_reduction_point, dr_any_reduction_covariates_point, dr_substantial_reduction_point, dr_substantial_reduction_covariates_point, dr_complete_abandonment_point, dr_complete_abandonment_covariates_point), 3), nsmall = 3)
-  cils <- format(round(c(dr_any_reduction_cil, dr_any_reduction_covariates_cil, dr_substantial_reduction_cil, dr_substantial_reduction_covariates_cil, dr_complete_abandonment_cil, dr_complete_abandonment_covariates_cil), 3), nsmall = 3)
-  cius <- format(round(c(dr_any_reduction_ciu, dr_any_reduction_covariates_ciu, dr_substantial_reduction_ciu, dr_substantial_reduction_covariates_ciu, dr_complete_abandonment_ciu, dr_complete_abandonment_covariates_ciu), 3), nsmall = 3)
+  atts <- format(round(c(dr_small_reduction_point, dr_small_reduction_covariates_point, dr_moderate_reduction_point, dr_moderate_reduction_covariates_point, dr_substantial_reduction_point, dr_substantial_reduction_covariates_point), 3), nsmall = 3)
+  cils <- format(round(c(dr_small_reduction_cil, dr_small_reduction_covariates_cil, dr_moderate_reduction_cil, dr_moderate_reduction_covariates_cil, dr_substantial_reduction_cil, dr_substantial_reduction_covariates_cil), 3), nsmall = 3)
+  cius <- format(round(c(dr_small_reduction_ciu, dr_small_reduction_covariates_ciu, dr_moderate_reduction_ciu, dr_moderate_reduction_covariates_ciu, dr_substantial_reduction_ciu, dr_substantial_reduction_covariates_ciu), 3), nsmall = 3)
 
-  n_players_any <- length(unique(did_results$dr_any_reduction$DIDparams$data$id_no))
+  n_players_small <- length(unique(did_results$dr_small_reduction$DIDparams$data$id_no))
+  n_players_moderate <- length(unique(did_results$dr_moderate_reduction$DIDparams$data$id_no))
   n_players_substantial <- length(unique(did_results$dr_substantial_reduction$DIDparams$data$id_no))
-  n_players_complete <- length(unique(did_results$dr_complete_abandonment$DIDparams$data$id_no))
 
-  n_observations_any <- dim(did_results$dr_any_reduction$DIDparams$data)[1]
+  n_observations_small <- dim(did_results$dr_small_reduction$DIDparams$data)[1]
+  n_observations_moderate <- dim(did_results$dr_moderate_reduction$DIDparams$data)[1]
   n_observations_substantial <- dim(did_results$dr_substantial_reduction$DIDparams$data)[1]
-  n_observations_complete <- dim(did_results$dr_complete_abandonment$DIDparams$data)[1]
 
   treatment_date <- did_results$treatment_date
 
-  n_treated_any_reduction <- did_results$dr_any_reduction$DIDparams$data %>%
+  n_treated_small_reduction <- did_results$dr_small_reduction$DIDparams$data %>%
     dplyr::filter(day_no > as.numeric(treatment_date)) %>%
     dplyr::distinct(id_no, .keep_all = TRUE) %>%
-    dplyr::mutate(n_treated = sum(any_reduction_no != 0)) %>%
+    dplyr::mutate(n_treated = sum(small_reduction_no != 0)) %>%
+    dplyr::pull(n_treated) %>%
+    unique()
+
+  n_treated_moderate_reduction <- did_results$dr_moderate_reduction$DIDparams$data %>%
+    dplyr::filter(day_no > as.numeric(treatment_date)) %>%
+    dplyr::distinct(id_no, .keep_all = TRUE) %>%
+    dplyr::mutate(n_treated = sum(moderate_reduction_no != 0)) %>%
     dplyr::pull(n_treated) %>%
     unique()
 
@@ -609,13 +620,6 @@ latex_did <- function(did_results, seed = 1986) {
     dplyr::filter(day_no > as.numeric(treatment_date)) %>%
     dplyr::distinct(id_no, .keep_all = TRUE) %>%
     dplyr::mutate(n_treated = sum(substantial_reduction_no != 0)) %>%
-    dplyr::pull(n_treated) %>%
-    unique()
-
-  n_treated_complete_abandonment <- did_results$dr_complete_abandonment$DIDparams$data %>%
-    dplyr::filter(day_no > 1654034400) %>%
-    dplyr::distinct(id_no, .keep_all = TRUE) %>%
-    dplyr::mutate(n_treated = sum(complete_abandonment_no != 0)) %>%
     dplyr::pull(n_treated) %>%
     unique()
 
@@ -629,7 +633,7 @@ latex_did <- function(did_results, seed = 1986) {
     \\begin{tabular}{@{\\extracolsep{5pt}}l c c c c c c}
       \\\\[-1.8ex]\\hline
       \\hline \\\\[-1.8ex]
-      & \\multicolumn{2}{c}{\\textit{Any Reduction}} & \\multicolumn{2}{c}{\\textit{Substantial Reduction}} & \\multicolumn{2}{c}{\\textit{Complete Abandonment}} \\\\ \\cmidrule{2-3} \\cmidrule{4-5} \\cmidrule{6-7}
+      & \\multicolumn{2}{c}{\\textit{Small Reduction}} & \\multicolumn{2}{c}{\\textit{Moderate Reduction}} & \\multicolumn{2}{c}{\\textit{Substantial Reduction}} \\\\ \\cmidrule{2-3} \\cmidrule{4-5} \\cmidrule{6-7}
       & (1) & (2) & (3) & (4) & (5) & (6) \\\\
 
       \\midrule
@@ -640,9 +644,9 @@ latex_did <- function(did_results, seed = 1986) {
       \\midrule
 
       Conditional PT & & \\checkmark & & \\checkmark & & \\checkmark \\\\
-      Players & ", stringr::str_sub(paste(paste0(rep(n_players_any, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_players_substantial, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_players_complete, 2), " &"), collapse = " "), end = -3), " \\\\
-      Treated & ", paste0(rep(n_treated_any_reduction, 2), " & "), paste0(rep(n_treated_substantial_reduction, 2), " & "), stringr::str_sub(paste(paste0(rep(n_treated_complete_abandonment, 2), " &"), collapse = " "), end = -3), " \\\\
-      Observations & ", stringr::str_sub(paste(paste0(rep(n_observations_any, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_observations_substantial, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_observations_complete, 2), " &"), collapse = " "), end = -3), " \\\\
+      Players & ", stringr::str_sub(paste(paste0(rep(n_players_small, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_players_moderate, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_players_substantial, 2), " &"), collapse = " "), end = -3), " \\\\
+      Treated & ", paste0(rep(n_treated_small_reduction, 2), " & "), paste0(rep(n_treated_moderate_reduction, 2), " & "), stringr::str_sub(paste(paste0(rep(n_treated_substantial_reduction, 2), " &"), collapse = " "), end = -3), " \\\\
+      Observations & ", stringr::str_sub(paste(paste0(rep(n_observations_small, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_observations_moderate, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_observations_substantial, 2), " &"), collapse = " "), end = -3), " \\\\
 
       \\\\[-1.8ex]\\hline
       \\hline \\\\[-1.8ex]
@@ -679,20 +683,30 @@ plot_did <- function(did_results, save_here = getwd()) {
   post <- NULL
 
   treatment_date <- did_results$treatment_date
-  n_times <- length(unique(did_results$dr_any_reduction$t))
-  times <- unique(did_results$dr_any_reduction$t)
+  n_times <- length(unique(did_results$dr_small_reduction$t))
+  times <- unique(did_results$dr_small_reduction$t)
 
-  results_any_reduction <- results_any_reduction_covariates <- results_substantial_reduction <- results_substantial_reduction_covariates <- results_complete_abandonment <- results_complete_abandonment_covariates <- data.frame(year = as.POSIXct(times, origin = "1970-01-01"))
+  results_small_reduction <- results_moderate_reduction <- results_substantial_reduction <- data.frame(year = as.POSIXct(times, origin = "1970-01-01"))
 
-  results_any_reduction$att <- did_results$dr_any_reduction$att
-  results_any_reduction$att.se <- did_results$dr_any_reduction$se
-  results_any_reduction$post <- as.factor(1 * (results_any_reduction$year >= treatment_date))
-  results_any_reduction$c <- did_results$dr_any_reduction$c
-  alp_any_reduction <- did_results$dr_any_reduction$alp
-  c.point_any_reduction <- stats::qnorm(1 - alp_any_reduction / 2)
-  results_any_reduction$treatment_type <- "Any reduction"
-  results_any_reduction$parallel_type <- "Unconditional"
-  results_any_reduction$plot_post <- as.factor(1 * (results_any_reduction$year >= (as.Date(treatment_date) - 10)))
+  results_small_reduction$att <- did_results$dr_small_reduction$att
+  results_small_reduction$att.se <- did_results$dr_small_reduction$se
+  results_small_reduction$post <- as.factor(1 * (results_small_reduction$year >= treatment_date))
+  results_small_reduction$c <- did_results$dr_small_reduction$c
+  alp_small_reduction <- did_results$dr_small_reduction$alp
+  c.point_small_reduction <- stats::qnorm(1 - alp_small_reduction / 2)
+  results_small_reduction$treatment_type <- "Small reduction"
+  results_small_reduction$parallel_type <- "Unconditional"
+  results_small_reduction$plot_post <- as.factor(1 * (results_small_reduction$year >= (as.Date(treatment_date) - 10)))
+
+  results_moderate_reduction$att <- did_results$dr_moderate_reduction$att
+  results_moderate_reduction$att.se <- did_results$dr_moderate_reduction$se
+  results_moderate_reduction$post <- as.factor(1 * (results_moderate_reduction$year >= treatment_date))
+  results_moderate_reduction$c <- did_results$dr_moderate_reduction$c
+  alp_moderate_reduction <- did_results$dr_moderate_reduction$alp
+  c.point_moderate_reduction <- stats::qnorm(1 - alp_moderate_reduction / 2)
+  results_moderate_reduction$treatment_type <- "Moderate reduction"
+  results_moderate_reduction$parallel_type <- "Unconditional"
+  results_moderate_reduction$plot_post <- as.factor(1 * (results_moderate_reduction$year >= (as.Date(treatment_date) - 10)))
 
   results_substantial_reduction$att <- did_results$dr_substantial_reduction$att
   results_substantial_reduction$att.se <- did_results$dr_substantial_reduction$se
@@ -704,21 +718,12 @@ plot_did <- function(did_results, save_here = getwd()) {
   results_substantial_reduction$parallel_type <- "Unconditional"
   results_substantial_reduction$plot_post <- as.factor(1 * (results_substantial_reduction$year >= (as.Date(treatment_date) - 10)))
 
-  results_complete_abandonment$att <- did_results$dr_complete_abandonment$att
-  results_complete_abandonment$att.se <- did_results$dr_complete_abandonment$se
-  results_complete_abandonment$post <- as.factor(1 * (results_complete_abandonment$year >= treatment_date))
-  results_complete_abandonment$c <- did_results$dr_complete_abandonment$c
-  alp_complete_abandonment <- did_results$dr_complete_abandonment$alp
-  c.point_complete_abandonment <- stats::qnorm(1 - alp_complete_abandonment / 2)
-  results_complete_abandonment$treatment_type <- "Complete abandonment"
-  results_complete_abandonment$parallel_type <- "Unconditional"
-  results_complete_abandonment$plot_post <- as.factor(1 * (results_complete_abandonment$year >= (as.Date(treatment_date) - 10)))
 
   ## 1.) Produce and save plot.
-  plot_pre <- results_any_reduction %>%
-    dplyr::bind_rows(results_substantial_reduction, results_complete_abandonment) %>%
+  plot_pre <- results_small_reduction %>%
+    dplyr::bind_rows(results_moderate_reduction, results_substantial_reduction) %>%
     dplyr::filter(plot_post == 0) %>%
-    dplyr::mutate(treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
+    dplyr::mutate(treatment_factor = factor(treatment_type, levels = c("Small reduction", "Moderate reduction", "Substantial reduction"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
@@ -732,10 +737,10 @@ plot_did <- function(did_results, save_here = getwd()) {
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
   ggplot2::ggsave(paste0(save_here, "/", "players_performance_did_pre.pdf"), plot_pre, width = 7, height = 7)
 
-  plot_post <- results_any_reduction %>%
-    dplyr::bind_rows(results_substantial_reduction, results_complete_abandonment) %>%
+  plot_post <- results_small_reduction %>%
+    dplyr::bind_rows(results_moderate_reduction, results_substantial_reduction) %>%
     dplyr::filter(plot_post == 1) %>%
-    dplyr::mutate(treatment_factor = factor(treatment_type, levels = c("Any reduction", "Substantial reduction", "Complete abandonment"))) %>%
+    dplyr::mutate(treatment_factor = factor(treatment_type, levels = c("Small reduction", "Moderate reduction", "Substantial reduction"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = year, y = att, ymin = (att - c * att.se), ymax = (att + c * att.se))) +
     ggplot2::geom_point(ggplot2::aes(colour = post), size = 1.5) +
     ggplot2::geom_errorbar(ggplot2::aes(colour = post), width = 0.1) +
@@ -769,28 +774,25 @@ plot_did <- function(did_results, save_here = getwd()) {
 #' None. It produces nice plots.
 #'
 #' @details
-#' We consider all players. We classify them into four different categories:
+#' We consider only prior-users. We classify them into four different categories:
 #'
 #' \describe{
-#'    \item{\code{Non-prior users}}{All non-prior users.}
-#'    \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
-#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50\% following his disclosure are considered treated.}
-#'    \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
+#'    \item{\code{No reduction}}{Players that did not reduce their average pick rate for Graves.}
+#'    \item{\code{Small reduction}}{Players that reduce their average pick rate for Graves by any amount within (0%, 25%].)}
+#'    \item{\code{Moderate reduction}}{Players that reduce their average pick rate for Graves by any amount within (25%, 50%].}
+#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by any amount within (50%, 100%].}
 #' }
-#'
-#' Notice that the last three categories are not mutually exclusive: those that are classified under \code{Complete abandomnent} are also classified under \code{Any reduction} (the opposite is not true).
-#' However, non-prior users cannot be classified in any other category.\cr
 #'
 #' \code{min_date} and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #'
-#' @import dplyr patchwork ggplot2
+#' @import dplyr ggplot2
 #'
 #' @author Riccardo Di Francesco
 #'
 #' @export
-belveth <- function(n_pre_matches, jungle_threshold = 20,
+belveth <- function(n_pre_matches, jungle_threshold = 0,
                     min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                     save_here = getwd()) {
   ## 0.) Handling inputs and checks.
@@ -821,8 +823,8 @@ belveth <- function(n_pre_matches, jungle_threshold = 20,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(min_date < day & day < max_date) %>%
-    dplyr::mutate(belveth_released = ifelse(day >= belveth_date, 1, 0),
-                  disclosure = ifelse(day > coming_out_date, 1, 0))
+    dplyr::mutate(belveth_released = as.numeric(day >= belveth_date),
+                  disclosure = as.numeric(day > coming_out_date))
 
   keep_these_players <- lol_player_dta %>%
     dplyr::group_by(id) %>%
@@ -849,16 +851,16 @@ belveth <- function(n_pre_matches, jungle_threshold = 20,
                   avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
                   avg_graves_rate_post = sum(graves_rate * disclosure) / sum(disclosure),
                   no_reduction = as.numeric(avg_graves_rate_post >= avg_graves_rate_pre),
-                  any_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre),
-                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre),
-                  complete_abandonment = as.numeric(avg_graves_rate_pre > 0 & avg_graves_rate_post == 0)) %>%
+                  small_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre & avg_graves_rate_post >= 0.75 * avg_graves_rate_pre),
+                  moderate_reduction = as.numeric(avg_graves_rate_post < 0.75 * avg_graves_rate_pre & avg_graves_rate_post >= 0.5 * avg_graves_rate_pre),
+                  substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(id, jungle_user, prior_user, no_reduction, any_reduction, substantial_reduction, complete_abandonment)
+    dplyr::select(id, jungle_user, prior_user, no_reduction, small_reduction, moderate_reduction, substantial_reduction)
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, belveth_released, disclosure, jungle_user, prior_user, no_reduction, any_reduction, substantial_reduction, complete_abandonment, graves_rate, belveth_rate)
+    dplyr::select(day, id, belveth_released, disclosure, jungle_user, prior_user, no_reduction, small_reduction, moderate_reduction, substantial_reduction, graves_rate, belveth_rate)
 
   ## 2.) Focus on jungle users.
   lol_player_dta <- lol_player_dta %>%
@@ -872,25 +874,11 @@ N. jungle users is ", length(unique(lol_player_dta$id)), " of which:
 
 Among prior-users:
   ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::filter(prior_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(no_reduction) %>% sum(), " did not reduce their pick rates for Graves
-  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(any_reduction) %>% sum(), " reduced their pick rates for Graves by any amount
-  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by a substantial amount
-  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(complete_abandonment) %>% sum(), " completely stopped playing Graves \n", sep = "")
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::filter(prior_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(small_reduction) %>% sum(), " reduced their pick rates for Graves by (0, 25%]
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::filter(prior_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(moderate_reduction) %>% sum(), " reduced their pick rates for Graves by (25%, 50%]
+  ", treated_controls %>% dplyr::filter(jungle_user) %>% dplyr::filter(prior_user) %>% dplyr::distinct(id, .keep_all = TRUE) %>% dplyr::pull(substantial_reduction) %>% sum(), " reduced their pick rates for Graves by (50%, 100%]. \n", sep = "")
 
   ## 3.) Plot.
-  non_prior_users_dta <- lol_player_dta %>%
-    dplyr::filter(belveth_released == 1 & prior_user == FALSE) %>%
-    dplyr::mutate(treatment_status = "non_prior_users",
-                  avg_belveth_rate = mean(belveth_rate)) %>%
-    dplyr::select(treatment_status, avg_belveth_rate) %>%
-    dplyr::distinct()
-
-  prior_users_dta <- lol_player_dta %>%
-    dplyr::filter(belveth_released == 1 & prior_user == TRUE) %>%
-    dplyr::mutate(treatment_status = "prior_users",
-                  avg_belveth_rate = mean(belveth_rate)) %>%
-    dplyr::select(treatment_status, avg_belveth_rate) %>%
-    dplyr::distinct()
-
   prior_users_no_reduction_dta <- lol_player_dta %>%
     dplyr::filter(belveth_released == 1 & prior_user == TRUE & no_reduction == 1) %>%
     dplyr::mutate(treatment_status = "prior_users_no_reduction",
@@ -898,9 +886,16 @@ Among prior-users:
     dplyr::select(treatment_status, avg_belveth_rate) %>%
     dplyr::distinct()
 
-  prior_users_any_reduction_dta <- lol_player_dta %>%
-    dplyr::filter(belveth_released == 1 & prior_user == TRUE & any_reduction == 1) %>%
-    dplyr::mutate(treatment_status = "prior_users_any_reduction",
+  prior_users_small_reduction_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == TRUE & small_reduction == 1) %>%
+    dplyr::mutate(treatment_status = "prior_users_small_reduction",
+                  avg_belveth_rate = mean(belveth_rate)) %>%
+    dplyr::select(treatment_status, avg_belveth_rate) %>%
+    dplyr::distinct()
+
+  prior_users_moderate_reduction_dta <- lol_player_dta %>%
+    dplyr::filter(belveth_released == 1 & prior_user == TRUE & moderate_reduction == 1) %>%
+    dplyr::mutate(treatment_status = "prior_users_moderate_reduction",
                   avg_belveth_rate = mean(belveth_rate)) %>%
     dplyr::select(treatment_status, avg_belveth_rate) %>%
     dplyr::distinct()
@@ -912,35 +907,17 @@ Among prior-users:
     dplyr::select(treatment_status, avg_belveth_rate) %>%
     dplyr::distinct()
 
-  prior_users_complete_abandonment_dta <- lol_player_dta %>%
-    dplyr::filter(belveth_released == 1 & prior_user == TRUE & complete_abandonment == 1) %>%
-    dplyr::mutate(treatment_status = "prior_users_complete_abandonment",
-                  avg_belveth_rate = mean(belveth_rate)) %>%
-    dplyr::select(treatment_status, avg_belveth_rate) %>%
-    dplyr::distinct()
-
-  plot_belveth_buckets_all_players <- non_prior_users_dta %>%
-    dplyr::bind_rows(prior_users_dta) %>%
-    dplyr::mutate(players = "All players") %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treatment_status, levels = c("non_prior_users", "prior_users"), labels = c("Non-prior users", "Prior users")), y = avg_belveth_rate)) +
-    ggplot2::geom_bar(position = "dodge", stat = "identity", fill = "dodgerblue") +
-    ggplot2::facet_grid(cols = vars(players)) +
-    ggplot2::xlab("") + ggplot2::ylab("Average Bel'Veth's pick rate") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
-                   axis.text.x = ggplot2::element_text(angle = 0), legend.direction = "vertical", legend.justification = c("left", "top"))
-
   plot_belveth_buckets_prior_users <- prior_users_no_reduction_dta %>%
-    dplyr::bind_rows(prior_users_any_reduction_dta, prior_users_substantial_reduction_dta, prior_users_complete_abandonment_dta) %>%
+    dplyr::bind_rows(prior_users_small_reduction_dta, prior_users_moderate_reduction_dta, prior_users_substantial_reduction_dta) %>%
     dplyr::mutate(players = "Prior users") %>%
-    ggplot2::ggplot(ggplot2::aes(x = factor(treatment_status, levels = c("prior_users_no_reduction", "prior_users_any_reduction", "prior_users_substantial_reduction", "prior_users_complete_abandonment"), labels = c("No reduction", "Any reduction", "Substantial reduction", "Complete abandonment")), y = avg_belveth_rate)) +
+    ggplot2::ggplot(ggplot2::aes(x = factor(treatment_status, levels = c("prior_users_no_reduction", "prior_users_small_reduction", "prior_users_moderate_reduction", "prior_users_substantial_reduction"), labels = c("No reduction", "Small reduction", "Moderate reduction", "Substantial reduction")), y = avg_belveth_rate)) +
     ggplot2::geom_bar(position = "dodge", stat = "identity", fill = "dodgerblue") +
     ggplot2::facet_grid(cols = vars(players)) +
     ggplot2::xlab("") + ggplot2::ylab("Average Bel'Veth's pick rate") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
                    axis.text.x = ggplot2::element_text(angle = 0), legend.direction = "vertical", legend.justification = c("left", "top"))
-  ggplot2::ggsave(paste0(save_here, "/", "players_belveth_barplot.pdf"), plot_belveth_buckets_all_players / plot_belveth_buckets_prior_users, width = 7, height = 7)
+  ggplot2::ggsave(paste0(save_here, "/", "players_belveth_barplot.pdf"), plot_belveth_buckets_prior_users, width = 7, height = 7)
 
   ## 4.) Talk to the user.
   cat("\n")
