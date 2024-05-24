@@ -15,7 +15,7 @@ pkgs <- c("CostComingOutLOL")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Settings ----------------------------------------------------------------
-n_pre_matches <- 100
+n_pre_matches <- 50
 
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
 
@@ -30,11 +30,11 @@ players_performance_plots_lol(n_pre_matches, treatment_date = treatment_date, mi
 
 # Players' performance ----------------------------------------------------
 ## Assess impact of Pride Month on prior users' performance.
-did_results <- did_players_performance(n_pre_matches, filter = "prior_users", treatment_date = treatment_date, min_date = min_date, max_date = max_date)
+did_results <- did_players_performance(n_pre_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
 
 plot_did(did_results, save_here)
 latex_did(did_results)
 
 # Belveth -----------------------------------------------------------------
 ## Check preferences for Belveth.
-belveth(n_pre_matches, jungle_threshold = 0, min_date = min_date, max_date = max_date, save_here = save_here)
+belveth(n_pre_matches, min_date = min_date, max_date = max_date, save_here = save_here)
