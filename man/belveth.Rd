@@ -6,7 +6,6 @@
 \usage{
 belveth(
   n_pre_matches,
-  jungle_threshold = 20,
   min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2023-08-01"),
   save_here = getwd()
@@ -14,8 +13,6 @@ belveth(
 }
 \arguments{
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
-
-\item{jungle_threshold}{Only players that played an average of \code{jungle_threshold}% of their matches in jungle position are considered. Useful to avoid measuring differences in preferences for positions.}
 
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
@@ -30,21 +27,7 @@ None. It produces nice plots.
 Check whether Graves' prior and non-prior users switched to Belveth.
 }
 \details{
-We consider all players. We classify them into four different categories:
 
-\describe{
-   \item{\code{Non-prior users}}{All non-prior users.}
-   \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
-   \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50\% following his disclosure are considered treated.}
-   \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
-}
-
-Notice that the last three categories are not mutually exclusive: those that are classified under \code{Complete abandomnent} are also classified under \code{Any reduction} (the opposite is not true).
-However, non-prior users cannot be classified in any other category.\cr
-
-\code{min_date} and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
-
-Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 }
 \author{
 Riccardo Di Francesco

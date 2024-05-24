@@ -83,7 +83,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 
   cat("N. players is ", length(unique(lol_player_dta$id)), " of which:
   ", treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " was playing Graves at least 5% before the disclosure (prior users)
-  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has never played Graves before the disclosure (non-prior users) \n", sep = "")
+  ", length(unique(lol_player_dta$id))- treated_controls %>% distinct(id, .keep_all = TRUE) %>% pull(prior_user) %>% sum(), " has played Graves less than 5% before the disclosure (non-prior users) \n", sep = "")
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%

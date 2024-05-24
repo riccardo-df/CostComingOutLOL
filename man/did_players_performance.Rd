@@ -6,7 +6,6 @@
 \usage{
 did_players_performance(
   n_pre_matches,
-  filter = "prior_users",
   treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   min_date = as.POSIXct("2022-01-01"),
   max_date = as.POSIXct("2023-08-01")
@@ -15,13 +14,13 @@ did_players_performance(
 \arguments{
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
-\item{filter}{Which players to retain for the analysis.}
-
 \item{treatment_date}{Object of class \code{POSIXct}. The date of the treatment.}
 
 \item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
 
 \item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
+
+\item{filter}{Which players to retain for the analysis.}
 }
 \value{
 Returns a list with \code{treatment_date} and all the diff-in-diff results. The user can post-process the output using the \code{\link{plot_did}} function.
@@ -30,27 +29,7 @@ Returns a list with \code{treatment_date} and all the diff-in-diff results. The 
 Uses a diff-in-diff strategy to investigate the impact of the coming-out event on players' performance.
 }
 \details{
-We define three versions of the treatment.
 
-\describe{
-   \item{\code{Any reduction}}{Players that reduce their average pick rate for Graves by any amount following his disclosure are considered treated.}
-   \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by at least 50\% following his disclosure are considered treated.}
-   \item{\code{Complete abandomnent}}{Players that had a non-zero average pick rate for Graves before his disclosure and transition to a zero pick rate after are considered treated.}
-}
-
-Notice that the categories are not mutually exclusive: those that are considered treated under \code{Complete abandomnent} are also treated under \code{Any reduction} (the opposite is not true).
-We keep the control group fixed as it is always composed of those prior-users that do not reduce their pick rates for Graves at all.\cr
-
-The estimators of Callaway and Sant’Anna (2021) are employed to estimate the impact of the coming-out event on the performance of treated players. This is implemented using the \code{\link[did]{att_gt}} function.
-Technical details are given in the associated documentation. To summarize, we identify and estimate the average treatment effect on the treated for all time t > \code{treatment_date}. "Effects" before that date are
-also estimated and are useful to check the plausibility of the parallel trend assumption. We consider both the unconditional estimator and the doubly-robust estimator that conditions on pre-treatment covariates
-(average kills, assists, deaths, gold earned, and matches played each day).\cr
-
-\code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
-
-Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
-Moreover, additional players are removed if the \code{filter} argument is not set to \code{"all"}. If this is set to \code{"prior_users"}, then only players that used to play Graves before
-his disclosure are used in the analysis.
 }
 \author{
 Riccardo Di Francesco
