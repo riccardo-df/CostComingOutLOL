@@ -751,7 +751,7 @@ construct_lol_player_data <- function(dta) {
 #' \code{\link{construct_lol_match_data}} performs the following operations on \code{dta}.\cr
 #'
 #' First, it keeps only players that played at least 50 matches in our data. This is because, due to our data construction, some players
-#' might appear only once or twice, and thus information on their behavior is "weak."
+#' might appear only once or twice, and thus information on their behavior is "weak." After this, we restrict the data to matches with all 10 players.
 #'
 #' Second, it codes team identifiers (1 or 2) and generates the variables of interest.
 #' \describe{
@@ -759,7 +759,8 @@ construct_lol_player_data <- function(dta) {
 #'  \item{\code{surrender}}{Whether \code{match_id} ended by a surrender (match-level).}
 #'  \item{\code{early_surrender}}{Whether \code{match_id} ended by an early surrender (match-level).}
 #'  \item{\code{duration}}{Duration of \code{match_id} in minutes (match-level).}
-#'  \item{\code{Graves}}{Whether someone in \code{team} has picked \code{Graves} (team-level).}
+#'  \item{\code{graves_team}}{Whether someone in \code{team} has picked \code{Graves} (team-level).}
+#'  \item{\code{graves_match}}{Whether someone in \code{match_id} has picked \code{Graves} (match-level).}
 #'  \item{\code{day_no}}{Numeric version of the \code{day} variable, useful when the data set is loaded in other sessions to get the time right.}
 #' }
 #'
@@ -785,7 +786,7 @@ construct_lol_match_data <- function(dta) {
   match_id <- NULL
   day_no <- NULL
 
-  ## Keep players with at least 50 matches.
+  ## Keep players with at least 50 matches. Ensure to keep only matches with 10 players.
   cat("Keep players with at least 50 matches. \n")
   dta <- dta %>%
     dplyr::group_by(player_puiid) %>%
@@ -793,6 +794,11 @@ construct_lol_match_data <- function(dta) {
     dplyr::ungroup() %>%
     dplyr::filter(n_matches >= 50) %>%
     dplyr::select(-n_matches)
+
+  dta <- dta %>%
+    dplyr::group_by(match_id) %>%
+    dplyr::filter(n() == 10) %>%
+    dplyr::ungroup()
 
   ## Generate variables.
   cat("Generating variables. \n")
@@ -804,8 +810,11 @@ construct_lol_match_data <- function(dta) {
                      surrender = first(surrender),
                      early_surrender = first(early_surrender),
                      duration = first(duration),
-                     Graves = any(champion == "Graves"),
-                     .groups = "drop")
+                     graves_team = any(champion == "Graves"),
+                     .groups = "drop") %>%
+    dplyr::group_by(match_id) %>%
+    dplyr::mutate(graves_match = any(graves_team)) %>%
+    dplyr::ungroup()
 
   ## Final operations.
   panel <- is_graves_picked

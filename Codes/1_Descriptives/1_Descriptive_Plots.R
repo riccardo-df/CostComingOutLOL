@@ -19,18 +19,33 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 champions <- c("Graves")
 
 bandwidth_champions <- 5
-bandwidth_players <- 3
-
-min_date <- as.POSIXct("2022-01-01")
-max_date <- as.POSIXct("2022-07-13")
+bandwidth_players <- 5
+bandwidth_matches <- 5
 
 treatment_date1 <- NULL
 treatment_date2 <- NULL
 
 save_here_champions <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
-save_here_players <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
+save_here_players <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
+save_here_matches <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Matches"
 
 ## Produce plots.
-champions_descriptive_plots_lol(champions, treatment_date1 = treatment_date1, treatment_date2 = treatment_date2, min_date = min_date, max_date = max_date, bandwidth = bandwidth_champions, ylims_rates = c(0, 40), save_here = save_here_champions)
-champions_performance_plots_lol(champions, min_date = min_date, max_date = max_date, bandwidth = bandwidth_champions, save_here = save_here_champions)
-players_descriptive_plots_lol(min_date = min_date, max_date = max_date, bandwidth = bandwidth_players, save_here = save_here_players)
+champions_descriptive_plots_lol(champions,
+                                treatment_date1 = treatment_date1, treatment_date2 = treatment_date2,
+                                bandwidth = bandwidth_champions,
+                                ylims_rates = c(0, 40),
+                                save_here = save_here_champions)
+
+champions_performance_plots_lol(champions,
+                                bandwidth = bandwidth_champions,
+                                save_here = save_here_champions)
+
+players_descriptive_plots_lol(bandwidth = bandwidth_players,
+                              save_here = save_here_players)
+
+matches_descriptive_plots_lol(bandwidth = bandwidth_matches,
+                              save_here = save_here_matches)
+
+matches_descriptive_plots_lol(bandwidth = bandwidth_matches,
+                              save_here = save_here_matches,
+                              graves_only = TRUE)

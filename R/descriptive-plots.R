@@ -5,8 +5,6 @@
 #' @param champions Character vector with the champions of interest.
 #' @param treatment_date1 Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
 #' @param treatment_date2 Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
-#' @param min_date Object of class \code{POSIXct}. When to start the series.
-#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param ylims_levels Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).
 #' @param ylims_rates Vector storing lower and upper limit for the y-axis (valid for the variables measured in rates).
@@ -16,7 +14,7 @@
 #' Produces nice plots.
 #'
 #' @details
-#' \code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' \code{treatment_date1} and \code{treatment_date2}, must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' If one of the element of \code{champions} is \code{"LGB"}, \code{\link{champions_descriptive_plots_lol}} includes in the plots an LGB composite unit constructed by averaging the variables values of the
 #' champions Diana, Leona, Nami, and Neeko. These are the champions confirmed to be LGBT before Graves' disclosure. See Section 2.2 and Section 5.4 of the paper for more details.\cr
@@ -36,8 +34,7 @@
 champions_descriptive_plots_lol <- function(champions,
                                   treatment_date1 = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
                                   treatment_date2 = as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d"),
-                                  min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
-                                  bandwidth = 0.01, ylims_levels = c(0, 100), ylims_rates = c(0, 100), save_here = getwd()) {
+                                  bandwidth = 0.01, ylims_rates = c(0, 100), save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   pick_level_sum <- NULL
@@ -73,21 +70,9 @@ champions_descriptive_plots_lol <- function(champions,
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
 
-  pride_month_2023_begin <- as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d")
-  pride_month_2023_end <- as.POSIXct("2023-06-30", tryFormats = "%Y-%m-%d")
-
-  plot_2022_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2022_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2022_end) + 1)
-  plot_2023_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2023_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2023_end) + 1)
-
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
 
-  lol_champ_dta <- lol_champ_dta %>%
-    dplyr::filter(min_date < day & day < max_date)
-
-  lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::filter(min_date < day & day < max_date)
-
-  ## 1.) If necessary, Construct composite LGB unit and bind rows.
+  ## 1.) If necessary, construct composite LGB unit and bind rows.
   if ("LGB" %in% champions) {
     lgb_champions <- c("Nami", "Leona", "Diana", "Neeko")
 
@@ -133,8 +118,8 @@ champions_descriptive_plots_lol <- function(champions,
   }
 
   ## 2.) Smooth the series.
-  to_smooth_pool <- c("pick_level_sum", "pick_rate_pooled", "ban_level_sum", "ban_rate_pooled", "win_level_sum", "win_rate_pooled")
-  to_smooth_regional <- c("pick_level", "pick_rate", "ban_level", "ban_rate", "win_level", "win_rate")
+  to_smooth_pool <- c("pick_rate_pooled", "ban_rate_pooled", "win_rate_pooled")
+  to_smooth_regional <- c("pick_rate", "ban_rate", "win_rate")
 
   lol_champ_pool_dta <- lol_champ_pool_dta %>%
     dplyr::group_by(champion) %>%
@@ -146,28 +131,10 @@ champions_descriptive_plots_lol <- function(champions,
 
   ## 3.) Plots for pooled variables.
   # 3a.) Picks.
-  plot_pick_level_pooled <- lol_champ_pool_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_level_sum, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::ylim(ylims_levels[1], ylims_levels[2]) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Pick level")) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::facet_wrap(vars(champion)) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_pooled.pdf"), plot_pick_level_pooled, width = 7, height = 7)
-
   plot_pick_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_rate_pooled, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
@@ -181,28 +148,10 @@ champions_descriptive_plots_lol <- function(champions,
   ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_pooled.pdf"), plot_pick_rate_pooled, width = 7, height = 7)
 
   # 3b.) Bans.
-  plot_ban_level_pooled <- lol_champ_pool_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_level_sum, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::ylim(ylims_levels[1], ylims_levels[2]) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Ban level")) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::facet_wrap(vars(champion)) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_pooled.pdf"), plot_ban_level_pooled, width = 7, height = 7)
-
   plot_ban_rate_pooled <- lol_champ_pool_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_rate_pooled, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
@@ -215,64 +164,12 @@ champions_descriptive_plots_lol <- function(champions,
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
   ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_pooled.pdf"), plot_ban_rate_pooled, width = 7, height = 7)
 
-  # 3c.) Wins.
-  plot_win_level_pooled <- lol_champ_pool_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_level_sum, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::ylim(ylims_levels[1], ylims_levels[2]) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Win level")) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::facet_wrap(vars(champion)) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_pooled.pdf"), plot_win_level_pooled, width = 7, height = 7)
-
-  plot_win_rate_pooled <- lol_champ_pool_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_rate_pooled, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::ylim(ylims_rates[1], ylims_rates[2]) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::facet_wrap(vars(champion)) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_pooled.pdf"), plot_win_rate_pooled, width = 7, height = 7)
-
   ## 4.) Regional plots.
   # 4a.) Picks.
-  plot_pick_level_regional <- lol_champ_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_level, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Pick level")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
-    ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_pick_level_regional.pdf"), plot_pick_level_regional, width = 7, height = 7)
-
   plot_pick_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_rate, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
@@ -285,27 +182,10 @@ champions_descriptive_plots_lol <- function(champions,
   ggplot2::ggsave(paste0(save_here, "/", "plot_pick_rate_regional.pdf"), plot_pick_rate_regional, width = 7, height = 7)
 
   # 4b.) Bans.
-  plot_ban_level_regional <- lol_champ_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_level, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Ban level")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
-    ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_ban_level_regional.pdf"), plot_ban_level_regional, width = 7, height = 7)
-
   plot_ban_rate_regional <- lol_champ_dta %>%
     dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_rate, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
     ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
@@ -316,39 +196,6 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
   ggplot2::ggsave(paste0(save_here, "/", "plot_ban_rate_regional.pdf"), plot_ban_rate_regional, width = 7, height = 7)
-
-  # 4c.) Wins.
-  plot_win_level_regional <- lol_champ_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_level, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Win level")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
-    ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_level_regional.pdf"), plot_win_level_regional, width = 7, height = 7)
-
-  plot_win_rate_regional <- lol_champ_dta %>%
-    dplyr::filter(champion %in% c(champions, "Composite LGB")) %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = win_rate, group = champion, color = champion)) +
-    ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
-    ggplot2::xlab("") + ggplot2::ylab(paste0("Win rate")) +
-    ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
-    ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.position = "none", strip.text = ggplot2::element_text(size = 10, face = "bold"),
-                   axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  ggplot2::ggsave(paste0(save_here, "/", "plot_win_rate_regional.pdf"), plot_win_rate_regional, width = 7, height = 7)
 
   ## 5.) Talk to the user.
   cat("\n")
@@ -361,8 +208,6 @@ champions_descriptive_plots_lol <- function(champions,
 #' Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
 #'
 #' @param champions Character vector with the champions of interest.
-#' @param min_date Object of class \code{POSIXct}. When to start the series.
-#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -370,7 +215,7 @@ champions_descriptive_plots_lol <- function(champions,
 #' Produces a nice plot.
 #'
 #' @details
-#' \code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' \code{treatment_date1} and \code{treatment_date2} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 #' An infinitesimal bandwidth amounts to no smoothing.\cr
@@ -385,8 +230,7 @@ champions_descriptive_plots_lol <- function(champions,
 #'
 #' @export
 champions_performance_plots_lol <- function(champions,
-                                  min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
-                                  bandwidth = 0.01, save_here = getwd()) {
+                                            bandwidth = 0.01, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   lol_champ_dta <- lol_champ_dta
   champion <- NULL
@@ -403,16 +247,7 @@ champions_performance_plots_lol <- function(champions,
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
 
-  pride_month_2023_begin <- as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d")
-  pride_month_2023_end <- as.POSIXct("2023-06-30", tryFormats = "%Y-%m-%d")
-
-  plot_2022_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2022_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2022_end) + 1)
-  plot_2023_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2023_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2023_end) + 1)
-
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
-
-  lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::filter(min_date < day & day < max_date)
 
   ## 1.) Plots.
   for (i in seq_len((length(champions)))) {
@@ -433,8 +268,7 @@ champions_performance_plots_lol <- function(champions,
     plot <- plot_dta %>%
       reshape2::melt(id.vars = "day", measure.vars = c("Kills/Deaths", "Win Rate")) %>%
       ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = value)) +
-      ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
+      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
       ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
       ggplot2::facet_grid(rows = vars(variable), scales = "free") +
       ggplot2::xlab("") + ggplot2::ylab("") + ggplot2::ggtitle(my_champion) +
@@ -455,8 +289,6 @@ champions_performance_plots_lol <- function(champions,
 #'
 #' Produces plots for the number of daily players and matches.
 #'
-#' @param min_date Object of class \code{POSIXct}. When to start the series.
-#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -464,7 +296,7 @@ champions_performance_plots_lol <- function(champions,
 #' Produces a nice plot.
 #'
 #' @details
-#' \code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' \code{treatment_date1} and must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 #' An infinitesimal bandwidth amounts to no smoothing.\cr
@@ -478,48 +310,37 @@ champions_performance_plots_lol <- function(champions,
 #' @seealso \code{\link{champions_descriptive_plots_lol}} \code{\link{champions_performance_plots_lol}}
 #'
 #' @export
-players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
-                                          bandwidth = 0.01, save_here = getwd()) {
+players_descriptive_plots_lol <- function(bandwidth = 0.01, save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   lol_champ_dta <- lol_champ_dta
   n_matches <- NULL
-  total_matches <- NULL
+  total_hours <- NULL
   total_players <- NULL
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
 
-  pride_month_2023_begin <- as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d")
-  pride_month_2023_end <- as.POSIXct("2023-06-30", tryFormats = "%Y-%m-%d")
-
-  plot_2022_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2022_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2022_end) + 1)
-  plot_2023_rainbow <- (as.Date(min_date) + 1 < as.Date(pride_month_2023_begin) + 1) & (as.Date(max_date) + 1 > as.Date(pride_month_2023_end) + 1)
-
   rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
-
-  lol_player_dta <- lol_player_dta %>%
-    dplyr::filter(min_date < day & day < max_date)
 
   ## 1.) Plot.
   trans_coef <- 5
-  matches_color <- "tomato"
+  hours_color <- "tomato"
   players_color <- "#00BFC4"
 
   plot <- lol_player_dta %>%
     dplyr::group_by(day) %>%
-    dplyr::mutate(total_matches = sum(n_matches) / 10,
-                  total_players = n_distinct(id)) %>%
-    dplyr::distinct(day, .keep_all = TRUE) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(dplyr::across(dplyr::all_of(c("total_matches", "total_players")), function(x) { stats::ksmooth(stats::time(x), x, "normal", bandwidth = bandwidth)$y })) %>%
+    dplyr::summarise(total_hours = sum(n_hours) / 10,
+                     total_players = n_distinct(id),
+                     .groups = "drop") %>%
+    dplyr::mutate(smooth_hours = stats::ksmooth(stats::time(total_hours), total_hours, "normal", bandwidth = bandwidth)$y,
+                  smooth_players = stats::ksmooth(stats::time(total_players), total_players, "normal", bandwidth = bandwidth)$y) %>%
     ggplot2::ggplot(ggplot2::aes(x = day)) +
-    ggplot2::geom_line(ggplot2::aes(y = total_matches, color = "Matches"), linewidth = 0.8) +
-    ggplot2::geom_line(aes(y = total_players / trans_coef, color = "Players"), linewidth = 0.8) +
-    ggplot2::annotation_raster(rainbow, xmin = pride_month_2022_begin, xmax = pride_month_2022_end, ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_raster(rainbow, xmin = pride_month_2023_begin, xmax = pride_month_2023_end, ymin = -Inf, ymax = Inf) +
+    ggplot2::geom_line(ggplot2::aes(y = smooth_hours, color = "Hours"), linewidth = 0.8) +
+    ggplot2::geom_line(aes(y = smooth_players / trans_coef, color = "Players"), linewidth = 0.8) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::scale_y_continuous(name = "N. daily matches", sec.axis = sec_axis(~ . * trans_coef, name = "N. daily players")) +
-    ggplot2::scale_color_manual(name = "Colors", values = c("Matches" = matches_color, "Players" = players_color)) +
+    ggplot2::scale_y_continuous(name = "N. daily hours", sec.axis = sec_axis(~ . * trans_coef, name = "N. daily players")) +
+    ggplot2::scale_color_manual(name = "Colors", values = c("Hours" = hours_color, "Players" = players_color)) +
     ggplot2::xlab("") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
@@ -527,6 +348,116 @@ players_descriptive_plots_lol <- function(min_date = as.POSIXct("2022-01-01"), m
   ggplot2::ggsave(paste0(save_here, "/", "n_matches_players.pdf"), plot, width = 7, height = 7)
 
   ## 2.) Talk to the user.
+  cat("\n")
+  cat("Figures are saved at ", save_here, "\n", sep = "")
+}
+
+
+#' LoL Matches Plots
+#'
+#' Produces plots for the number of daily matches, average match duration, and Graves pick rate.
+#'
+#' @param bandwidth Parameter controlling the amount of smoothing.
+#' @param save_here String denoting the path where to save the figures.
+#' @param graves_only If \code{TRUE}, only matches where Graves appeared are used to plot.
+#'
+#' @return
+#' Produces a plot showing daily matches, average duration, and Graves pick rate over time.
+#'
+#' @details
+#' \code{treatment_date1} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#'
+#' The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger the parameter, the smoother the series.
+#' An infinitesimal bandwidth amounts to no smoothing.\cr
+#'
+#' @import dplyr ggplot2 grDevices Cairo reshape2
+#' @importFrom stats ksmooth
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @seealso \code{\link{players_descriptive_plots_lol}} \code{\link{champions_descriptive_plots_lol}}
+#'
+#' @export
+matches_descriptive_plots_lol <- function(bandwidth = 0.01, save_here = getwd(), graves_only = FALSE) {
+  ## 0.) Handling inputs and checks.
+  pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
+  pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+
+  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+
+  ## 1.) Daily aggregation.
+  if (graves_only) { # If required, condition on Graves being in the match.
+    plot_dta <- lol_match_dta %>%
+      dplyr::group_by(match_id) %>%
+      dplyr::filter(graves_match)
+  } else {
+    plot_dta <- lol_match_dta
+  }
+
+  plot_dta <- plot_dta %>%
+    dplyr::distinct(match_id, .keep_all = TRUE) %>%
+    dplyr::group_by(day) %>%
+    dplyr::summarise(n_matches = n_distinct(match_id),
+                     avg_duration = mean(duration),
+                     surrender_prob = mean(surrender),
+                     early_surrender_prob = mean(early_surrender),
+                     graves_prob = mean(graves_match),
+                     .groups = "drop")
+
+   plot_dta <- plot_dta %>%
+     dplyr::mutate(smooth_n_matches = stats::ksmooth(stats::time(n_matches), n_matches, kernel = "normal", bandwidth = bandwidth)$y,
+                   smooth_duration = stats::ksmooth(stats::time(avg_duration), avg_duration, kernel = "normal", bandwidth = bandwidth)$y,
+                   smooth_surrender = stats::ksmooth(stats::time(surrender_prob), surrender_prob, kernel = "normal", bandwidth = bandwidth)$y,
+                   smooth_early = stats::ksmooth(stats::time(early_surrender_prob), early_surrender_prob, kernel = "normal", bandwidth = bandwidth)$y,
+                   smooth_graves = stats::ksmooth(stats::time(graves_prob), graves_prob, kernel = "normal", bandwidth = bandwidth)$y)
+
+  ## 2.) Plots.
+  # Average duration.
+  plot_duration <- plot_dta %>%
+    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_duration)) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+    ggplot2::xlab("") + ggplot2::ylab("Avg. match duration (min)") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+  # Surrender probability.
+  plot_surrender <- plot_dta %>%
+    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_surrender)) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+    ggplot2::xlab("") + ggplot2::ylab("Surrender probability") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+  # Early surrender probability.
+  plot_early_surrender <- plot_dta %>%
+    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_early)) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+    ggplot2::xlab("") + ggplot2::ylab("Early surrender probability") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+  # Graves pick probability.
+  plot_graves <- plot_dta %>%
+    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_graves)) +
+    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
+    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
+    ggplot2::xlab("") + ggplot2::ylab("Graves probability") +
+    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
+
+  # Combine in 2x2 grid.
+  combined_plot <- plot_graves / (plot_duration | plot_surrender)
+  if (graves_only) filename <- "match_outcomes_graves_only.pdf" else filename <- "match_outcomes.pdf"
+  ggplot2::ggsave(paste0(save_here, "/", filename), combined_plot, width = 7, height = 7)
+
+    ## 2.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }
