@@ -7,17 +7,17 @@
 #' @details
 #' \code{\link{clean_lol_data}} performs the following operations on the raw data.\cr
 #'
-#' First, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
+#' First, it keeps data for the period January-July 2022.
+#'
+#' Second, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 #' and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 #'
-#' Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted more than two hours or
+#' Third, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted more than two hours or
 #' where the position of some player is not assigned).\cr
 #'
-#' Third, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
+#' Fourth, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
 #'
-#' Fourth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most.\cr
-#'
-#' Fifth, it keeps only data for the period January-July 2022.
+#' Fifth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most. It then drops matches where champions were played in weird roles.\cr
 #'
 #' The raw data are available from the authors on request.
 #'
@@ -40,6 +40,11 @@ clean_lol_data <- function(dta) {
   main_role <- NULL
   aux_role <- NULL
   in_position <- NULL
+
+  ## Keep only January-July 2022.
+  dta <- dta %>%
+    dplyr::filter(lubridate::year(day) %in% c(2022)) %>%
+    dplyr::filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
 
   ## Merge regions according to macro area and drop regions with too many missings.
   cat("Merging regions of interest and dropping the others. \n")
@@ -258,6 +263,12 @@ clean_lol_data <- function(dta) {
   dta_noduplicate$main_role <- sapply(dta_noduplicate$champion, function(x) { champs_positions1[x] })
   dta_noduplicate$aux_role <- sapply(dta_noduplicate$champion, function(x) { champs_positions2[x] })
 
+  dta_noduplicate <- dta_noduplicate %>%
+    dplyr::group_by(match_id, champion) %>%
+    dplyr::mutate(in_position = position %in% c(main_role, aux_role)) %>%
+    dplyr::filter(in_position) %>%
+    dplyr::ungroup()
+
   ## Drop again matches with less than ten players (double-check).
   dta_noduplicate <- dta_noduplicate %>%
     dplyr::group_by(match_id) %>%
@@ -269,11 +280,6 @@ clean_lol_data <- function(dta) {
     select(c("match_id", "player_name", "player_puiid", "player_level", "day",
              "champion", "position", "kills", "assists", "deaths", "gold", "duration", "early_surrender",
              "surrender", "win", "ban", "region", "main_role", "aux_role"))
-
-  ## Keep only January-July 2022.
-  dta_final <- dta_final %>%
-    dplyr::filter(lubridate::year(day) %in% c(2022)) %>%
-    dplyr::filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
 
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
@@ -304,10 +310,10 @@ clean_lol_data <- function(dta) {
 #'  \item{\code{aux_role}}{For each \code{champion}, extract its auxiliary position.}
 #' }
 #'
-#' Third, it balances the panel by imputing the zeroes for champions that have not been picked in a particular pair \code{region} and \code{day}. This part
+#' Second, it balances the panel by imputing the zeroes for champions that have not been picked in a particular pair \code{region} and \code{day}. This part
 #' of the function works in parallel using all but one processors of your computer.\cr
 #'
-#' Fourth, it generates additional variables. As before, NAs may be produced and are replaced with zeroes.\cr
+#' Third, it generates additional variables. As before, NAs may be produced and are replaced with zeroes.\cr
 #' \describe{
 #'  \item{\code{n_matches}}{For each pair \code{region} and \code{day}, count how many matches have been played.}
 #'  \item{\code{pick_rate}}{Divide \code{pick_level} by \code{n_matches}.}
@@ -583,9 +589,7 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the year 2022.\cr
-#'
-#' Second, it generates the variables of interest.
+#' First, it generates the variables of interest.
 #' \describe{
 #'  \item{\code{Graves}}{How often the player picked Graves in that \code{day}.}
 #'  \item{\code{Graves_ban}}{How often the player banned Graves in that \code{day}.}
@@ -637,11 +641,6 @@ construct_lol_player_data <- function(dta) {
   assists_avg <- NULL
   deaths_avg <- NULL
   day_no <- NULL
-
-  ## Keep only 2022 data.
-  cat("Keeping only 2022 data. \n")
-    dta <- dta %>%
-      dplyr::filter(lubridate::year(day) %in% c(2022))
 
   ## Generate variables.
   cat("Generating variables. \n")
@@ -722,9 +721,7 @@ construct_lol_player_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_match_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the year 2022.\cr
-#'
-#' Second, it codes team identifiers (1 or 2) and generates the variables of interest.
+#' First, it codes team identifiers (1 or 2) and generates the variables of interest.
 #' \describe{
 #'  \item{\code{victory}}{Whether \code{team} won \code{match_id} (team-level).}
 #'  \item{\code{surrender}}{Whether \code{match_id} ended by a surrender (match-level).}
@@ -755,11 +752,6 @@ construct_lol_match_data <- function(dta) {
   Graves <- NULL
   match_id <- NULL
   day_no <- NULL
-
-  ## Keep only 2022 data.
-  cat("Keeping only 2022 data. \n")
-  dta <- dta %>%
-    dplyr::filter(lubridate::year(day) %in% c(2022))
 
   ## Generate variables.
   cat("Generating variables. \n")
