@@ -589,15 +589,24 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it generates the variables of interest.
+#' First, it keeps only players that played at least 50 matches in our data. This is because, due to our data construction, some players
+#' might appear only once or twice, and thus information on their behavior is "weak."
+#'
+#' Second, it generates the variables of interest.
 #' \describe{
-#'  \item{\code{Graves}}{How often the player picked Graves in that \code{day}.}
-#'  \item{\code{Graves_ban}}{How often the player banned Graves in that \code{day}.}
-#'  \item{\code{win_sum}}{How many matches the player won in that \code{day}.}
 #'  \item{\code{n_matches}}{How many matches the player has played in that \code{day}.}
-#'  \item{\code{Graves_rate}}{Equals \code{Graves} divided by \code{n_matches}.}
-#'  \item{\code{Graves_ban_rate}}{Equals \code{Graves_ban} divided by \code{n_matches}.}
-#'  \item{\code{win_rate}}{Equals \code{win_sum} divided by \code{n_matches}.}
+#'  \item{\code{n_hours}}{How many hours the player has played in that \code{day}.}
+#'  \item{\code{graves_rate}}{Daily percentage of matches where the player picked \code{Graves} out of their \code{n_matches}.}
+#'  \item{\code{graves_ban_rate}}{Daily percentage of matches where the player banned \code{Graves} out of their \code{n_matches}.}
+#'  \item{\code{belveth_rate}}{Daily percentage of matches where the player picked \code{Belveth} out of their \code{n_matches}.}
+#'  \item{\code{belveth_ban_rate}}{Daily percentage of matches where the player banned \code{Belveth} out of their \code{n_matches}.}
+#'  \item{\code{top_rate}}{Daily percentage of matches where the player picked a top champion out of their \code{n_matches}.}
+#'  \item{\code{jungle_rate}}{Daily percentage of matches where the player picked a jungle champion out of their \code{n_matches}.}
+#'  \item{\code{mid_rate}}{Daily percentage of matches where the player picked a mid champion out of their \code{n_matches}.}
+#'  \item{\code{bottom_rate}}{Daily percentage of matches where the player picked a bottom champion out of their \code{n_matches}.}
+#'  \item{\code{support_rate}}{Daily percentage of matches where the player picked a support champion out of their \code{n_matches}.}
+#'  \item{\code{lgb_rate}}{Daily percentage of matches where the player picked an LGB champion ("Diana", "Leona", "Nami", "Neeko") out of their \code{n_matches}.}
+#'  \item{\code{win_rate}}{Daily percentage of matches won by the player out of their \code{n_matches}.}
 #'  \item{\code{gold_avg}}{Average gold earned by the player in that \code{day}.}
 #'  \item{\code{kills_avg}}{Average number of kills achieved by the player in that \code{day}.}
 #'  \item{\code{assists_avg}}{Average number of assists achieved by the player in that \code{day}.}
@@ -642,6 +651,15 @@ construct_lol_player_data <- function(dta) {
   deaths_avg <- NULL
   day_no <- NULL
 
+  ## Keep players with at least 50 matches.
+  cat("Keep players with at least 50 matches. \n")
+  dta <- dta %>%
+    dplyr::group_by(player_puiid) %>%
+    dplyr::summarise(n_matches = n_distinct(match_id),
+                     .groups = "drop") %>%
+    dplyr::filter(n_matches >= 50) %>%
+    dplyr::select(-n_matches)
+
   ## Generate variables.
   cat("Generating variables. \n")
   cat("    Preferences for champions (picks and bans) and roles. \n")
@@ -683,7 +701,7 @@ construct_lol_player_data <- function(dta) {
   daily_panel <- picks_bans %>%
     dplyr::left_join(n_matches, by = c("player_puiid", "day")) %>%
     dplyr::left_join(numeric_covariates, by = c("player_puiid", "day")) %>%
-    dplyr::select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
+    dplyr::select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb, n_matches, n_hours, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
 
   cat("    Variables in rates. \n")
   extended_daily_panel <- daily_panel %>%
@@ -691,19 +709,31 @@ construct_lol_player_data <- function(dta) {
                   graves_ban_rate = graves_ban / n_matches * 100,
                   belveth_rate = belveth / n_matches * 100,
                   belveth_ban_rate = belveth_ban / n_matches * 100,
+                  top_rate = top / n_matches * 100,
+                  jungle_rate = jungle / n_matches * 100,
+                  mid_rate = mid / n_matches * 100,
+                  bottom_rate = bottom / n_matches * 100,
+                  support_rate = support / n_matches * 100,
+                  lgb_rate = lgb / n_matches * 100,
                   win_rate = win_sum / n_matches * 100,
                   gold_avg = gold_sum / n_matches,
                   kills_avg = kills_sum / n_matches,
                   assists_avg = assists_sum / n_matches,
                   deaths_avg = deaths_sum / n_matches) %>%
-    dplyr::select(day, player_puiid, n_matches, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg, top, jungle, mid, bottom, support, lgb)
+    dplyr::select(day, player_puiid, n_matches, n_hours,
+                  graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate,
+                  win_rate, gold_avg, kills_avg, assists_avg, deaths_avg,
+                  top_rate, jungle_rate, mid_rate, bottom_rate, support_rate_rate, lgb_rate)
 
   ## Final operations.
   panel <- extended_daily_panel
   panel$day_no <- as.numeric(panel$day)
 
   panel <- panel %>%
-    dplyr::select(day, day_no, player_puiid, n_matches, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, top, jungle, mid, bottom, support, lgb, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, day_no, player_puiid, n_matches, n_hours,
+                  graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate,
+                  top_rate, jungle_rate, mid_rate, bottom_rate, support_rate, lgb_rate,
+                  win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
   colnames(panel)[3] <- c("id")
 
   ## Write csv.
