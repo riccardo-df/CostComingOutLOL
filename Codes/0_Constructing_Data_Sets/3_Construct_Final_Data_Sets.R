@@ -44,15 +44,6 @@ construct_lol_player_data(clean_dta)
 construct_lol_match_data(clean_dta)
 
 # Descriptives ------------------------------------------------------------
-lol_champ_dta <- lol_champ_dta %>%
-  filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
-lol_champ_pool_dta <- lol_champ_pool_dta %>%
-  filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
-lol_player_dta <- lol_player_dta %>%
-  filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
-lol_match_dta <- lol_match_dta %>%
-  filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
-
 cat("Champion data set:
      N. days:      ", length(unique(lol_champ_dta$day)), "
      N. champions: ", length(unique(lol_champ_dta$champion)), "
@@ -66,7 +57,6 @@ Champion pooled data set:
 Player data set:
      N. days:      ", length(unique(lol_player_dta$day)), "
      N. players:   ", length(unique(lol_player_dta$id)), "
-     N. matches:   ", lol_player_dta %>% pull(n_matches) %>% sum() / 10, "
 
 Match data set:
      N. days:      ", length(unique(lol_match_dta$day)), "

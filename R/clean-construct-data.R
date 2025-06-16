@@ -354,7 +354,6 @@ construct_lol_champion_data <- function(dta) {
 
   ## Generate variables and merging.
   cat("Generating outcomes and covariates. \n")
-
   cat("    Pick level. \n")
   pick_level <- dta %>%
     dplyr::group_by(region, day) %>%
@@ -655,8 +654,8 @@ construct_lol_player_data <- function(dta) {
   cat("Keep players with at least 50 matches. \n")
   dta <- dta %>%
     dplyr::group_by(player_puiid) %>%
-    dplyr::summarise(n_matches = n_distinct(match_id),
-                     .groups = "drop") %>%
+    dplyr::mutate(n_matches = n_distinct(match_id)) %>%
+    dplyr::ungroup() %>%
     dplyr::filter(n_matches >= 50) %>%
     dplyr::select(-n_matches)
 
@@ -723,7 +722,7 @@ construct_lol_player_data <- function(dta) {
     dplyr::select(day, player_puiid, n_matches, n_hours,
                   graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate,
                   win_rate, gold_avg, kills_avg, assists_avg, deaths_avg,
-                  top_rate, jungle_rate, mid_rate, bottom_rate, support_rate_rate, lgb_rate)
+                  top_rate, jungle_rate, mid_rate, bottom_rate, support_rate, lgb_rate)
 
   ## Final operations.
   panel <- extended_daily_panel
@@ -751,7 +750,10 @@ construct_lol_player_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_match_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it codes team identifiers (1 or 2) and generates the variables of interest.
+#' First, it keeps only players that played at least 50 matches in our data. This is because, due to our data construction, some players
+#' might appear only once or twice, and thus information on their behavior is "weak."
+#'
+#' Second, it codes team identifiers (1 or 2) and generates the variables of interest.
 #' \describe{
 #'  \item{\code{victory}}{Whether \code{team} won \code{match_id} (team-level).}
 #'  \item{\code{surrender}}{Whether \code{match_id} ended by a surrender (match-level).}
@@ -782,6 +784,15 @@ construct_lol_match_data <- function(dta) {
   Graves <- NULL
   match_id <- NULL
   day_no <- NULL
+
+  ## Keep players with at least 50 matches.
+  cat("Keep players with at least 50 matches. \n")
+  dta <- dta %>%
+    dplyr::group_by(player_puiid) %>%
+    dplyr::mutate(n_matches = n_distinct(match_id)) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(n_matches >= 50) %>%
+    dplyr::select(-n_matches)
 
   ## Generate variables.
   cat("Generating variables. \n")
