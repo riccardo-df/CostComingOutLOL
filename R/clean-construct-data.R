@@ -646,64 +646,64 @@ construct_lol_player_data <- function(dta) {
   cat("Generating variables. \n")
   cat("    Preferences for champions (picks and bans) and roles. \n")
   picks_bans <- dta %>%
-    group_by(player_puiid, day) %>%
-    mutate(graves = sum(champion == 'Graves'),
-           graves_ban = sum(ban == 'Graves'),
-           belveth = sum(champion == 'Belveth'),
-           belveth_ban = sum(ban == 'Belveth'),
-           top = sum(main_role == "TOP"),
-           jungle = sum(main_role == "JUNGLE"),
-           mid = sum(main_role == "MIDDLE"),
-           bottom = sum(main_role == "BOTTOM"),
-           support = sum(main_role == "UTILITY"),
-           lgb = sum(champion %in% c("Diana", "Leona", "Nami", "Neeko"))) %>% # https://gaymingmag.com/2023/05/every-lgbtq-character-in-league-of-legends/
-    select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb) %>%
-    distinct(player_puiid, day, .keep_all = TRUE) %>%
-    ungroup()
+    dplyr::group_by(player_puiid, day) %>%
+    dplyr::mutate(graves = sum(champion == 'Graves'),
+                  graves_ban = sum(ban == 'Graves'),
+                  belveth = sum(champion == 'Belveth'),
+                  belveth_ban = sum(ban == 'Belveth'),
+                  top = sum(main_role == "TOP"),
+                  jungle = sum(main_role == "JUNGLE"),
+                  mid = sum(main_role == "MIDDLE"),
+                  bottom = sum(main_role == "BOTTOM"),
+                  support = sum(main_role == "UTILITY"),
+                  lgb = sum(champion %in% c("Diana", "Leona", "Nami", "Neeko"))) %>% # https://gaymingmag.com/2023/05/every-lgbtq-character-in-league-of-legends/
+    dplyr::select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb) %>%
+    dplyr::distinct(player_puiid, day, .keep_all = TRUE) %>%
+    dplyr::ungroup()
 
   cat("    Number of matches and hours played. \n")
   n_matches <- dta %>%
-    group_by(player_puiid, day) %>%
-    summarise(n_matches = n_distinct(match_id),
-              n_hours = sum(duration) / 60,
-              .groups = "drop")
+    dplyr::group_by(player_puiid, day) %>%
+    dplyr::summarise(n_matches = n_distinct(match_id),
+                     n_hours = sum(duration) / 60,
+                     .groups = "drop")
 
   cat("    Total gold, kills, assists, and deaths. \n")
   numeric_covariates <- dta %>%
-    group_by(player_puiid, day) %>%
-    mutate(gold_sum = sum(gold),
-           kills_sum = sum(kills),
-           assists_sum = sum(assists),
-           deaths_sum = sum(deaths),
-           win_sum = sum(win)) %>%
-    select(player_puiid, day, gold_sum, kills_sum, assists_sum, deaths_sum, win_sum) %>%
-    distinct(player_puiid, day, .keep_all = TRUE) %>%
-    ungroup()
+    dplyr::group_by(player_puiid, day) %>%
+    dplyr::mutate(gold_sum = sum(gold),
+                  kills_sum = sum(kills),
+                  assists_sum = sum(assists),
+                  deaths_sum = sum(deaths),
+                  win_sum = sum(win)) %>%
+    dplyr::select(player_puiid, day, gold_sum, kills_sum, assists_sum, deaths_sum, win_sum) %>%
+    dplyr::distinct(player_puiid, day, .keep_all = TRUE) %>%
+    dplyr::ungroup()
 
   daily_panel <- picks_bans %>%
-    left_join(n_matches, by = c("player_puiid", "day")) %>%
-    left_join(numeric_covariates, by = c("player_puiid", "day")) %>%
-    select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
+    dplyr::left_join(n_matches, by = c("player_puiid", "day")) %>%
+    dplyr::left_join(numeric_covariates, by = c("player_puiid", "day")) %>%
+    dplyr::select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb, n_matches, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
 
   cat("    Variables in rates. \n")
   extended_daily_panel <- daily_panel %>%
-    mutate(graves_rate = graves / n_matches * 100,
-           graves_ban_rate = graves_ban / n_matches * 100,
-           belveth_rate = belveth / n_matches * 100,
-           belveth_ban_rate = belveth_ban / n_matches * 100,
-           win_rate = win_sum / n_matches * 100,
-           gold_avg = gold_sum / n_matches,
-           kills_avg = kills_sum / n_matches,
-           assists_avg = assists_sum / n_matches,
-           deaths_avg = deaths_sum / n_matches) %>%
-    select(day, player_puiid, n_matches, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg, top, jungle, mid, bottom, support, lgb)
+    dplyr::mutate(graves_rate = graves / n_matches * 100,
+                  graves_ban_rate = graves_ban / n_matches * 100,
+                  belveth_rate = belveth / n_matches * 100,
+                  belveth_ban_rate = belveth_ban / n_matches * 100,
+                  win_rate = win_sum / n_matches * 100,
+                  gold_avg = gold_sum / n_matches,
+                  kills_avg = kills_sum / n_matches,
+                  assists_avg = assists_sum / n_matches,
+                  deaths_avg = deaths_sum / n_matches) %>%
+    dplyr::select(day, player_puiid, n_matches, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg, top, jungle, mid, bottom, support, lgb)
 
   ## Final operations.
   panel <- extended_daily_panel
   panel$day_no <- as.numeric(panel$day)
 
   panel <- panel %>%
-    select(day, day_no, player_puiid, n_matches, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, top, jungle, mid, bottom, support, lgb, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, day_no, player_puiid, n_matches, graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate, top, jungle, mid, bottom, support, lgb, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
   colnames(panel)[3] <- c("id")
 
   ## Write csv.
@@ -756,15 +756,15 @@ construct_lol_match_data <- function(dta) {
   ## Generate variables.
   cat("Generating variables. \n")
   is_graves_picked <- dta %>%
-    rename(team = win) %>%
-    group_by(match_id, team) %>% # Grouping by "win" after grouping by "match_id" is equivalent to group by team.
-    summarise(day = first(day),
-              victory = first(team),
-              surrender = first(surrender),
-              early_surrender = first(early_surrender),
-              duration = first(duration),
-              Graves = any(champion == "Graves"),
-              .groups = "drop")
+    dplyr::rename(team = win) %>%
+    dplyr::group_by(match_id, team) %>% # Grouping by "win" after grouping by "match_id" is equivalent to group by team.
+    dplyr::summarise(day = first(day),
+                     victory = first(team),
+                     surrender = first(surrender),
+                     early_surrender = first(early_surrender),
+                     duration = first(duration),
+                     Graves = any(champion == "Graves"),
+                     .groups = "drop")
 
   ## Final operations.
   panel <- is_graves_picked
