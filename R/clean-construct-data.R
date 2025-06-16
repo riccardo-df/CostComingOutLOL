@@ -10,16 +10,18 @@
 #' First, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 #' and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 #'
-#' Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than one minute or more than two hours or
+#' Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted more than two hours or
 #' where the position of some player is not assigned).\cr
 #'
 #' Third, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
 #'
-#' Fourth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most. It then drops matches where champions were played in weird roles.\cr
+#' Fourth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most.\cr
+#'
+#' Fifth, it keeps only data for the period January-July 2022.
 #'
 #' The raw data are available from the authors on request.
 #'
-#' @import dplyr
+#' @import dplyr lubridate
 #'
 #' @importFrom data.table fwrite
 #'
@@ -53,7 +55,7 @@ clean_lol_data <- function(dta) {
     dplyr::distinct(match_id, player_puiid, .keep_all = TRUE) %>%
     dplyr::group_by(match_id) %>%
     dplyr::filter(n() == 10) %>%
-    dplyr::filter(1 <= duration & duration <= 120) %>%
+    dplyr::filter(duration <= 120) %>%
     dplyr::filter(position != "") %>%
     dplyr::ungroup()
 
@@ -236,7 +238,7 @@ clean_lol_data <- function(dta) {
   dta_noduplicate$day <- as.POSIXct(strftime(dta_noduplicate$day, format = "%Y-%m-%d"))
 
   ## To each champion, assign most-played positions.
-  cat("Identifying main and auxiliary positions and dropping 'out-of-role' matches. \n")
+  cat("Identifying main and auxiliary positions. \n")
   champs_positions1 <- apply(table(dta_noduplicate$champion, dta_noduplicate$position), MARGIN = 1, function(x) {
     if (which.max(x) == 1) {"BOTTOM"}
     else if (which.max(x) == 2) {"JUNGLE"}
@@ -256,12 +258,6 @@ clean_lol_data <- function(dta) {
   dta_noduplicate$main_role <- sapply(dta_noduplicate$champion, function(x) { champs_positions1[x] })
   dta_noduplicate$aux_role <- sapply(dta_noduplicate$champion, function(x) { champs_positions2[x] })
 
-  dta_noduplicate <- dta_noduplicate %>%
-    dplyr::group_by(match_id, champion) %>%
-    dplyr::mutate(in_position = position %in% c(main_role, aux_role)) %>%
-    dplyr::filter(in_position) %>%
-    dplyr::ungroup()
-
   ## Drop again matches with less than ten players (double-check).
   dta_noduplicate <- dta_noduplicate %>%
     dplyr::group_by(match_id) %>%
@@ -272,11 +268,12 @@ clean_lol_data <- function(dta) {
   dta_final <- dta_noduplicate %>%
     select(c("match_id", "player_name", "player_puiid", "player_level", "day",
              "champion", "position", "kills", "assists", "deaths", "gold", "duration", "early_surrender",
-             "surrender", "win", "ban", "region", "main_role", "aux_role", "rank", "division"))
+             "surrender", "win", "ban", "region", "main_role", "aux_role"))
 
-  ## Final checks.
-  if (length(unique(table(dta_final$position))) != 1) warning("The number of played positions is not equal! You may want to double-check.")
-  if (length(unique(table(dta_final$win))) != 1) warning("The shares of won and lost matches are unequal! You may want to double-check.")
+  ## Keep only January-July 2022.
+  dta_final <- dta_final %>%
+    dplyr::filter(lubridate::year(day) %in% c(2022)) %>%
+    dplyr::filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
 
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
@@ -293,9 +290,7 @@ clean_lol_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the years 2022 and 2023.\cr
-#'
-#' Second, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
+#' First, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
 #' \code{day} and \code{region}. These are replaced with zeroes.
 #' \describe{
 #'  \item{\code{pick_level}}{For each pair \code{region} and \code{day}, count how many times a particular \code{champion} is picked by players.}
@@ -350,12 +345,6 @@ construct_lol_champion_data <- function(dta) {
   main_role <- NULL
   aux_role <- NULL
   kills_avg <- NULL
-
-  ## Keep only 2022 and 2023 data.
-  cat("Keeping only 2022 and 2023 data. \n")
-
-  dta <- dta %>%
-    dplyr::filter(lubridate::year(day) %in% c(2022, 2023))
 
   ## Generate variables and merging.
   cat("Generating outcomes and covariates. \n")
@@ -594,7 +583,7 @@ construct_lol_champion_pooled_data <- function(dta) {
 #' @details
 #' \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only data for the years 2022 and 2023.\cr
+#' First, it keeps only data for the year 2022.\cr
 #'
 #' Second, it generates the variables of interest.
 #' \describe{
@@ -649,14 +638,14 @@ construct_lol_player_data <- function(dta) {
   deaths_avg <- NULL
   day_no <- NULL
 
-  ## Keep only 2022 and 2023 data.
-  cat("Keeping only 2022 and 2023 data. \n")
+  ## Keep only 2022 data.
+  cat("Keeping only 2022 data. \n")
     dta <- dta %>%
-      dplyr::filter(lubridate::year(day) %in% c(2022, 2023))
+      dplyr::filter(lubridate::year(day) %in% c(2022))
 
   ## Generate variables.
   cat("Generating variables. \n")
-  cat("    Preferences for Graves (picks and bans) and roles. \n")
+  cat("    Preferences for champions (picks and bans) and roles. \n")
   picks_bans <- dta %>%
     group_by(player_puiid, day) %>%
     mutate(graves = sum(champion == 'Graves'),
@@ -673,11 +662,12 @@ construct_lol_player_data <- function(dta) {
     distinct(player_puiid, day, .keep_all = TRUE) %>%
     ungroup()
 
-  cat("    Number of matches. \n")
+  cat("    Number of matches and hours played. \n")
   n_matches <- dta %>%
     group_by(player_puiid, day) %>%
-    summarise(n_matches = n_distinct(match_id)) %>%
-    ungroup()
+    summarise(n_matches = n_distinct(match_id),
+              n_hours = sum(duration) / 60,
+              .groups = "drop")
 
   cat("    Total gold, kills, assists, and deaths. \n")
   numeric_covariates <- dta %>%
@@ -720,4 +710,75 @@ construct_lol_player_data <- function(dta) {
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
   data.table::fwrite(panel, file = "lol_player_dta.csv", row.names = FALSE)
+}
+
+
+#' Construct LoL Match Data Set
+#'
+#' Constructs the LoL macth data set.
+#'
+#' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
+#'
+#' @details
+#' \code{\link{construct_lol_match_data}} performs the following operations on \code{dta}.\cr
+#'
+#' First, it keeps only data for the year 2022.\cr
+#'
+#' Second, it codes team identifiers (1 or 2) and generates the variables of interest.
+#' \describe{
+#'  \item{\code{victory}}{Whether \code{team} won \code{match_id} (team-level).}
+#'  \item{\code{surrender}}{Whether \code{match_id} ended by a surrender (match-level).}
+#'  \item{\code{early_surrender}}{Whether \code{match_id} ended by an early surrender (match-level).}
+#'  \item{\code{duration}}{Duration of \code{match_id} in minutes (match-level).}
+#'  \item{\code{Graves}}{Whether someone in \code{team} has picked \code{Graves} (team-level).}
+#'  \item{\code{day_no}}{Numeric version of the \code{day} variable, useful when the data set is loaded in other sessions to get the time right.}
+#' }
+#'
+#' @import dplyr lubridate
+#'
+#' @importFrom data.table fwrite
+#' @importFrom plm is.pbalanced
+#'
+#' @author Riccardo Di Francesco
+#'
+#' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_data}} \code{\link{construct_lol_champion_pooled_data}}
+#'
+#' @export
+construct_lol_match_data <- function(dta) {
+  ## Handle warnings.
+  player_puiid <- NULL
+  champion <- NULL
+  victory <- NULL
+  surrender <- NULL
+  early_surrender <- NULL
+  duration <- NULL
+  Graves <- NULL
+  match_id <- NULL
+  day_no <- NULL
+
+  ## Keep only 2022 data.
+  cat("Keeping only 2022 data. \n")
+  dta <- dta %>%
+    dplyr::filter(lubridate::year(day) %in% c(2022))
+
+  ## Generate variables.
+  cat("Generating variables. \n")
+  is_graves_picked <- dta %>%
+    rename(team = win) %>%
+    group_by(match_id, team) %>% # Grouping by "win" after grouping by "match_id" is equivalent to group by team.
+    summarise(day = first(day),
+              victory = first(team),
+              surrender = first(surrender),
+              early_surrender = first(early_surrender),
+              duration = first(duration),
+              Graves = any(champion == "Graves"),
+              .groups = "drop")
+
+  ## Final operations.
+  panel <- is_graves_picked
+  panel$day_no <- as.numeric(panel$day)
+
+  ## Write csv.
+  cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
+  data.table::fwrite(panel, file = "lol_match_dta.csv", row.names = FALSE)
 }

@@ -48,4 +48,5 @@ rmses <- produce_plot_placebo(pooled_results, "Graves", drop_overfit = drop_over
 ## Investigate pre-RMSE.
 rmses$pre %>%
   arrange(desc(rmse_pre)) %>%
-  filter(rmse_pre > drop_overfit)
+  filter(rmse_pre > drop_overfit) %>%
+  print(n = 100)

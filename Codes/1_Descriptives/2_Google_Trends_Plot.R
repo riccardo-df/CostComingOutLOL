@@ -50,7 +50,7 @@ plot_dta <- bind_rows(search_interest, search_interest_gay) %>%
          gay_query = factor(grepl("gay", keyword), levels = c(TRUE, FALSE), labels = c("[champion] gay", "LoL [champion]")))
 plot_dta$week <- as.POSIXct(plot_dta$week)
 
-## Plot and save.
+## Paper.
 plot_graves <- plot_dta %>%
   filter(champion == "Graves") %>%
   mutate(gay_query = factor(grepl("gay", keyword), levels = c(TRUE, FALSE), labels = c("Graves gay", "LoL Graves"))) %>%
@@ -79,5 +79,21 @@ plot_graves_twisted <- plot_dta %>%
   theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 15, face = "italic"),
         legend.position = c(0.12, 0.92), legend.title = element_blank())
 
+## Slides.
+plot_graves_slides <- plot_dta %>%
+  filter(champion == "Graves" & keyword == "gay") %>%
+  ggplot(aes(x = week, y = hits, color = champion)) +
+  geom_line(linewidth = 1.2) +
+  geom_vline(xintercept = as.POSIXct(treatment_week), linetype = 4) +
+  annotate(geom = "rect", xmin = as.POSIXct(wc_2022_begin), xmax = as.POSIXct(wc_2022_end), ymin = -Inf, ymax = Inf, fill = "black", alpha = 0.2) +
+  scale_x_datetime(date_breaks = "1 month", date_labels = "%Y-%m") +
+  scale_color_brewer(palette = "Set2") +
+  xlab("") + ylab("Search interest") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 15, face = "italic"),
+        legend.position = "none")
+
+## Export.
 ggsave(paste0(save_here, "/", "google_trends_time_grid_graves.pdf"), plot = plot_graves, width = 7, height = 7)
 ggsave(paste0(save_here, "/", "google_trends_time_grid_graves_twisted.pdf"), plot = plot_graves_twisted, width = 7, height = 7)
+ggsave(paste0(save_here, "/", "google_trends_time_graves_slides.pdf"), plot = plot_graves_slides, width = 12, height = 7)

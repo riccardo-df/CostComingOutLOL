@@ -15,17 +15,33 @@ pkgs <- c("CostComingOutLOL", "data.table")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Loading data.
-clean_dta <- fread("C:/Users/riccardo-df/Dropbox/University/Research/Data_Sets/LoL/Clean/lol_cleaned.csv")
+clean_dta <- fread("C:/Users/rdif/Dropbox/University/Research/Data_Sets/LoL/Clean/lol_cleaned.csv")
 
 ## Descriptives.
 cat("N. players is ", length(unique(clean_dta$player_puiid)), "\n", sep = "")
 cat("N. matches is ", length(unique(clean_dta$match_id)), "\n", sep = "")
 
 # Final data sets ---------------------------------------------------------
-## The output of these functions are bundled in the package, so you do not need to run this section.
+# ## Count how many daily hours each player plays. Because of matchmaking and character selection, this is massively underestimating time spent on LoL.
+# clean_dta <- clean_dta %>%
+#   group_by(day, player_puiid) %>%
+#   mutate(hours_played = sum(duration) / 60) %>%
+#   ungroup()
+#
+# ## Count how many daily matches each player plays.
+# clean_dta <- clean_dta %>%
+#   group_by(day, player_puiid) %>%
+#   mutate(matches_played = n_distinct(match_id)) %>%
+#   ungroup() %>%
+#   group_by(player_puiid) %>%
+#   mutate(avg_daily_matches = mean(matches_played)) %>%
+#   ungroup()
+
+## Construct estimation data sets. The output of these functions are bundled in the package, so you do not need to run this chunk.
 construct_lol_champion_data(clean_dta)
 construct_lol_champion_pooled_data(lol_champ_dta)
 construct_lol_player_data(clean_dta)
+construct_lol_match_data(clean_dta)
 
 # Descriptives ------------------------------------------------------------
 lol_champ_dta <- lol_champ_dta %>%
@@ -33,6 +49,8 @@ lol_champ_dta <- lol_champ_dta %>%
 lol_champ_pool_dta <- lol_champ_pool_dta %>%
   filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
 lol_player_dta <- lol_player_dta %>%
+  filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
+lol_match_dta <- lol_match_dta %>%
   filter(day < as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d"))
 
 cat("Champion data set:
@@ -48,4 +66,8 @@ Champion pooled data set:
 Player data set:
      N. days:      ", length(unique(lol_player_dta$day)), "
      N. players:   ", length(unique(lol_player_dta$id)), "
-     N. matches:   ", lol_player_dta %>% pull(n_matches) %>% sum() / 10, "\n", sep = "")
+     N. matches:   ", lol_player_dta %>% pull(n_matches) %>% sum() / 10, "
+
+Match data set:
+     N. days:      ", length(unique(lol_match_dta$day)), "
+     N. matches:   ", lol_match_dta %>% pull(match_id) %>% unique() %>% length(), "\n", sep = "")

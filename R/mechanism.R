@@ -376,7 +376,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
-#' Among these, only "prior_users" players are considerd, defined as those that used to play Graves at least 5% of their matches before his disclosure.
+#' Among these, only "prior_users" players are considered, defined as those that used to play Graves at least 5% of their matches before his disclosure.
 #'
 #' @import dplyr fixest did
 #' @importFrom lubridate month
@@ -811,7 +811,7 @@ plot_did <- function(did_results, save_here = getwd()) {
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #'
-#' @import dplyr ggplot2
+#' @import dplyr ggplot2 patchwotk
 #'
 #' @author Riccardo Di Francesco
 #'
@@ -876,11 +876,11 @@ belveth <- function(n_pre_matches,
                   substantial_reduction = overall_reduction > 75) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(id, overall_reduction, no_reduction, moderate_reduction, substantial_reduction)
+    dplyr::select(id, avg_graves_rate_pre, avg_graves_rate_post, overall_reduction, no_reduction, moderate_reduction, substantial_reduction)
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, belveth_released, disclosure, overall_reduction, no_reduction, moderate_reduction, substantial_reduction, graves_rate, belveth_rate)
+    dplyr::select(day, id, belveth_released, disclosure, avg_graves_rate_pre, avg_graves_rate_post, overall_reduction, no_reduction, moderate_reduction, substantial_reduction, graves_rate, belveth_rate)
 
   cat("N. observations is ", dim(lol_player_dta)[1], "
 N. players is ", length(unique(lol_player_dta$id)), " of which:
@@ -891,7 +891,7 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
   plot_overall_reduction <- treated_controls %>%
     ggplot2::ggplot(ggplot2::aes(x = overall_reduction)) +
     geom_histogram(fill = "dodgerblue", color = "black", alpha = 0.8) +
-    ggplot2::xlab("") + ggplot2::ylab("Reduction in average Graves' pick rate (percentage)") +
+    ggplot2::xlab("Percentage reduction in average Graves' pick rate") + ggplot2::ylab("") +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), legend.title = ggplot2::element_blank(), strip.text.x = ggplot2::element_text(size = 10, face = "italic"),
                    axis.text.x = ggplot2::element_text(angle = 0), legend.direction = "vertical", legend.justification = c("left", "top"))

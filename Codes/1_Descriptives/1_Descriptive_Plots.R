@@ -16,7 +16,7 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Plots -------------------------------------------------------------------
 ## Settings.
-champions <- c("Belveth")
+champions <- c("Graves")
 
 bandwidth_champions <- 5
 bandwidth_players <- 3
@@ -27,7 +27,7 @@ max_date <- as.POSIXct("2022-07-13")
 treatment_date1 <- NULL
 treatment_date2 <- NULL
 
-save_here_champions <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
+save_here_champions <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
 save_here_players <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
 
 ## Produce plots.
