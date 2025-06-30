@@ -26,15 +26,15 @@ save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Com
 
 # Players' skills ---------------------------------------------------------
 ## Compare prior and non-prior users.
-players_performance_plots_lol(n_pre_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date, save_here = save_here)
+players_performance_plots_lol(n_pre_matches, treatment_date = treatment_date, save_here = save_here)
 
 # Players' performance ----------------------------------------------------
 ## Assess impact of Pride Month on prior users' performance.
-did_results <- did_players_performance(n_pre_matches, treatment_date = treatment_date, min_date = min_date, max_date = max_date)
+did_results <- did_players_performance(n_pre_matches, treatment_date = treatment_date)
 
 plot_did(did_results, save_here)
 latex_did(did_results)
 
 # Belveth -----------------------------------------------------------------
 ## Check preferences for Belveth.
-belveth(n_pre_matches, min_date = min_date, max_date = max_date, save_here = save_here)
+belveth(n_pre_matches, save_here = save_here)

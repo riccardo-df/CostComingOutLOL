@@ -25,14 +25,11 @@ outcome_colname_regional <- "pick_rate"
 bandwidth_pool <- 3
 bandwidth_regional <- 3
 
-min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
-max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
-
 ## Set SC estimator.
 donor_pools <- c("all", "support_adc")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- TRUE
+inference <- FALSE
 n_boot <- 200
 backdate <- 10
 
@@ -52,8 +49,8 @@ for (estimator in estimators) {
     cat("Estimator: ", estimator, " donor pool: ", pool, "\n", sep = "")
     cat("\n")
 
-    pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
-    regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional, max_date = max_date)
+    pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool)
+    # regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional)
 
     counter <- counter + 1
   }
@@ -69,11 +66,11 @@ palette <- pal_jco()(length(unique_actives))
 names(palette) <- unique_actives
 
 ## Decide where to save the plots and call functions.
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
+save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
-for (i in seq_len(length(regional_result_list))) {
+for (i in seq_len(length(pooled_result_list))) {
   produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), palette, save_here)
-  produce_plots_regional(regional_result_list[[i]], ylims = c(0, 60), palette, save_here)
+  # produce_plots_regional(regional_result_list[[i]], ylims = c(0, 60), palette, save_here)
 }
 
 # LATEX -------------------------------------------------------------------

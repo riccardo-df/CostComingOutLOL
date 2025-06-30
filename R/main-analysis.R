@@ -12,8 +12,6 @@
 #' @param n_boot Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_pool_dta}} storing the time-varying covariates for which we want to adjust for.
-#' @param min_date Object of class \code{POSIXct}. When to start the series.
-#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #'
 #' @details
 #' For each champion in \code{champions}, \code{\link{run_main_pooled}} performs the following operations.
@@ -30,7 +28,7 @@
 #'                is carried out only if the number of non-zero contributions is less than 10 to avoid a large running time.}
 #' }
 #'
-#' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 #' An infinitesimal bandwidth amounts to no smoothing.\cr
@@ -76,7 +74,7 @@
 #'
 #' @export
 run_main_pooled <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
-                            inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-09-12")) {
+                            inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c()) {
   ## Handling inputs and checks.
   kills_pooled <- NULL
   deaths_pooled <- NULL
@@ -106,9 +104,6 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
   if (!is.logical(inference)) stop("Invalid 'inference'. This must be either 'TRUE' or 'FALSE.", call. = FALSE)
   if (n_boot <= 1 | n_boot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
-
-  lol_champ_pool_dta <- lol_champ_pool_dta %>%
-    dplyr::filter(min_date < day & day < max_date)
 
   if (outcome_colname != "kd_ratio") {
     lol_champ_pool_dta$selected_outcome <- lol_champ_pool_dta[[outcome_colname]]

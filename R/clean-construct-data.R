@@ -674,7 +674,7 @@ construct_lol_player_data <- function(dta) {
                   bottom = sum(main_role == "BOTTOM"),
                   support = sum(main_role == "UTILITY"),
                   lgb = sum(champion %in% c("Diana", "Leona", "Nami", "Neeko"))) %>% # https://gaymingmag.com/2023/05/every-lgbtq-character-in-league-of-legends/
-    dplyr::select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb) %>%
+    dplyr::select(player_puiid, player_name, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb) %>%
     dplyr::distinct(player_puiid, day, .keep_all = TRUE) %>%
     dplyr::ungroup()
 
@@ -700,7 +700,7 @@ construct_lol_player_data <- function(dta) {
   daily_panel <- picks_bans %>%
     dplyr::left_join(n_matches, by = c("player_puiid", "day")) %>%
     dplyr::left_join(numeric_covariates, by = c("player_puiid", "day")) %>%
-    dplyr::select(player_puiid, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb, n_matches, n_hours, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
+    dplyr::select(player_puiid, player_name, day, graves, graves_ban, belveth, belveth_ban, top, jungle, mid, bottom, support, lgb, n_matches, n_hours, win_sum, gold_sum, kills_sum, assists_sum, deaths_sum)
 
   cat("    Variables in rates. \n")
   extended_daily_panel <- daily_panel %>%
@@ -719,7 +719,7 @@ construct_lol_player_data <- function(dta) {
                   kills_avg = kills_sum / n_matches,
                   assists_avg = assists_sum / n_matches,
                   deaths_avg = deaths_sum / n_matches) %>%
-    dplyr::select(day, player_puiid, n_matches, n_hours,
+    dplyr::select(day, player_puiid, player_name, n_matches, n_hours,
                   graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate,
                   win_rate, gold_avg, kills_avg, assists_avg, deaths_avg,
                   top_rate, jungle_rate, mid_rate, bottom_rate, support_rate, lgb_rate)
@@ -729,11 +729,12 @@ construct_lol_player_data <- function(dta) {
   panel$day_no <- as.numeric(panel$day)
 
   panel <- panel %>%
-    dplyr::select(day, day_no, player_puiid, n_matches, n_hours,
+    dplyr::select(day, day_no, player_puiid, player_name, n_matches, n_hours,
                   graves_rate, graves_ban_rate, belveth_rate, belveth_ban_rate,
                   top_rate, jungle_rate, mid_rate, bottom_rate, support_rate, lgb_rate,
                   win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
   colnames(panel)[3] <- c("id")
+  colnames(panel)[4] <- c("nick")
 
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")

@@ -6,15 +6,13 @@
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
-#' @param min_date Object of class \code{POSIXct}. When to start the series.
-#' @param max_date Object of class \code{POSIXct}. When to end the series.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
 #' Produces nice plots.
 #'
 #' @details
-#' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #'
@@ -25,7 +23,7 @@
 #'
 #' @export
 players_performance_plots_lol <- function(n_pre_matches,
-                                 treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
+                                 treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
                                  save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   n_matches <- NULL
@@ -54,7 +52,6 @@ players_performance_plots_lol <- function(n_pre_matches,
   post_treatment <- NULL
 
   lol_player_dta <- lol_player_dta %>%
-    dplyr::filter(min_date < day & day < max_date) %>%
     dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0))
 
   keep_these_players <- lol_player_dta %>%
@@ -351,8 +348,6 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param filter Which players to retain for the analysis.
 #' @param treatment_date Object of class \code{POSIXct}. The date of the treatment.
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #'
 #' @return
 #' Returns a list with \code{treatment_date} and all the diff-in-diff results. The user can post-process the output using the \code{\link{plot_did}} function.
@@ -373,7 +368,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' also estimated and are useful to check the plausibility of the parallel trend assumption. We consider both the unconditional estimator and the doubly-robust estimator that conditions on pre-treatment covariates
 #' (average kills, assists, deaths, gold earned, and matches played each day).\cr
 #'
-#' \code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #' Among these, only "prior_users" players are considered, defined as those that used to play Graves at least 5% of their matches before his disclosure.
@@ -385,7 +380,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #'
 #' @export
 did_players_performance <- function(n_pre_matches,
-                                    treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01")) {
+                                    treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")) {
   ## 0.) Handling inputs and checks.
   n_matches <- NULL
   disclosure <- NULL
@@ -409,7 +404,6 @@ did_players_performance <- function(n_pre_matches,
   mean_deaths_pre <- NULL
 
   lol_player_dta <- lol_player_dta %>%
-    dplyr::filter(min_date < day & day < max_date) %>%
     dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0))
   lol_player_dta$day <- as.POSIXct(lol_player_dta$day, tryFormats = "%Y-%m-%d")
 
@@ -439,10 +433,6 @@ did_players_performance <- function(n_pre_matches,
                   no_reduction = overall_reduction == 0,
                   moderate_reduction = overall_reduction > 0 & overall_reduction <= 75,
                   substantial_reduction = overall_reduction > 75) %>%
-                  # no_reduction = as.numeric(avg_graves_rate_post >= avg_graves_rate_pre),
-                  # small_reduction = as.numeric(avg_graves_rate_post < avg_graves_rate_pre & avg_graves_rate_post >= 0.75 * avg_graves_rate_pre),
-                  # moderate_reduction = as.numeric(avg_graves_rate_post < 0.75 * avg_graves_rate_pre & avg_graves_rate_post >= 0.5 * avg_graves_rate_pre),
-                  # substantial_reduction = as.numeric(avg_graves_rate_post < 0.5 * avg_graves_rate_pre)
     dplyr::ungroup() %>%
     dplyr::distinct(id, .keep_all = TRUE) %>%
     dplyr::select(id, avg_graves_rate_pre, avg_graves_rate_post, overall_reduction, no_reduction, moderate_reduction, substantial_reduction)
@@ -470,34 +460,21 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
     dplyr::mutate(day_no = as.numeric(day),
                   id_no = as.numeric(factor(id)),
                   no_reduction_no = ifelse(no_reduction == 1, as.numeric(treatment_date), 0),
-                  # small_reduction_no = ifelse(small_reduction == 1, as.numeric(treatment_date), 0),
                   moderate_reduction_no = ifelse(moderate_reduction == 1, as.numeric(treatment_date), 0),
                   substantial_reduction_no = ifelse(substantial_reduction == 1, as.numeric(treatment_date), 0))
 
   ## 3.) Doubly-robust DiD. Subset to avoid including "treated with less intensity" in the control group.
-  # Small reduction.
-  # estimation_dta_small_reduction <- estimation_dta %>%
-  #   dplyr::filter(no_reduction == 1 | small_reduction == 1)
-  #
-  # dr_results_small_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "small_reduction_no",
-  #                                           xformla = ~ 1,
-  #                                           data = estimation_dta_small_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
-  #
-  # dr_results_small_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "small_reduction_no",
-  #                                                      xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-  #                                                      data = estimation_dta_small_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
-
   # Moderate reduction.
   estimation_dta_moderate_reduction <- estimation_dta %>%
     dplyr::filter(no_reduction == 1 | moderate_reduction == 1)
 
   dr_results_moderate_reduction <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "moderate_reduction_no",
-                                                  xformla = ~ 1,
-                                                  data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
+                                               xformla = ~ 1,
+                                               data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
 
   dr_results_moderate_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "moderate_reduction_no",
-                                                             xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-                                                             data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
+                                                          xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
+                                                          data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
 
   # Substantial reduction.
   estimation_dta_substantial_reduction <- estimation_dta %>%
@@ -514,8 +491,6 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
 
   ## 5.) Output.
   return(list("treatment_date" = treatment_date,
-              # "dr_small_reduction" = dr_results_small_reduction,
-              # "dr_small_reduction_covariates" = dr_results_small_reduction_covariates,
               "dr_moderate_reduction" = dr_results_moderate_reduction,
               "dr_moderate_reduction_covariates" = dr_results_moderate_reduction_covariates,
               "dr_substantial_reduction" = dr_results_substantial_reduction,
@@ -544,37 +519,27 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
 latex_did <- function(did_results, seed = 1986) {
   ## Aggregate time ATTs.
   set.seed(seed)
-#
-#   dr_small_reduction_agg <- did::aggte(did_results$dr_small_reduction, type = "simple")
-#   dr_small_reduction_covariates_agg <- did::aggte(did_results$dr_small_reduction_covariates, type = "simple")
+
   dr_moderate_reduction_agg <- did::aggte(did_results$dr_moderate_reduction, type = "simple")
   dr_moderate_reduction_covariates_agg <- did::aggte(did_results$dr_moderate_reduction_covariates, type = "simple")
   dr_substantial_reduction_agg <- did::aggte(did_results$dr_substantial_reduction, type = "simple")
   dr_substantial_reduction_covariates_agg <- did::aggte(did_results$dr_substantial_reduction_covariates, type = "simple")
 
-  # dr_small_reduction_point <- dr_small_reduction_agg$overall.att
-  # dr_small_reduction_covariates_point <- dr_small_reduction_covariates_agg$overall.att
   dr_moderate_reduction_point <- dr_moderate_reduction_agg$overall.att
   dr_moderate_reduction_covariates_point <- dr_moderate_reduction_covariates_agg$overall.att
   dr_substantial_reduction_point <- dr_substantial_reduction_agg$overall.att
   dr_substantial_reduction_covariates_point <- dr_substantial_reduction_covariates_agg$overall.att
 
-  # dr_small_reduction_se <- dr_small_reduction_agg$overall.se
-  # dr_small_reduction_covariates_se <- dr_small_reduction_covariates_agg$overall.se
   dr_moderate_reduction_se <- dr_moderate_reduction_agg$overall.se
   dr_moderate_reduction_covariates_se <- dr_moderate_reduction_covariates_agg$overall.se
   dr_substantial_reduction_se <- dr_substantial_reduction_agg$overall.se
   dr_substantial_reduction_covariates_se <- dr_substantial_reduction_covariates_agg$overall.se
 
-  # dr_small_reduction_cil <- dr_small_reduction_point - 1.96 * dr_small_reduction_se
-  # dr_small_reduction_covariates_cil <- dr_small_reduction_covariates_point - 1.96 * dr_small_reduction_covariates_se
   dr_moderate_reduction_cil <- dr_moderate_reduction_point - 1.96 * dr_moderate_reduction_se
   dr_moderate_reduction_covariates_cil <- dr_moderate_reduction_covariates_point - 1.96 * dr_moderate_reduction_covariates_se
   dr_substantial_reduction_cil <- dr_substantial_reduction_point - 1.96 * dr_substantial_reduction_se
   dr_substantial_reduction_covariates_cil <- dr_substantial_reduction_covariates_point - 1.96 * dr_substantial_reduction_covariates_se
 
-  # dr_small_reduction_ciu <- dr_small_reduction_point + 1.96 * dr_small_reduction_se
-  # dr_small_reduction_covariates_ciu <- dr_small_reduction_covariates_point + 1.96 * dr_small_reduction_covariates_se
   dr_moderate_reduction_ciu <- dr_moderate_reduction_point + 1.96 * dr_moderate_reduction_se
   dr_moderate_reduction_covariates_ciu <- dr_moderate_reduction_covariates_point + 1.96 * dr_moderate_reduction_covariates_se
   dr_substantial_reduction_ciu <- dr_substantial_reduction_point + 1.96 * dr_substantial_reduction_se
@@ -585,22 +550,13 @@ latex_did <- function(did_results, seed = 1986) {
   cils <- format(round(c(dr_moderate_reduction_cil, dr_moderate_reduction_covariates_cil, dr_substantial_reduction_cil, dr_substantial_reduction_covariates_cil), 3), nsmall = 3)
   cius <- format(round(c(dr_moderate_reduction_ciu, dr_moderate_reduction_covariates_ciu, dr_substantial_reduction_ciu, dr_substantial_reduction_covariates_ciu), 3), nsmall = 3)
 
-  # n_players_small <- length(unique(did_results$dr_small_reduction$DIDparams$data$id_no))
   n_players_moderate <- length(unique(did_results$dr_moderate_reduction$DIDparams$data$id_no))
   n_players_substantial <- length(unique(did_results$dr_substantial_reduction$DIDparams$data$id_no))
 
-  # n_observations_small <- dim(did_results$dr_small_reduction$DIDparams$data)[1]
   n_observations_moderate <- dim(did_results$dr_moderate_reduction$DIDparams$data)[1]
   n_observations_substantial <- dim(did_results$dr_substantial_reduction$DIDparams$data)[1]
 
   treatment_date <- did_results$treatment_date
-
-  # n_treated_small_reduction <- did_results$dr_small_reduction$DIDparams$data %>%
-  #   dplyr::filter(day_no > as.numeric(treatment_date)) %>%
-  #   dplyr::distinct(id_no, .keep_all = TRUE) %>%
-  #   dplyr::mutate(n_treated = sum(small_reduction_no != 0)) %>%
-  #   dplyr::pull(n_treated) %>%
-  #   unique()
 
   n_treated_moderate_reduction <- did_results$dr_moderate_reduction$DIDparams$data %>%
     dplyr::filter(day_no > as.numeric(treatment_date)) %>%
@@ -650,39 +606,6 @@ latex_did <- function(did_results, seed = 1986) {
       \\label{table_did_performance_measures}
     \\end{table}
 \\endgroup \n", sep = "")
-#   cat("\\begingroup
-#   \\setlength{\\tabcolsep}{8pt}
-#   \\renewcommand{\\arraystretch}{1.1}
-#   \\begin{table}[H]
-#     \\centering
-#     \\begin{adjustbox}{width = 1\\textwidth}
-#     \\begin{tabular}{@{\\extracolsep{5pt}}l c c c c c c}
-#       \\\\[-1.8ex]\\hline
-#       \\hline \\\\[-1.8ex]
-#       & \\multicolumn{2}{c}{\\textit{Small Reduction}} & \\multicolumn{2}{c}{\\textit{Moderate Reduction}} & \\multicolumn{2}{c}{\\textit{Substantial Reduction}} \\\\ \\cmidrule{2-3} \\cmidrule{4-5} \\cmidrule{6-7}
-#       & (1) & (2) & (3) & (4) & (5) & (6) \\\\
-#
-#       \\midrule
-#
-#       \\multirow{2}{*}{$\\overline{ATT \\left( t \\right)}$} & ", stringr::str_sub(paste(paste0(atts, " &"), collapse = " "), end = -3), " \\\\
-#       &", stringr::str_sub(paste(paste0("[", cils, ", ", cius, "] &"), collapse = " "), end = -3), " \\\\
-#
-#       \\midrule
-#
-#       Conditional PT & & \\checkmark & & \\checkmark & & \\checkmark \\\\
-#       Players & ", stringr::str_sub(paste(paste0(rep(n_players_small, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_players_moderate, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_players_substantial, 2), " &"), collapse = " "), end = -3), " \\\\
-#       Treated & ", paste0(rep(n_treated_small_reduction, 2), " & "), paste0(rep(n_treated_moderate_reduction, 2), " & "), stringr::str_sub(paste(paste0(rep(n_treated_substantial_reduction, 2), " &"), collapse = " "), end = -3), " \\\\
-#       Observations & ", stringr::str_sub(paste(paste0(rep(n_observations_small, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_observations_moderate, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_observations_substantial, 2), " &"), collapse = " "), end = -3), " \\\\
-#
-#       \\\\[-1.8ex]\\hline
-#       \\hline \\\\[-1.8ex]
-#
-#       \\end{tabular}
-#       \\end{adjustbox}
-#       \\caption{Point estimates and $95\\%$ confidence intervals for $\\overline{ATT \\left( t \\right)}$. Standard errors are clustered at the player level and computed using the multiplier bootstrap. Columns marked with checkmarks under 'Conditional PT' display the results obtained with the doubly-robust approach. The remaining columns display the results obtained with the unconditional estimator.}
-#       \\label{table_did_performance_measures}
-#     \\end{table}
-# \\endgroup \n", sep = "")
 }
 
 
@@ -713,16 +636,6 @@ plot_did <- function(did_results, save_here = getwd()) {
   times <- unique(did_results$dr_moderate_reduction$t)
 
   results_moderate_reduction <- results_substantial_reduction <- data.frame(year = as.POSIXct(times, origin = "1970-01-01"))
-
-  # results_small_reduction$att <- did_results$dr_small_reduction$att
-  # results_small_reduction$att.se <- did_results$dr_small_reduction$se
-  # results_small_reduction$post <- as.factor(1 * (results_small_reduction$year >= treatment_date))
-  # results_small_reduction$c <- did_results$dr_small_reduction$c
-  # alp_small_reduction <- did_results$dr_small_reduction$alp
-  # c.point_small_reduction <- stats::qnorm(1 - alp_small_reduction / 2)
-  # results_small_reduction$treatment_type <- "Small reduction"
-  # results_small_reduction$parallel_type <- "Unconditional"
-  # results_small_reduction$plot_post <- as.factor(1 * (results_small_reduction$year >= (as.Date(treatment_date) - 10)))
 
   results_moderate_reduction$att <- did_results$dr_moderate_reduction$att
   results_moderate_reduction$att.se <- did_results$dr_moderate_reduction$se
@@ -791,8 +704,6 @@ plot_did <- function(did_results, save_here = getwd()) {
 #' Check whether Graves' prior and non-prior users switched to Belveth.
 #'
 #' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
-#' @param min_date Object of class \code{POSIXct}. Where to start the series.
-#' @param max_date Object of class \code{POSIXct}. Where to end the series.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
@@ -807,8 +718,6 @@ plot_did <- function(did_results, save_here = getwd()) {
 #'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by any amount within (75%, 100%].}
 #' }
 #'
-#' \code{min_date} and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
-#'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #'
 #' @import dplyr ggplot2 patchwotk
@@ -817,7 +726,6 @@ plot_did <- function(did_results, save_here = getwd()) {
 #'
 #' @export
 belveth <- function(n_pre_matches,
-                    min_date = as.POSIXct("2022-01-01"), max_date = as.POSIXct("2023-08-01"),
                     save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   n_matches <- NULL
@@ -846,7 +754,6 @@ belveth <- function(n_pre_matches,
   coming_out_date <- as.POSIXct("2022-06-01")
 
   lol_player_dta <- lol_player_dta %>%
-    dplyr::filter(min_date < day & day < max_date) %>%
     dplyr::mutate(belveth_released = as.numeric(day >= belveth_date),
                   disclosure = as.numeric(day > coming_out_date))
 
