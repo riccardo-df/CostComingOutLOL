@@ -173,32 +173,3 @@ latex <- function() {
 }
 
 latex()
-
-# Pick rate distribution across characters --------------------------------
-## Compute average pre-treatment pick rate for all characters.
-averages_pick <- lol_champ_pool_dta %>%
-  filter(day <= max_date) %>%
-  mutate(treatment = factor(day < treatment_date, levels = c(TRUE, FALSE), labels = c("Pre-treatment", "Post-treatment"))) %>%
-  group_by(champion, treatment) %>%
-  mutate(avg_pick_rate = mean(pick_rate_pooled)) %>%
-  ungroup() %>%
-  distinct(champion, treatment, .keep_all = TRUE) %>%
-  select(champion, avg_pick_rate, treatment)
-
-## Plot.
-annotations <- data.frame(treatment = c("Pre-treatment", "Post-treatment"),
-                          avg_pick_rate = averages_pick$avg_pick_rate[which(averages_pick$champion == "Graves")],
-                          label = "Graves")
-
-plot_density <- averages_pick %>%
-  ggplot(aes(x = avg_pick_rate)) +
-  geom_density(fill = "dodgerblue", color = "black", alpha = 0.8) +
-  facet_grid(rows = vars(factor(treatment, levels = c("Pre-treatment", "Post-treatment")))) +
-  geom_vline(data = filter(averages_pick, treatment == "Pre-treatment" & champion == "Graves"), aes(xintercept = avg_pick_rate), color = "red") +
-  geom_vline(data = filter(averages_pick, treatment == "Post-treatment" & champion == "Graves"), aes(xintercept = avg_pick_rate), color = "red") +
-  geom_text(data = annotations, aes(x = avg_pick_rate + 2, y = 0.07, label = label)) +
-  xlab("Average pick rate") + ylab("") +
-  theme_bw() +
-  theme()
-ggsave(paste0(save_here, "/", "plot_pick_rate_density.pdf"), plot_density, width = 7, height = 7)
-
