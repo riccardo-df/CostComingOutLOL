@@ -15,17 +15,24 @@ Constructs the LoL player data set.
 \details{
 \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 
-First, it keeps only data for the years 2022 and 2023.\cr
+First, it keeps only players that played at least 50 matches in our data. This is because, due to our data construction, some players
+might appear only once or twice, and thus information on their behavior is "weak."
 
 Second, it generates the variables of interest.
 \describe{
- \item{\code{Graves}}{How often the player picked Graves in that \code{day}.}
- \item{\code{Graves_ban}}{How often the player banned Graves in that \code{day}.}
- \item{\code{win_sum}}{How many matches the player won in that \code{day}.}
  \item{\code{n_matches}}{How many matches the player has played in that \code{day}.}
- \item{\code{Graves_rate}}{Equals \code{Graves} divided by \code{n_matches}.}
- \item{\code{Graves_ban_rate}}{Equals \code{Graves_ban} divided by \code{n_matches}.}
- \item{\code{win_rate}}{Equals \code{win_sum} divided by \code{n_matches}.}
+ \item{\code{n_hours}}{How many hours the player has played in that \code{day}.}
+ \item{\code{graves_rate}}{Daily percentage of matches where the player picked \code{Graves} out of their \code{n_matches}.}
+ \item{\code{graves_ban_rate}}{Daily percentage of matches where the player banned \code{Graves} out of their \code{n_matches}.}
+ \item{\code{belveth_rate}}{Daily percentage of matches where the player picked \code{Belveth} out of their \code{n_matches}.}
+ \item{\code{belveth_ban_rate}}{Daily percentage of matches where the player banned \code{Belveth} out of their \code{n_matches}.}
+ \item{\code{top_rate}}{Daily percentage of matches where the player picked a top champion out of their \code{n_matches}.}
+ \item{\code{jungle_rate}}{Daily percentage of matches where the player picked a jungle champion out of their \code{n_matches}.}
+ \item{\code{mid_rate}}{Daily percentage of matches where the player picked a mid champion out of their \code{n_matches}.}
+ \item{\code{bottom_rate}}{Daily percentage of matches where the player picked a bottom champion out of their \code{n_matches}.}
+ \item{\code{support_rate}}{Daily percentage of matches where the player picked a support champion out of their \code{n_matches}.}
+ \item{\code{lgb_rate}}{Daily percentage of matches where the player picked an LGB champion ("Diana", "Leona", "Nami", "Neeko") out of their \code{n_matches}.}
+ \item{\code{win_rate}}{Daily percentage of matches won by the player out of their \code{n_matches}.}
  \item{\code{gold_avg}}{Average gold earned by the player in that \code{day}.}
  \item{\code{kills_avg}}{Average number of kills achieved by the player in that \code{day}.}
  \item{\code{assists_avg}}{Average number of assists achieved by the player in that \code{day}.}

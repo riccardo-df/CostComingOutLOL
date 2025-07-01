@@ -16,7 +16,7 @@ produce_plots_pooled(
 
 \item{ylims}{Vector storing lower and upper limit for the y-axis.}
 
-\item{palette}{String vector with hexadecimal codes. It controls the colors for the weight plot.}
+\item{palette}{String vector with hexadecimal codes. It controls the colors for the weight plot. If \code{NULL}, the weight plot is not produced.}
 
 \item{save_here}{String denoting the path where to save the figures.}
 }

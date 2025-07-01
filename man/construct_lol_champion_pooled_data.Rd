@@ -4,10 +4,12 @@
 \alias{construct_lol_champion_pooled_data}
 \title{Construct LoL Champion Pooled Data Set}
 \usage{
-construct_lol_champion_pooled_data(dta)
+construct_lol_champion_pooled_data(dta, filename = "lol_champ_pool_dta.csv")
 }
 \arguments{
 \item{dta}{Data set as constructed by the \code{\link{construct_lol_champion_data}} function (you can find this data set already bundled in the package).}
+
+\item{filename}{String to control the name of the output.}
 }
 \description{
 Constructs the LoL champion pooled data set by aggregating observations over regions.

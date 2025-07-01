@@ -9,6 +9,7 @@
 #' @param ylims_levels Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).
 #' @param ylims_rates Vector storing lower and upper limit for the y-axis (valid for the variables measured in rates).
 #' @param save_here String denoting the path where to save the figures.
+#' @param dataset String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"below"}, we use \code{lol_champ_pool_dta_belowM}. If \code{"above"}, we use \code{lol_champ_pool_dta_aboveM}.
 #'
 #' @return
 #' Produces nice plots.
@@ -28,13 +29,12 @@
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{champions_performance_plots_lol}} \code{\link{players_descriptive_plots_lol}}
-#'
 #' @export
 champions_descriptive_plots_lol <- function(champions,
                                   treatment_date1 = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
                                   treatment_date2 = as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d"),
-                                  bandwidth = 0.01, ylims_rates = c(0, 100), save_here = getwd()) {
+                                  bandwidth = 0.01, ylims_rates = c(0, 100), save_here = getwd(),
+                                  dataset = "main") {
   ## 0.) Handling inputs and checks.
   champion <- NULL
   pick_level_sum <- NULL
@@ -66,6 +66,15 @@ champions_descriptive_plots_lol <- function(champions,
 
   if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
+  if (!(dataset %in% c("main", "below", "above"))) stop("Invalid 'dataset'. This must be one of 'main', 'below', 'above'.", call. = FALSE)
+
+  if (dataset == "main") {
+    lol_champ_pool_dta <- lol_champ_pool_dta
+  } else if (dataset == "below") {
+    lol_champ_pool_dta <- lol_champ_pool_dta_belowM
+  } else if (dataset == "above") {
+    lol_champ_pool_dta <- lol_champ_pool_dta_aboveM
+  }
 
   pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
   pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
@@ -203,93 +212,10 @@ champions_descriptive_plots_lol <- function(champions,
 }
 
 
-#' LoL Champions' Performance Plots
-#'
-#' Produces plots for kill-to-death ratio, number of assists, number of kills, and win rates of the champions of interest.
-#'
-#' @param champions Character vector with the champions of interest.
-#' @param bandwidth Parameter controlling the amount of smoothing.
-#' @param save_here String denoting the path where to save the figures.
-#'
-#' @return
-#' Produces a nice plot.
-#'
-#' @details
-#' \code{treatment_date1} and \code{treatment_date2} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
-#'
-#' The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
-#' An infinitesimal bandwidth amounts to no smoothing.\cr
-#'
-#' @import dplyr ggplot2 grDevices Cairo reshape2
-#' @importFrom stats ksmooth
-#' @importFrom stats time
-#'
-#' @author Riccardo Di Francesco
-#'
-#' @seealso \code{\link{champions_descriptive_plots_lol}} \code{\link{players_descriptive_plots_lol}}
-#'
-#' @export
-champions_performance_plots_lol <- function(champions,
-                                            bandwidth = 0.01, save_here = getwd()) {
-  ## 0.) Handling inputs and checks.
-  lol_champ_dta <- lol_champ_dta
-  champion <- NULL
-  kills_pooled <- NULL
-  deaths_pooled <- NULL
-  . <- NULL
-  kd_ratio <- NULL
-  win_rate_pooled <- NULL
-  value <- NULL
-  variable <- NULL
-
-  if (sum(!(champions %in% unique(lol_champ_dta$champion))) > 1 | sum(!(champions %in% unique(lol_champ_pool_dta$champion)))) stop("Invalid 'champions'. One or more champions are not in the data sets.", call. = FALSE)
-
-  pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-  pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
-
-  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
-
-  ## 1.) Plots.
-  for (i in seq_len((length(champions)))) {
-    my_champion <- champions[i]
-
-    plot_dta <- lol_champ_pool_dta %>%
-      dplyr::filter(champion == my_champion) %>%
-      dplyr::mutate(kd_ratio = kills_pooled / deaths_pooled) %>%
-      replace(is.na(.), 0) %>%
-      dplyr::select(day, kd_ratio, win_rate_pooled)
-    colnames(plot_dta) <- c("day", "Kills/Deaths", "Win Rate")
-
-    to_smooth_pool <- c("Kills/Deaths", "Win Rate")
-
-    plot_dta <- plot_dta %>%
-      dplyr::mutate(dplyr::across(dplyr::all_of(to_smooth_pool), function(x) { stats::ksmooth(stats::time(x), x, "normal", bandwidth = bandwidth)$y }))
-
-    plot <- plot_dta %>%
-      reshape2::melt(id.vars = "day", measure.vars = c("Kills/Deaths", "Win Rate")) %>%
-      ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = value)) +
-      ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-      ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-      ggplot2::facet_grid(rows = vars(variable), scales = "free") +
-      ggplot2::xlab("") + ggplot2::ylab("") + ggplot2::ggtitle(my_champion) +
-      ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-    ggsave(paste0(save_here, "/", tolower(my_champion), "_performance_pooled.pdf"), plot = plot, width = 7, height = 7)
-  }
-
-  ## 2.) Talk to the user.
-  cat("\n")
-  cat("Figures are saved at ", save_here, "\n", sep = "")
-}
-
-
 #' LoL Players' Behavior Plots
 #'
-#' Produces plots for the number of daily players and matches.
+#' Produces plots for the number of matches and hours played.
 #'
-#' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
@@ -298,166 +224,54 @@ champions_performance_plots_lol <- function(champions,
 #' @details
 #' \code{treatment_date1} and must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
-#' An infinitesimal bandwidth amounts to no smoothing.\cr
-#'
-#' @import dplyr ggplot2 grDevices Cairo reshape2
-#' @importFrom stats ksmooth
-#' @importFrom stats time
+#' @import dplyr ggplot2 grDevices Cairo reshape2 tidyr
 #'
 #' @author Riccardo Di Francesco
 #'
-#' @seealso \code{\link{champions_descriptive_plots_lol}} \code{\link{champions_performance_plots_lol}}
-#'
 #' @export
-players_descriptive_plots_lol <- function(bandwidth = 0.01, save_here = getwd()) {
+players_descriptive_plots_lol <- function(save_here = getwd()) {
   ## 0.) Handling inputs and checks.
-  lol_champ_dta <- lol_champ_dta
-  n_matches <- NULL
-  total_hours <- NULL
-  total_players <- NULL
+  lol_player_dta <- lol_player_dta
+  tot_hours <- NULL
 
-  pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-  pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
+  ## 1.) Compute total matches and hours played by each player.
+  lol_player_dta <- lol_player_dta %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(tot_matches = sum(n_matches),
+                  tot_hours = sum(n_hours)) %>%
+    dplyr::ungroup()
 
-  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
+  ## 2.) Arrange plotting data.
+  totals_dta <- lol_player_dta %>%
+    dplyr::distinct(id, tot_matches, tot_hours) %>%
+    tidyr::pivot_longer(cols = c(tot_matches, tot_hours), names_to = "variable", values_to = "value") %>%
+    dplyr::mutate(level = "Player",
+                  variable = dplyr::recode(variable,
+                                           tot_matches = "Total matches",
+                                           tot_hours = "Total hours"))
 
-  ## 1.) Plot.
-  trans_coef <- 5
-  hours_color <- "tomato"
-  players_color <- "#00BFC4"
+  daily_dta <- lol_player_dta %>%
+    dplyr::select(id, n_matches, n_hours) %>%
+    tidyr::pivot_longer(cols = c(n_matches, n_hours), names_to = "variable", values_to = "value") %>%
+    dplyr::mutate(level = "Daily",
+                  variable = dplyr::recode(variable,
+                                           n_matches = "Daily matches",
+                                           n_hours = "Daily hours"))
 
-  plot <- lol_player_dta %>%
-    dplyr::group_by(day) %>%
-    dplyr::summarise(total_hours = sum(n_hours) / 10,
-                     total_players = n_distinct(id),
-                     .groups = "drop") %>%
-    dplyr::mutate(smooth_hours = stats::ksmooth(stats::time(total_hours), total_hours, "normal", bandwidth = bandwidth)$y,
-                  smooth_players = stats::ksmooth(stats::time(total_players), total_players, "normal", bandwidth = bandwidth)$y) %>%
-    ggplot2::ggplot(ggplot2::aes(x = day)) +
-    ggplot2::geom_line(ggplot2::aes(y = smooth_hours, color = "Hours"), linewidth = 0.8) +
-    ggplot2::geom_line(aes(y = smooth_players / trans_coef, color = "Players"), linewidth = 0.8) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::scale_y_continuous(name = "N. daily hours", sec.axis = sec_axis(~ . * trans_coef, name = "N. daily players")) +
-    ggplot2::scale_color_manual(name = "Colors", values = c("Hours" = hours_color, "Players" = players_color)) +
-    ggplot2::xlab("") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-                   legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-  ggplot2::ggsave(paste0(save_here, "/", "n_matches_players.pdf"), plot, width = 7, height = 7)
+  hist_dta <- bind_rows(totals_dta, daily_dta)
 
-  ## 2.) Talk to the user.
-  cat("\n")
-  cat("Figures are saved at ", save_here, "\n", sep = "")
-}
+  ## 3.) Plot.
+  plot_player_activity <- hist_dta %>%
+    ggplot2::ggplot(ggplot2::aes(x = value)) +
+    ggplot2::geom_histogram(bins = 100, fill = "#4E79A7", color = "black", alpha = 0.8) +
+    ggplot2::facet_wrap(~ variable, scales = "free", ncol = 2) +
+    ggplot2::theme_bw(base_size = 13) +
+    ggplot2::labs(title = "", x = NULL, y = "Count") +
+    ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
+                   panel.grid.minor = ggplot2::element_blank())
+  ggplot2::ggsave(paste0(save_here, "/", "plot_player_activity.pdf"), plot_player_activity, width = 10, height = 7)
 
-
-#' LoL Matches Plots
-#'
-#' Produces plots for the number of daily matches, average match duration, and Graves pick rate.
-#'
-#' @param bandwidth Parameter controlling the amount of smoothing.
-#' @param save_here String denoting the path where to save the figures.
-#' @param graves_only If \code{TRUE}, only matches where Graves appeared are used to plot.
-#'
-#' @return
-#' Produces a plot showing daily matches, average duration, and Graves pick rate over time.
-#'
-#' @details
-#' \code{treatment_date1} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
-#'
-#' The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger the parameter, the smoother the series.
-#' An infinitesimal bandwidth amounts to no smoothing.\cr
-#'
-#' @import dplyr ggplot2 grDevices Cairo reshape2
-#' @importFrom stats ksmooth
-#'
-#' @author Riccardo Di Francesco
-#'
-#' @seealso \code{\link{players_descriptive_plots_lol}} \code{\link{champions_descriptive_plots_lol}}
-#'
-#' @export
-matches_descriptive_plots_lol <- function(bandwidth = 0.01, save_here = getwd(), graves_only = FALSE) {
-  ## 0.) Handling inputs and checks.
-  pride_month_2022_begin <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-  pride_month_2022_end <- as.POSIXct("2022-06-30", tryFormats = "%Y-%m-%d")
-
-  rainbow <- grDevices::adjustcolor(matrix(grDevices::hcl(seq(0, 360, length.out = 50 * 50), 80, 70), nrow = 50), alpha.f = 0.4)
-
-  ## 1.) Daily aggregation.
-  if (graves_only) { # If required, condition on Graves being in the match.
-    plot_dta <- lol_match_dta %>%
-      dplyr::group_by(match_id) %>%
-      dplyr::filter(graves_match)
-  } else {
-    plot_dta <- lol_match_dta
-  }
-
-  plot_dta <- plot_dta %>%
-    dplyr::distinct(match_id, .keep_all = TRUE) %>%
-    dplyr::group_by(day) %>%
-    dplyr::summarise(n_matches = n_distinct(match_id),
-                     avg_duration = mean(duration),
-                     surrender_prob = mean(surrender),
-                     early_surrender_prob = mean(early_surrender),
-                     graves_prob = mean(graves_match),
-                     .groups = "drop")
-
-   plot_dta <- plot_dta %>%
-     dplyr::mutate(smooth_n_matches = stats::ksmooth(stats::time(n_matches), n_matches, kernel = "normal", bandwidth = bandwidth)$y,
-                   smooth_duration = stats::ksmooth(stats::time(avg_duration), avg_duration, kernel = "normal", bandwidth = bandwidth)$y,
-                   smooth_surrender = stats::ksmooth(stats::time(surrender_prob), surrender_prob, kernel = "normal", bandwidth = bandwidth)$y,
-                   smooth_early = stats::ksmooth(stats::time(early_surrender_prob), early_surrender_prob, kernel = "normal", bandwidth = bandwidth)$y,
-                   smooth_graves = stats::ksmooth(stats::time(graves_prob), graves_prob, kernel = "normal", bandwidth = bandwidth)$y)
-
-  ## 2.) Plots.
-  # Average duration.
-  plot_duration <- plot_dta %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_duration)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-    ggplot2::xlab("") + ggplot2::ylab("Avg. match duration (min)") +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-  # Surrender probability.
-  plot_surrender <- plot_dta %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_surrender)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-    ggplot2::xlab("") + ggplot2::ylab("Surrender probability") +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-  # Early surrender probability.
-  plot_early_surrender <- plot_dta %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_early)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-    ggplot2::xlab("") + ggplot2::ylab("Early surrender probability") +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-  # Graves pick probability.
-  plot_graves <- plot_dta %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = smooth_graves)) +
-    ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
-    ggplot2::geom_line(color = "tomato", linewidth = 0.5) +
-    ggplot2::xlab("") + ggplot2::ylab("Graves probability") +
-    ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), strip.text = ggplot2::element_text(size = 10, face = "italic"), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "none")
-
-  # Combine in 2x2 grid.
-  combined_plot <- plot_graves / (plot_duration | plot_surrender)
-  if (graves_only) filename <- "match_outcomes_graves_only.pdf" else filename <- "match_outcomes.pdf"
-  ggplot2::ggsave(paste0(save_here, "/", filename), combined_plot, width = 7, height = 7)
-
-    ## 2.) Talk to the user.
+  ## 3.) Talk to the user.
   cat("\n")
   cat("Figures are saved at ", save_here, "\n", sep = "")
 }

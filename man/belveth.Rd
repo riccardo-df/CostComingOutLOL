@@ -4,19 +4,10 @@
 \alias{belveth}
 \title{LoL Belveth}
 \usage{
-belveth(
-  n_pre_matches,
-  min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-08-01"),
-  save_here = getwd()
-)
+belveth(n_pre_matches, save_here = getwd())
 }
 \arguments{
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
-
-\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
-
-\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
 
 \item{save_here}{String denoting the path where to save the figures.}
 }

@@ -4,10 +4,12 @@
 \alias{construct_lol_champion_data}
 \title{Construct LoL Champion Regional Data Set}
 \usage{
-construct_lol_champion_data(dta)
+construct_lol_champion_data(dta, filename = "lol_champ_dta.csv")
 }
 \arguments{
 \item{dta}{Data set as constructed by the \code{\link{clean_lol_data}} function.}
+
+\item{filename}{String to control the name of the output.}
 }
 \description{
 Constructs the LoL champion regional data set.
@@ -15,9 +17,7 @@ Constructs the LoL champion regional data set.
 \details{
 \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
 
-First, it keeps only data for the years 2022 and 2023.\cr
-
-Second, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
+First, it generates the variables of interest. Notice that NAs may be produced here because of champions never picked or banned in a particular
 \code{day} and \code{region}. These are replaced with zeroes.
 \describe{
  \item{\code{pick_level}}{For each pair \code{region} and \code{day}, count how many times a particular \code{champion} is picked by players.}
@@ -31,10 +31,10 @@ Second, it generates the variables of interest. Notice that NAs may be produced 
  \item{\code{aux_role}}{For each \code{champion}, extract its auxiliary position.}
 }
 
-Third, it balances the panel by imputing the zeroes for champions that have not been picked in a particular pair \code{region} and \code{day}. This part
+Second, it balances the panel by imputing the zeroes for champions that have not been picked in a particular pair \code{region} and \code{day}. This part
 of the function works in parallel using all but one processors of your computer.\cr
 
-Fourth, it generates additional variables. As before, NAs may be produced and are replaced with zeroes.\cr
+Third, it generates additional variables. As before, NAs may be produced and are replaced with zeroes.\cr
 \describe{
  \item{\code{n_matches}}{For each pair \code{region} and \code{day}, count how many matches have been played.}
  \item{\code{pick_rate}}{Divide \code{pick_level} by \code{n_matches}.}

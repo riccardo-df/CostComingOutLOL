@@ -15,8 +15,7 @@ run_main_pooled(
   n_boot = 100,
   bandwidth = 0.01,
   covariate_colnames = c(),
-  min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-09-12")
+  dataset = "main"
 )
 }
 \arguments{
@@ -40,9 +39,7 @@ run_main_pooled(
 
 \item{covariate_colnames}{Character vector with the names of the columns of \code{\link{lol_champ_pool_dta}} storing the time-varying covariates for which we want to adjust for.}
 
-\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
-
-\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
+\item{dataset}{String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"QX"}, we use \code{lol_champ_pool_dta_QX}.}
 }
 \value{
 A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).
@@ -68,7 +65,7 @@ For each champion in \code{champions}, \code{\link{run_main_pooled}} performs th
                is carried out only if the number of non-zero contributions is less than 10 to avoid a large running time.}
 }
 
-\code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+\code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
 The outcome series is smoothed using a Nadaraya–Watson kernel regression before the covariate adjustment. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 An infinitesimal bandwidth amounts to no smoothing.\cr

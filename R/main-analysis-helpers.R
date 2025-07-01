@@ -4,7 +4,7 @@
 #'
 #' @param pooled_results Output of \code{\link{run_main_pooled}}
 #' @param ylims Vector storing lower and upper limit for the y-axis.
-#' @param palette String vector with hexadecimal codes. It controls the colors for the weight plot.
+#' @param palette String vector with hexadecimal codes. It controls the colors for the weight plot. If \code{NULL}, the weight plot is not produced.
 #' @param save_here String denoting the path where to save the figures.
 #'
 #' @return
@@ -116,18 +116,20 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".pdf"), plot_main, width = 13, height = 7)
 
     # 2b.) Weights for the main fit.
-    plot_weights <- synth_outcomes[[my_champion]]$weights %>%
-      mutate(wrap = my_champion) %>%
-      ggplot2::ggplot(ggplot2::aes(x = stats::reorder(champion, -sort(weight)), y = weight, fill = champion)) +
-      ggplot2::geom_bar(position = "dodge", stat = "identity") +
-      ggplot2::coord_flip() +
-      ggplot2::scale_fill_manual(values = palette) +
-      ggplot2::facet_wrap(vars(wrap)) +
-      ggplot2::xlab("") + ggplot2::ylab("Weight") +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
-                     legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
-    ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
+    if (!is.null(palette)) {
+      plot_weights <- synth_outcomes[[my_champion]]$weights %>%
+        mutate(wrap = my_champion) %>%
+        ggplot2::ggplot(ggplot2::aes(x = stats::reorder(champion, -sort(weight)), y = weight, fill = champion)) +
+        ggplot2::geom_bar(position = "dodge", stat = "identity") +
+        ggplot2::coord_flip() +
+        ggplot2::scale_fill_manual(values = palette) +
+        ggplot2::facet_wrap(vars(wrap)) +
+        ggplot2::xlab("") + ggplot2::ylab("Weight") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
+                       legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+      ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
+    }
 
     # 2d.) Backdate exercise.
     plot_back <- plot_dta %>%

@@ -6,19 +6,13 @@
 \usage{
 did_players_performance(
   n_pre_matches,
-  treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
-  min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-08-01")
+  treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d")
 )
 }
 \arguments{
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
 \item{treatment_date}{Object of class \code{POSIXct}. The date of the treatment.}
-
-\item{min_date}{Object of class \code{POSIXct}. Where to start the series.}
-
-\item{max_date}{Object of class \code{POSIXct}. Where to end the series.}
 
 \item{filter}{Which players to retain for the analysis.}
 }

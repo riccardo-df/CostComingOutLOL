@@ -15,15 +15,17 @@ Cleans the raw LoL data as obtained from calling the \code{\link{pull_lol_data}}
 \details{
 \code{\link{clean_lol_data}} performs the following operations on the raw data.\cr
 
-First, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
+First, it keeps data for the period January-July 2022.
+
+Second, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 
-Second, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted less than one minute or more than two hours or
+Third, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted more than two hours or
 where the position of some player is not assigned).\cr
 
-Third, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
+Fourth, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
 
-Fourth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most. It then drops matches where champions were played in weird roles.\cr
+Fifth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most. It then drops matches where champions were played in weird roles.\cr
 
 The raw data are available from the authors on request.
 }

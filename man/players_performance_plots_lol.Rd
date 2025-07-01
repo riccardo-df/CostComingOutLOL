@@ -7,8 +7,6 @@
 players_performance_plots_lol(
   n_pre_matches,
   treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
-  min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-08-01"),
   save_here = getwd()
 )
 }
@@ -16,10 +14,6 @@ players_performance_plots_lol(
 \item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 
 \item{treatment_date}{Object of class \code{POSIXct}. When the treatment took place.}
-
-\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
-
-\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
 
 \item{save_here}{String denoting the path where to save the figures.}
 }
@@ -32,7 +26,7 @@ in each group before and after the treatment. It also produces a plot to investi
 plot is then repeated only for those prior users that are "treated" as discussed in the documentation of the \code{\link{did_players_performance}}.
 }
 \details{
-\code{treatment_date}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+\code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
 Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 }

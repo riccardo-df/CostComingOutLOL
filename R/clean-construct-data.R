@@ -292,6 +292,7 @@ clean_lol_data <- function(dta) {
 #' Constructs the LoL champion regional data set.
 #'
 #' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
+#' @param filename String to control the name of the output.
 #'
 #' @details
 #' \code{\link{construct_lol_champion_pooled_data}} performs the following operations on \code{dta}.\cr
@@ -332,7 +333,7 @@ clean_lol_data <- function(dta) {
 #' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_pooled_data}}, \code{\link{construct_lol_player_data}}
 #'
 #' @export
-construct_lol_champion_data <- function(dta) {
+construct_lol_champion_data <- function(dta, filename = "lol_champ_dta.csv") {
   ## Handle warnings.
   region <- NULL
   champion <- NULL
@@ -447,7 +448,7 @@ construct_lol_champion_data <- function(dta) {
   n_matches <- dta %>%
     dplyr::group_by(region, day) %>%
     dplyr::summarise(n_matches = n_distinct(match_id)) %>%
-    ungroup()
+    dplyr::ungroup()
 
   cat("    Compute variables in rates. \n")
   final_daily_panel <- left_join(new_daily_panel, n_matches, by = c("region", "day")) %>%
@@ -487,7 +488,7 @@ construct_lol_champion_data <- function(dta) {
 
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
-  data.table::fwrite(panel, file = "lol_champ_dta.csv", row.names = FALSE)
+  data.table::fwrite(panel, file = filename, row.names = FALSE)
 }
 
 
@@ -496,6 +497,7 @@ construct_lol_champion_data <- function(dta) {
 #' Constructs the LoL champion pooled data set by aggregating observations over regions.
 #'
 #' @param dta Data set as constructed by the \code{\link{construct_lol_champion_data}} function (you can find this data set already bundled in the package).
+#' @param filename String to control the name of the output.
 #'
 #' @details
 #' \code{\link{construct_lol_champion_pooled_data}} generates new variables by aggregating the observations (i.e., the champions) over the regions.\cr
@@ -518,7 +520,7 @@ construct_lol_champion_data <- function(dta) {
 #' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_data}}, \code{\link{construct_lol_player_data}}
 #'
 #' @export
-construct_lol_champion_pooled_data <- function(dta) {
+construct_lol_champion_pooled_data <- function(dta, filename = "lol_champ_pool_dta.csv") {
   ## Handle warnings.
   champion <- NULL
   pick_level <- NULL
@@ -575,7 +577,7 @@ construct_lol_champion_pooled_data <- function(dta) {
 
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
-  data.table::fwrite(panel, file = "lol_champ_pool_dta.csv", row.names = FALSE)
+  data.table::fwrite(panel, file = filename, row.names = FALSE)
 }
 
 
@@ -739,89 +741,4 @@ construct_lol_player_data <- function(dta) {
   ## Write csv.
   cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
   data.table::fwrite(panel, file = "lol_player_dta.csv", row.names = FALSE)
-}
-
-
-#' Construct LoL Match Data Set
-#'
-#' Constructs the LoL macth data set.
-#'
-#' @param dta Data set as constructed by the \code{\link{clean_lol_data}} function.
-#'
-#' @details
-#' \code{\link{construct_lol_match_data}} performs the following operations on \code{dta}.\cr
-#'
-#' First, it keeps only players that played at least 50 matches in our data. This is because, due to our data construction, some players
-#' might appear only once or twice, and thus information on their behavior is "weak." After this, we restrict the data to matches with all 10 players.
-#'
-#' Second, it codes team identifiers (1 or 2) and generates the variables of interest.
-#' \describe{
-#'  \item{\code{victory}}{Whether \code{team} won \code{match_id} (team-level).}
-#'  \item{\code{surrender}}{Whether \code{match_id} ended by a surrender (match-level).}
-#'  \item{\code{early_surrender}}{Whether \code{match_id} ended by an early surrender (match-level).}
-#'  \item{\code{duration}}{Duration of \code{match_id} in minutes (match-level).}
-#'  \item{\code{graves_team}}{Whether someone in \code{team} has picked \code{Graves} (team-level).}
-#'  \item{\code{graves_match}}{Whether someone in \code{match_id} has picked \code{Graves} (match-level).}
-#'  \item{\code{day_no}}{Numeric version of the \code{day} variable, useful when the data set is loaded in other sessions to get the time right.}
-#' }
-#'
-#' @import dplyr lubridate
-#'
-#' @importFrom data.table fwrite
-#' @importFrom plm is.pbalanced
-#'
-#' @author Riccardo Di Francesco
-#'
-#' @seealso \code{\link{pull_lol_data}}, \code{\link{clean_lol_data}}, \code{\link{construct_lol_champion_data}} \code{\link{construct_lol_champion_pooled_data}}
-#'
-#' @export
-construct_lol_match_data <- function(dta) {
-  ## Handle warnings.
-  player_puiid <- NULL
-  champion <- NULL
-  victory <- NULL
-  surrender <- NULL
-  early_surrender <- NULL
-  duration <- NULL
-  Graves <- NULL
-  match_id <- NULL
-  day_no <- NULL
-
-  ## Keep players with at least 50 matches. Ensure to keep only matches with 10 players.
-  cat("Keep players with at least 50 matches. \n")
-  dta <- dta %>%
-    dplyr::group_by(player_puiid) %>%
-    dplyr::mutate(n_matches = n_distinct(match_id)) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(n_matches >= 50) %>%
-    dplyr::select(-n_matches)
-
-  dta <- dta %>%
-    dplyr::group_by(match_id) %>%
-    dplyr::filter(n() == 10) %>%
-    dplyr::ungroup()
-
-  ## Generate variables.
-  cat("Generating variables. \n")
-  is_graves_picked <- dta %>%
-    dplyr::rename(team = win) %>%
-    dplyr::group_by(match_id, team) %>% # Grouping by "win" after grouping by "match_id" is equivalent to group by team.
-    dplyr::summarise(day = first(day),
-                     victory = first(team),
-                     surrender = first(surrender),
-                     early_surrender = first(early_surrender),
-                     duration = first(duration),
-                     graves_team = any(champion == "Graves"),
-                     .groups = "drop") %>%
-    dplyr::group_by(match_id) %>%
-    dplyr::mutate(graves_match = any(graves_team)) %>%
-    dplyr::ungroup()
-
-  ## Final operations.
-  panel <- is_graves_picked
-  panel$day_no <- as.numeric(panel$day)
-
-  ## Write csv.
-  cat("Writing csv file at ", getwd(), ". \n\n", sep = "")
-  data.table::fwrite(panel, file = "lol_match_dta.csv", row.names = FALSE)
 }

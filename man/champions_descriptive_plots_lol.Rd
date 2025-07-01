@@ -8,12 +8,10 @@ champions_descriptive_plots_lol(
   champions,
   treatment_date1 = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   treatment_date2 = as.POSIXct("2023-06-01", tryFormats = "\%Y-\%m-\%d"),
-  min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-08-01"),
   bandwidth = 0.01,
-  ylims_levels = c(0, 100),
   ylims_rates = c(0, 100),
-  save_here = getwd()
+  save_here = getwd(),
+  dataset = "main"
 )
 }
 \arguments{
@@ -23,17 +21,15 @@ champions_descriptive_plots_lol(
 
 \item{treatment_date2}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
 
-\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
-
-\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
-
 \item{bandwidth}{Parameter controlling the amount of smoothing.}
-
-\item{ylims_levels}{Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).}
 
 \item{ylims_rates}{Vector storing lower and upper limit for the y-axis (valid for the variables measured in rates).}
 
 \item{save_here}{String denoting the path where to save the figures.}
+
+\item{dataset}{String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"QX"}, we use \code{lol_champ_pool_dta_QX}.}
+
+\item{ylims_levels}{Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).}
 }
 \value{
 Produces nice plots.
@@ -42,16 +38,13 @@ Produces nice plots.
 Produces plots for the pick, ban, and win variables of the champions of interest.
 }
 \details{
-\code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+\code{treatment_date1} and \code{treatment_date2}, must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
 If one of the element of \code{champions} is \code{"LGB"}, \code{\link{champions_descriptive_plots_lol}} includes in the plots an LGB composite unit constructed by averaging the variables values of the
 champions Diana, Leona, Nami, and Neeko. These are the champions confirmed to be LGBT before Graves' disclosure. See Section 2.2 and Section 5.4 of the paper for more details.\cr
 
 The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
 An infinitesimal bandwidth amounts to no smoothing.
-}
-\seealso{
-\code{\link{champions_performance_plots_lol}} \code{\link{players_descriptive_plots_lol}}
 }
 \author{
 Riccardo Di Francesco

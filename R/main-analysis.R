@@ -12,6 +12,7 @@
 #' @param n_boot Number of champions to be assigned the placebo treatment for standard error estimation. Ignored if \code{inference} is \code{FALSE}.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param covariate_colnames Character vector with the names of the columns of \code{\link{lol_champ_pool_dta}} storing the time-varying covariates for which we want to adjust for.
+#' @param dataset String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"below"}, we use \code{lol_champ_pool_dta_belowM}. If \code{"above"}, we use \code{lol_champ_pool_dta_aboveM}.
 #'
 #' @details
 #' For each champion in \code{champions}, \code{\link{run_main_pooled}} performs the following operations.
@@ -74,7 +75,8 @@
 #'
 #' @export
 run_main_pooled <- function(champions, outcome_colname, donors, estimator, treatment_date, backdate,
-                            inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c()) {
+                            inference = FALSE, n_boot = 100, bandwidth = 0.01, covariate_colnames = c(),
+                            dataset = "main") {
   ## Handling inputs and checks.
   kills_pooled <- NULL
   deaths_pooled <- NULL
@@ -104,6 +106,15 @@ run_main_pooled <- function(champions, outcome_colname, donors, estimator, treat
   if (!is.logical(inference)) stop("Invalid 'inference'. This must be either 'TRUE' or 'FALSE.", call. = FALSE)
   if (n_boot <= 1 | n_boot %% 1 != 0) stop("Invalid 'n_boot'. This must be an interger greater than or equal to 2.", call. = FALSE)
   if (bandwidth <= 0) stop("Invalid 'bandwidth'. This must be a positive number.", call. = FALSE)
+  if (!(dataset %in% c("main", "below", "above"))) stop("Invalid 'dataset'. This must be one of 'main', 'below', 'above'.", call. = FALSE)
+
+  if (dataset == "main") {
+    lol_champ_pool_dta <- lol_champ_pool_dta
+  } else if (dataset == "below") {
+    lol_champ_pool_dta <- lol_champ_pool_dta_belowM
+  } else if (dataset == "above") {
+    lol_champ_pool_dta <- lol_champ_pool_dta_aboveM
+  }
 
   if (outcome_colname != "kd_ratio") {
     lol_champ_pool_dta$selected_outcome <- lol_champ_pool_dta[[outcome_colname]]

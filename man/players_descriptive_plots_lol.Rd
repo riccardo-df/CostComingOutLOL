@@ -4,36 +4,19 @@
 \alias{players_descriptive_plots_lol}
 \title{LoL Players' Behavior Plots}
 \usage{
-players_descriptive_plots_lol(
-  min_date = as.POSIXct("2022-01-01"),
-  max_date = as.POSIXct("2023-08-01"),
-  bandwidth = 0.01,
-  save_here = getwd()
-)
+players_descriptive_plots_lol(save_here = getwd())
 }
 \arguments{
-\item{min_date}{Object of class \code{POSIXct}. When to start the series.}
-
-\item{max_date}{Object of class \code{POSIXct}. When to end the series.}
-
-\item{bandwidth}{Parameter controlling the amount of smoothing.}
-
 \item{save_here}{String denoting the path where to save the figures.}
 }
 \value{
 Produces a nice plot.
 }
 \description{
-Produces plots for the number of daily players and matches.
+Produces plots for the number of matches and hours played.
 }
 \details{
-\code{treatment_date1}, \code{treatment_date2}, \code{min_date}, and \code{max_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
-
-The series are smoothed using a Nadaraya–Watson kernel regression. The user can control the amount of smoothing by setting the \code{bandwidth} parameter. The larger parameter, the smoother the series.
-An infinitesimal bandwidth amounts to no smoothing.\cr
-}
-\seealso{
-\code{\link{champions_descriptive_plots_lol}} \code{\link{champions_performance_plots_lol}}
+\code{treatment_date1} and must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 }
 \author{
 Riccardo Di Francesco
