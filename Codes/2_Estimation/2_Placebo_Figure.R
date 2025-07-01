@@ -1,5 +1,5 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
+## University of Southern Denmark
 ## 01\01\2024
 
 ## The Cost of Coming Out - Synthetic Controls.

@@ -1,5 +1,5 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
+## University of Southern Denmark
 ## 09\08\2023
 
 ## The Cost of Coming Out - Mechanisms (LGBT Pride Month).

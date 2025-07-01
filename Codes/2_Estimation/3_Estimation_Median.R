@@ -1,8 +1,8 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
-## 30\06\2025
+## University of Southern Denmark
+## 01\07\2025
 
-## The Cost of Coming Out - Main Results.
+## The Cost of Coming Out - Player heterogeneity.
 
 ## This script produces ...
 
@@ -46,6 +46,6 @@ pooled_result_top <- run_main_pooled(champions, outcome_colname_pool, pool, esti
 ## Decide where to save the plots and call functions.
 save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
-## Be careful, as plots are saved under the same filename and thus replaced at each call.
+## Produce plots. Be careful, as plots are saved under the same filename and thus replaced at each call.
 produce_plots_pooled(pooled_result_bottom, ylims = c(0, 40), palette = NULL, save_here)
 produce_plots_pooled(pooled_result_top, ylims = c(0, 40), palette = NULL, save_here)

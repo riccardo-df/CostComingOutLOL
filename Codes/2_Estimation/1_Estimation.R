@@ -1,5 +1,5 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
+## University of Southern Denmark
 ## 09\08\2023
 
 ## The Cost of Coming Out - Main Results.
@@ -50,7 +50,7 @@ for (estimator in estimators) {
     cat("\n")
 
     pooled_result_list[[counter]] <- run_main_pooled(champions, outcome_colname_pool, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool)
-    # regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional)
+    regional_result_list[[counter]] <- run_main_regional(champions, outcome_colname_regional, pool, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_regional, covariate_colnames = covariates_regional)
 
     counter <- counter + 1
   }
@@ -70,7 +70,7 @@ save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Co
 
 for (i in seq_len(length(pooled_result_list))) {
   produce_plots_pooled(pooled_result_list[[i]], ylims = c(0, 40), palette, save_here)
-  # produce_plots_regional(regional_result_list[[i]], ylims = c(0, 60), palette, save_here)
+  produce_plots_regional(regional_result_list[[i]], ylims = c(0, 60), palette, save_here)
 }
 
 # LATEX -------------------------------------------------------------------
