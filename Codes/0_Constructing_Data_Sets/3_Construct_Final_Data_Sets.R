@@ -11,7 +11,7 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL", "data.table", "devtools", "ggplot2", "tidyr")
+pkgs <- c("CostComingOutLOL", "data.table", "dplyr", "ggplot2", "tidyr")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 ## Loading data.
@@ -24,30 +24,29 @@ treatment_date <- as.POSIXct("2022-06-01")
 cat("N. players is ", length(unique(clean_dta$player_puiid)), "\n", sep = "")
 cat("N. matches is ", length(unique(clean_dta$match_id)), "\n", sep = "")
 
-# Final data sets (DO NOT RUN) --------------------------------------------
-## Construct estimation data sets and bundle.
+# Construct main data sets ------------------------------------------------
+## Construct regional character data sets and bundle.
 construct_lol_champion_data(clean_dta)
 lol_champ_dta <- fread("lol_champ_dta.csv")
 use_data(lol_champ_dta, compress = "xz")
 
+## From previous data set, construct pooled character data set and bundle.
 construct_lol_champion_pooled_data(lol_champ_dta)
 lol_champ_pool_dta <- fread("lol_champ_pool_dta.csv")
 use_data(lol_champ_pool_dta, compress = "xz")
 
+## Construct player data set.
 construct_lol_player_data(clean_dta)
 lol_player_dta <- fread("lol_player_dta.csv")
 use_data(lol_player_dta, compress = "xz")
 
-## Re-apply the champion functions to compute pick rates using only subsets of players (defined according to their engagement).
-# Split players according to quartiles of pre-treatment win rates. Then merge back. Filter players with at least 10 matches.
+# Construct data set for player skill heterogeneity -----------------------
+## Split players according to above/below median of pre-treatment win rates. Then merge back. Filter players with at least 20 matches.
 player_skill <- clean_dta %>%
   filter(day < treatment_date) %>%
   group_by(player_puiid) %>%
   summarise(tot_matches = n_distinct(match_id),
             win_rate = mean(win),
-            avg_gold = mean(gold),
-            kda_ratio = mean((kills + assists) / pmax(deaths, 1)),
-            avg_level = mean(player_level),
             .groups = "drop") %>%
   filter(tot_matches >= 20) %>%
   mutate(skill_group = ifelse(win_rate <= median(win_rate), "Below median", "Above median"))
@@ -58,7 +57,7 @@ clean_dta_tagged <- clean_dta %>%
 
 cat("N. unique players left is ", length(unique(clean_dta_tagged$player_puiid)), "\n", sep = "")
 
-# Plot histogram of total matches and hours below/above median.
+## Plot histograms of total matches and hours played for the different skill groups.
 plot_player_skill <- clean_dta_tagged %>%
   distinct(player_puiid, .keep_all = TRUE) %>%
   pivot_longer(cols = c(tot_matches, win_rate), names_to = "variable", values_to = "value") %>%
@@ -78,7 +77,8 @@ plot_player_skill <- clean_dta_tagged %>%
 save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
 ggsave(paste0(save_here, "/", "plot_player_skill_median.pdf"), plot_player_skill, width = 10, height = 7)
 
-# Filter by below/above and apply construction function. Bundle data sets.
+## Apply construction function to above/below subsamples and bundle.
+# Below median.
 dta_below <- clean_dta_tagged %>%
   filter(skill_group == "Below median")
 construct_lol_champion_data(dta_below, filename = "lol_champ_dta_belowM.csv")
@@ -86,6 +86,7 @@ construct_lol_champion_pooled_data(fread("lol_champ_dta_belowM.csv"), filename =
 lol_champ_pool_dta_belowM <- fread("lol_champ_pool_dta_belowM.csv")
 use_data(lol_champ_pool_dta_belowM, compress = "xz")
 
+# Above median.
 dta_above <- clean_dta_tagged %>%
   filter(skill_group == "Above median")
 construct_lol_champion_data(dta_above, filename = "lol_champ_dta_aboveM.csv")
@@ -106,14 +107,14 @@ Champion pooled data set:
      N. matches:   ", lol_champ_pool_dta %>% distinct(day, .keep_all = TRUE) %>% pull(n_matches_sum) %>% sum(), "
 
 Champion pooled data set (below median):
-     N. days:      ", length(unique(lol_champ_pool_dta_bottom$day)), "
-     N. champions: ", length(unique(lol_champ_pool_dta_bottom$champion)), "
-     N. matches:   ", lol_champ_pool_dta_bottom %>% distinct(day, .keep_all = TRUE) %>% pull(n_matches_sum) %>% sum(), "
+     N. days:      ", length(unique(lol_champ_pool_dta_belowM$day)), "
+     N. champions: ", length(unique(lol_champ_pool_dta_belowM$champion)), "
+     N. matches:   ", lol_champ_pool_dta_belowM %>% distinct(day, .keep_all = TRUE) %>% pull(n_matches_sum) %>% sum(), "
 
 Champion pooled data set (above median):
-     N. days:      ", length(unique(lol_champ_pool_dta_top$day)), "
-     N. champions: ", length(unique(lol_champ_pool_dta_top$champion)), "
-     N. matches:   ", lol_champ_pool_dta_top %>% distinct(day, .keep_all = TRUE) %>% pull(n_matches_sum) %>% sum(), "
+     N. days:      ", length(unique(lol_champ_pool_dta_aboveM$day)), "
+     N. champions: ", length(unique(lol_champ_pool_dta_aboveM$champion)), "
+     N. matches:   ", lol_champ_pool_dta_aboveM %>% distinct(day, .keep_all = TRUE) %>% pull(n_matches_sum) %>% sum(), "
 
 Player data set:
      N. days:      ", length(unique(lol_player_dta$day)), "
@@ -127,4 +128,3 @@ cat("Total player-hours in sample:", round(total_hours_all_players, 0), "\n")
 min_wage <- 7.25
 opportunity_cost_usd <- total_hours_all_players * min_wage
 cat("Imputed opportunity cost:", round(opportunity_cost_usd, 0), "USD\n")
-
