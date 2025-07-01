@@ -3,8 +3,7 @@
 #' Produces plots for the pick, ban, and win variables of the champions of interest.
 #'
 #' @param champions Character vector with the champions of interest.
-#' @param treatment_date1 Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
-#' @param treatment_date2 Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
+#' @param treatment_date Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.
 #' @param bandwidth Parameter controlling the amount of smoothing.
 #' @param ylims_levels Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).
 #' @param ylims_rates Vector storing lower and upper limit for the y-axis (valid for the variables measured in rates).
@@ -15,7 +14,7 @@
 #' Produces nice plots.
 #'
 #' @details
-#' \code{treatment_date1} and \code{treatment_date2}, must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' If one of the element of \code{champions} is \code{"LGB"}, \code{\link{champions_descriptive_plots_lol}} includes in the plots an LGB composite unit constructed by averaging the variables values of the
 #' champions Diana, Leona, Nami, and Neeko. These are the champions confirmed to be LGBT before Graves' disclosure. See Section 2.2 and Section 5.4 of the paper for more details.\cr
@@ -31,8 +30,7 @@
 #'
 #' @export
 champions_descriptive_plots_lol <- function(champions,
-                                  treatment_date1 = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
-                                  treatment_date2 = as.POSIXct("2023-06-01", tryFormats = "%Y-%m-%d"),
+                                  treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
                                   bandwidth = 0.01, ylims_rates = c(0, 100), save_here = getwd(),
                                   dataset = "main") {
   ## 0.) Handling inputs and checks.
@@ -145,8 +143,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_rate_pooled, group = champion, color = champion)) +
     ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::ylim(ylims_rates[1], ylims_rates[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick rate")) +
     ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
@@ -162,8 +159,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_rate_pooled, group = champion, color = champion)) +
     ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::ylim(ylims_rates[1], ylims_rates[2]) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban rate")) +
     ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
@@ -180,8 +176,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = pick_rate, group = champion, color = champion)) +
     ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Pick rate")) +
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
@@ -196,8 +191,7 @@ champions_descriptive_plots_lol <- function(champions,
     ggplot2::ggplot(ggplot2::aes(x = as.POSIXct(day), y = ban_rate, group = champion, color = champion)) +
     ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
     ggplot2::geom_line(color = "tomato") +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date1), linetype = 4) +
-    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date2), linetype = 4) +
+    ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
     ggplot2::xlab("") + ggplot2::ylab(paste0("Ban rate")) +
     ggplot2::scale_x_datetime(date_breaks = "3 month", date_labels = "%m-%Y") +
     ggplot2::facet_grid(cols = vars(champion), rows = vars(region), scales = "fixed") +
@@ -214,7 +208,7 @@ champions_descriptive_plots_lol <- function(champions,
 
 #' LoL Players' Behavior Plots
 #'
-#' Produces plots for the number of matches and hours played.
+#' Produces histograms for the number of matches and hours played.
 #'
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -222,7 +216,10 @@ champions_descriptive_plots_lol <- function(champions,
 #' Produces a nice plot.
 #'
 #' @details
-#' \code{treatment_date1} and must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+#' This routine computes, for each player, the total number of matches and hours played, as well as daily averages of number of matches and hours played. It then displays the distributions
+#' of these variables. Note that all variables are at the player-level.
+#'
+#' \code{treatment_date} and must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' @import dplyr ggplot2 grDevices Cairo reshape2 tidyr
 #'
@@ -237,31 +234,23 @@ players_descriptive_plots_lol <- function(save_here = getwd()) {
   ## 1.) Compute total matches and hours played by each player.
   lol_player_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(tot_matches = sum(n_matches),
-                  tot_hours = sum(n_hours)) %>%
-    dplyr::ungroup()
+    dplyr::summarise(avg_daily_matches = mean(n_matches),
+                     avg_daily_hours = mean(n_hours),
+                     tot_matches = sum(n_matches),
+                     tot_hours = sum(n_hours),
+                     .groups = "drop")
 
   ## 2.) Arrange plotting data.
-  totals_dta <- lol_player_dta %>%
-    dplyr::distinct(id, tot_matches, tot_hours) %>%
-    tidyr::pivot_longer(cols = c(tot_matches, tot_hours), names_to = "variable", values_to = "value") %>%
-    dplyr::mutate(level = "Player",
-                  variable = dplyr::recode(variable,
-                                           tot_matches = "Total matches",
-                                           tot_hours = "Total hours"))
-
-  daily_dta <- lol_player_dta %>%
-    dplyr::select(id, n_matches, n_hours) %>%
-    tidyr::pivot_longer(cols = c(n_matches, n_hours), names_to = "variable", values_to = "value") %>%
-    dplyr::mutate(level = "Daily",
-                  variable = dplyr::recode(variable,
-                                           n_matches = "Daily matches",
-                                           n_hours = "Daily hours"))
-
-  hist_dta <- bind_rows(totals_dta, daily_dta)
-
+  hist_dta <- lol_player_dta %>%
+    tidyr::pivot_longer(cols = c(avg_daily_matches, avg_daily_hours, tot_matches, tot_hours), names_to = "variable", values_to = "value") %>%
+    dplyr::mutate(variable = dplyr::recode(variable,
+                                           avg_daily_matches = "Avg. daily matches",
+                                           avg_daily_hours = "Avg. daily hours",
+                                           tot_matches = "Total n. matches",
+                                           tot_hours = "Total n. hours"))
   ## 3.) Plot.
   plot_player_activity <- hist_dta %>%
+    dplyr::mutate(variable = factor(variable, levels = c("Avg. daily matches", "Avg. daily hours", "Total n. matches", "Total n. hours"))) %>%
     ggplot2::ggplot(ggplot2::aes(x = value)) +
     ggplot2::geom_histogram(bins = 100, fill = "#4E79A7", color = "black", alpha = 0.8) +
     ggplot2::facet_wrap(~ variable, scales = "free", ncol = 2) +

@@ -1,10 +1,10 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
+## University of Southern Denmark
 ## 07\08\2023
 
 ## The Cost of Coming Out - Pulling data from Riot API.
 
-## This script pulls raw data from Riot API. Run "help(pull_lol_data)" for details.
+## This script pulls raw data from Riot API. Run "help(pull_lol_data)" for details. The raw data used for the paper is available from the authors on request.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

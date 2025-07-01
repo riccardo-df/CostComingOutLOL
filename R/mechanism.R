@@ -1,6 +1,6 @@
 #' LoL Players' Performance Plots
 #'
-#' Divides players into two groups according to whether they never picked Graves pre-treatment (prior and non-prior users) and produces plots showing the average performance of players
+#' Divides players into Graves prior and non-prior users and produces plots showing the average performance of players
 #' in each group before and after the treatment. It also produces a plot to investigate which positions are the most played in each group before and after the treatment. The same
 #' plot is then repeated only for those prior users that are "treated" as discussed in the documentation of the \code{\link{did_players_performance}}.
 #'
@@ -353,15 +353,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' Returns a list with \code{treatment_date} and all the diff-in-diff results. The user can post-process the output using the \code{\link{plot_did}} function.
 #'
 #' @details
-#' We define three versions of the treatment.
-#'
-#' \describe{
-#'    \item{\code{Small reduction}}{Players that reduce their average pick rate for Graves by any amount within (0%, 25%].)}
-#'    \item{\code{Moderate reduction}}{Players that reduce their average pick rate for Graves by any amount within (25%, 50%].}
-#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by any amount within (50%, 100%].}
-#' }
-#'
-#' We keep the control group fixed as it is always composed of those prior-users that do not reduce their pick rates for Graves at all.\cr
+#' We define three versions of the treatment, as described in the paper. We keep the control group fixed as it is always composed of those prior-users that do not reduce their pick rates for Graves at all.\cr
 #'
 #' The estimators of Callaway and Sant’Anna (2021) are employed to estimate the impact of the coming-out event on the performance of treated players. This is implemented using the \code{\link[did]{att_gt}} function.
 #' Technical details are given in the associated documentation. To summarize, we identify and estimate the average treatment effect on the treated for all time t > \code{treatment_date}. "Effects" before that date are
@@ -371,7 +363,7 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
-#' Among these, only "prior_users" players are considered, defined as those that used to play Graves at least 5% of their matches before his disclosure.
+#' Among these, only "prior_users" players are considered.
 #'
 #' @import dplyr fixest did
 #' @importFrom lubridate month
@@ -710,17 +702,11 @@ plot_did <- function(did_results, save_here = getwd()) {
 #' None. It produces nice plots.
 #'
 #' @details
-#' We consider only prior-users. We classify them into four different categories:
-#'
-#' \describe{
-#'    \item{\code{No reduction}}{Players that did not reduce their average pick rate for Graves.}
-#'    \item{\code{Moderate reduction}}{Players that reduce their average pick rate for Graves by any amount within (0%, 75%].}
-#'    \item{\code{Substantial reduction}}{Players that reduce their average pick rate for Graves by any amount within (75%, 100%].}
-#' }
+#' We consider only prior-users. We classify them as detailed in the paper.\cr
 #'
 #' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
 #'
-#' @import dplyr ggplot2 patchwotk
+#' @import dplyr ggplot2 patchwork
 #'
 #' @author Riccardo Di Francesco
 #'

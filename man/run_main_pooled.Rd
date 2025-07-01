@@ -39,7 +39,7 @@ run_main_pooled(
 
 \item{covariate_colnames}{Character vector with the names of the columns of \code{\link{lol_champ_pool_dta}} storing the time-varying covariates for which we want to adjust for.}
 
-\item{dataset}{String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"QX"}, we use \code{lol_champ_pool_dta_QX}.}
+\item{dataset}{String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"below"}, we use \code{lol_champ_pool_dta_belowM}. If \code{"above"}, we use \code{lol_champ_pool_dta_aboveM}.}
 }
 \value{
 A list of the same length as \code{champions}. Each element stores a list with results for one of those champions (elements are named).

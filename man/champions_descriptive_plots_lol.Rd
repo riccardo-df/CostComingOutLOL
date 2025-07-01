@@ -27,7 +27,7 @@ champions_descriptive_plots_lol(
 
 \item{save_here}{String denoting the path where to save the figures.}
 
-\item{dataset}{String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"QX"}, we use \code{lol_champ_pool_dta_QX}.}
+\item{dataset}{String controlling which data set to use. If \code{"main"}, we use \code{lol_champ_pool_dta}. If \code{"below"}, we use \code{lol_champ_pool_dta_belowM}. If \code{"above"}, we use \code{lol_champ_pool_dta_aboveM}.}
 
 \item{ylims_levels}{Vector storing lower and upper limit for the y-axis (valid for the variables measured in levels).}
 }

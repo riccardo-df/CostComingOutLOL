@@ -1,10 +1,10 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
-## 07\08\2023
+## University of Southern Denmark
+## 01\07\2025
 
 ## The Cost of Coming Out - Constructing the final data sets.
 
-## This script constructs the data sets used in the paper.
+## This script constructs the data sets used in the paper. Such data sets are already bundled in our R package, so no need to run again this script.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())

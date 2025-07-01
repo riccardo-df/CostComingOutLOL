@@ -12,10 +12,9 @@
 #' Second, it aggregates the regions of interest according to the geographical macro area where servers hosting the match are located (Latin America, North America, Europe, and Korea)
 #' and drops regions with too many missing values (Oceania, Russia, Japan, and Turkey).\cr
 #'
-#' Third, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted more than two hours or
-#' where the position of some player is not assigned).\cr
+#' Third, it drops duplicated matches and matches with corrupted data (i.e., matches with less than ten players or which lasted more than two hours or where the position of some player is not assigned).\cr
 #'
-#' Fourth, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names).\cr
+#' Fourth, it hard-codes the 'ban' variable (it maps it from integer numbers to champions' names). To apply the function to more recent years, new champions must be hard-coded.\cr
 #'
 #' Fifth, it identifies and assign the main and the auxiliary positions of each champion based on where they are played the most. It then drops matches where champions were played in weird roles.\cr
 #'

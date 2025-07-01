@@ -1,10 +1,10 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
+## University of Southern Denmark
 ## 07\08\2023
 
 ## The Cost of Coming Out - Cleaning the raw data.
 
-## This script cleans the raw data pulled from Riot API. Run "help(clean_lol_data)" for details.
+## This script cleans the raw data pulled from Riot API. Run "help(clean_lol_data)" for details. The cleaned data used for the paper is available from the authors on request.
 
 # Preliminaries -----------------------------------------------------------
 rm(list = ls())
