@@ -1,5 +1,5 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
+## University of Southern Denmark
 ## 30\06\2025
 
 ## The Cost of Coming Out - Descriptive Plots.

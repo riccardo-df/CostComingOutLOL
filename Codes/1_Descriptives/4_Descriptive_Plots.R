@@ -1,6 +1,6 @@
 ## @author: riccardo-df
-## University of Rome Tor Vergata
-## 08\08\2023
+## University of Southern Denmark
+## 30\06\2025
 
 ## The Cost of Coming Out - Descriptive Plots.
 
@@ -20,22 +20,18 @@ champions <- c("Graves")
 
 bandwidth_champions <- 5
 
-treatment_date1 <- NULL
-treatment_date2 <- NULL
+treatment_date <- NULL
 
 save_here_champions <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
 save_here_players <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Players"
 
-## Produce plots.
+## Produce plots for character metrics. Switch "dataset" to select which sample of players to use (see documentation for more details). Be careful, as each call saves the plots using the same filenames.
 champions_descriptive_plots_lol(champions,
-                                treatment_date1 = treatment_date1, treatment_date2 = treatment_date2,
+                                treatment_date,
                                 bandwidth = bandwidth_champions,
                                 ylims_rates = c(0, 40),
                                 save_here = save_here_champions,
                                 dataset = "above")
 
-champions_performance_plots_lol(champions,
-                                bandwidth = bandwidth_champions,
-                                save_here = save_here_champions)
-
+## Produce plots for player activity.
 players_descriptive_plots_lol(save_here = save_here_players)
