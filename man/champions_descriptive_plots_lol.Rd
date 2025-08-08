@@ -6,8 +6,7 @@
 \usage{
 champions_descriptive_plots_lol(
   champions,
-  treatment_date1 = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
-  treatment_date2 = as.POSIXct("2023-06-01", tryFormats = "\%Y-\%m-\%d"),
+  treatment_date = as.POSIXct("2022-06-01", tryFormats = "\%Y-\%m-\%d"),
   bandwidth = 0.01,
   ylims_rates = c(0, 100),
   save_here = getwd(),
@@ -17,9 +16,7 @@ champions_descriptive_plots_lol(
 \arguments{
 \item{champions}{Character vector with the champions of interest.}
 
-\item{treatment_date1}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
-
-\item{treatment_date2}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
+\item{treatment_date}{Object of class \code{POSIXct}. Where to display a dashed vertical line. Set to \code{NULL} if you do not want this line.}
 
 \item{bandwidth}{Parameter controlling the amount of smoothing.}
 
@@ -38,7 +35,7 @@ Produces nice plots.
 Produces plots for the pick, ban, and win variables of the champions of interest.
 }
 \details{
-\code{treatment_date1} and \code{treatment_date2}, must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+\code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 
 If one of the element of \code{champions} is \code{"LGB"}, \code{\link{champions_descriptive_plots_lol}} includes in the plots an LGB composite unit constructed by averaging the variables values of the
 champions Diana, Leona, Nami, and Neeko. These are the champions confirmed to be LGBT before Graves' disclosure. See Section 2.2 and Section 5.4 of the paper for more details.\cr

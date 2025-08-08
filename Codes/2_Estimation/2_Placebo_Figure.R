@@ -20,9 +20,6 @@ outcome_colname_pool <- "pick_rate_pooled"
 
 bandwidth_pool <- 3
 
-min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
-max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
-
 ## Set SC estimator.
 estimator <- "sc"
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
@@ -36,11 +33,11 @@ covariates_pool <- c()
 champions <- setdiff(sort(unique(lol_champ_pool_dta$champion)), c("Naafiri", "Milio", "KSante", "Nilah", "Belveth"))
 
 ## Estimation.
-pooled_results <- run_main_pooled(champions, outcome_colname_pool, champions, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool, max_date = max_date)
+pooled_results <- run_main_pooled(champions, outcome_colname_pool, champions, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth_pool, covariate_colnames = covariates_pool)
 
 # Plot -------------------------------------------------------------------
 ## Plot and save.
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
+save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 drop_overfit <- 1
 
 rmses <- produce_plot_placebo(pooled_results, "Graves", drop_overfit = drop_overfit, ylims = c(-40, 40), save_here)

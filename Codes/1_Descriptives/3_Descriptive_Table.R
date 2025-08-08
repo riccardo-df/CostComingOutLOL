@@ -48,7 +48,7 @@ stats <- bind_rows(get_mean_sd("pick_rate_pooled", champ_pre, champ_post) %>%
                    get_mean_sd("n_matches", player_pre, player_post) %>%
                      mutate(variable = "N. daily matches"),
                    get_mean_sd("n_hours", player_pre, player_post) %>%
-                     mutate(variable = "N. daily hours"),
+                     mutate(variable = "Time spent in-game (hours)"),
                    get_mean_sd("top_rate", player_pre, player_post) %>%
                      mutate(variable = "Top (\\%)"),
                    get_mean_sd("jungle_rate", player_pre, player_post) %>%
@@ -106,7 +106,7 @@ latex_code <- function(stats, label = "table_summary_stats", caption = "Pre- and
     "",
     "    \\footnotesize",
     "    \\renewcommand{\\baselineskip}{11pt}",
-    "    \\textit{Notes.} Means are reported in the first row for each variable, followed by standard deviations in parentheses. Pick and win rates are computed from the character-level data; remaining statistics are computed from the player-level data. Time spent in-game only captures time within matches, excluding champion selection and matchmaking time. The final column reports differences in means between the pre- and post-treatment periods.",
+    "    \\textit{Notes.} Sample averages are reported for each variable, followed by standard deviations in parentheses. Graves' pick and win rates are computed from the character-level data; remaining statistics are computed from the player-level data. Time spent in-game only captures time within matches, excluding character selection and matchmaking time. The final column reports differences in means between the pre- and post-treatment periods.",
     "\\end{table}"
   )
 

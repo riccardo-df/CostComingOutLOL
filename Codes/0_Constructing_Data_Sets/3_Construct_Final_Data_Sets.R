@@ -28,46 +28,46 @@ cat("N. matches is ", length(unique(clean_dta$match_id)), "\n", sep = "")
 ## Construct regional character data sets and bundle.
 construct_lol_champion_data(clean_dta)
 lol_champ_dta <- fread("lol_champ_dta.csv")
-use_data(lol_champ_dta, compress = "xz")
+use_data(lol_champ_dta, compress = "xz", overwrite = TRUE)
 
 ## From previous data set, construct pooled character data set and bundle.
 construct_lol_champion_pooled_data(lol_champ_dta)
 lol_champ_pool_dta <- fread("lol_champ_pool_dta.csv")
-use_data(lol_champ_pool_dta, compress = "xz")
+use_data(lol_champ_pool_dta, compress = "xz", overwrite = TRUE)
 
 ## Construct player data set.
 construct_lol_player_data(clean_dta)
 lol_player_dta <- fread("lol_player_dta.csv")
-use_data(lol_player_dta, compress = "xz")
+use_data(lol_player_dta, compress = "xz", overwrite = TRUE)
 
 # Construct data set for player skill heterogeneity -----------------------
-## Split players according to above/below median of pre-treatment win rates. Then merge back. Filter players with at least 20 matches.
+## Split players according to above/below median of pre-treatment average win rates. Then merge back. Filter players with at least 10 matches before and after the event for consistency.
 player_skill <- clean_dta %>%
-  filter(day < treatment_date) %>%
   group_by(player_puiid) %>%
-  summarise(tot_matches = n_distinct(match_id),
-            win_rate = mean(win),
+  summarise(n_matches = n_distinct(match_id), # Compute also total matches overall.
+            n_matches_before = n_distinct(match_id[day < treatment_date]),
+            n_matches_after = n_distinct(match_id[day >= treatment_date]),
+            win_rate = mean(win), # Compute also overall win rate.
+            win_rate_before = mean(win[day < treatment_date]),
             .groups = "drop") %>%
-  filter(tot_matches >= 20) %>%
-  mutate(skill_group = ifelse(win_rate <= median(win_rate), "Below median", "Above median"))
+  filter(n_matches_before >= 10, n_matches_after >= 10) %>%
+  mutate(skill_group = ifelse(win_rate_before <= median(win_rate_before), "Below median", "Above median"))
 
 clean_dta_tagged <- clean_dta %>%
   left_join(player_skill, by = "player_puiid") %>%
   filter(!is.na(skill_group))
 
-cat("N. unique players left is ", length(unique(clean_dta_tagged$player_puiid)), "\n", sep = "")
-
-## Plot histograms of total matches and hours played for the different skill groups.
+## Plot histograms of total matches overall and overall win rate for the different skill groups.
 plot_player_skill <- clean_dta_tagged %>%
   distinct(player_puiid, .keep_all = TRUE) %>%
-  pivot_longer(cols = c(tot_matches, win_rate), names_to = "variable", values_to = "value") %>%
+  pivot_longer(cols = c(n_matches, win_rate), names_to = "variable", values_to = "value") %>%
   mutate(variable = recode(variable,
-                           tot_matches = "Total matches",
+                           n_matches = "Total matches",
                            win_rate = "Win rate"),
          variable = factor(variable, levels = c("Win rate", "Total matches")),
          skill_group = factor(skill_group, levels = c("Below median", "Above median"))) %>%
   ggplot(aes(x = value)) +
-  geom_histogram(bins = 100, fill = "#4E79A7", color = "black", alpha = 0.8) +
+  geom_histogram(bins = 50, fill = "#4E79A7", color = "black", alpha = 0.8) +
   facet_grid(cols = vars(variable), rows = vars(skill_group), scales = "free") +
   theme_bw(base_size = 13) +
   labs(title = "", x = NULL, y = "Count") +
@@ -84,7 +84,7 @@ dta_below <- clean_dta_tagged %>%
 construct_lol_champion_data(dta_below, filename = "lol_champ_dta_belowM.csv")
 construct_lol_champion_pooled_data(fread("lol_champ_dta_belowM.csv"), filename = "lol_champ_pool_dta_belowM.csv")
 lol_champ_pool_dta_belowM <- fread("lol_champ_pool_dta_belowM.csv")
-use_data(lol_champ_pool_dta_belowM, compress = "xz")
+use_data(lol_champ_pool_dta_belowM, compress = "xz", overwrite = TRUE)
 
 # Above median.
 dta_above <- clean_dta_tagged %>%
@@ -92,7 +92,7 @@ dta_above <- clean_dta_tagged %>%
 construct_lol_champion_data(dta_above, filename = "lol_champ_dta_aboveM.csv")
 construct_lol_champion_pooled_data(fread("lol_champ_dta_aboveM.csv"), filename = "lol_champ_pool_dta_aboveM.csv")
 lol_champ_pool_dta_aboveM <- fread("lol_champ_pool_dta_aboveM.csv")
-use_data(lol_champ_pool_dta_aboveM, compress = "xz")
+use_data(lol_champ_pool_dta_aboveM, compress = "xz", overwrite = TRUE)
 
 # Descriptives ------------------------------------------------------------
 ## Overview.
@@ -127,4 +127,4 @@ cat("Total player-hours in sample:", round(total_hours_all_players, 0), "\n")
 ## Impute 2022 US federal minimum wage.
 min_wage <- 7.25
 opportunity_cost_usd <- total_hours_all_players * min_wage
-cat("Imputed opportunity cost:", round(opportunity_cost_usd, 0), "USD\n")
+cat("Imputed opportunity cost:", round(opportunity_cost_usd, 0), "USD \n")

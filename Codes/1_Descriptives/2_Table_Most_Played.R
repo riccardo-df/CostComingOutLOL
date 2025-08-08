@@ -166,7 +166,7 @@ latex <- function() {
       \\hline \\\\[-1.8ex]
       \\end{tabular}
       \\end{adjustbox}
-      \\caption{Most popular characters by role based on average pick rates before the coming-out event. The pre-treatment average pick rates are displayed in parenthesis.}
+      \\caption{Most popular characters by role based on average pick rates (displayed in parenthesis).}
       \\label{table_most_played_champions}
     \\end{table}
 \\endgroup")

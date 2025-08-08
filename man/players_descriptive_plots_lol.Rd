@@ -13,10 +13,13 @@ players_descriptive_plots_lol(save_here = getwd())
 Produces a nice plot.
 }
 \description{
-Produces plots for the number of matches and hours played.
+Produces histograms for the number of matches and hours played.
 }
 \details{
-\code{treatment_date1} and must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
+This routine computes, for each player, the total number of matches and hours played, as well as daily averages of number of matches and hours played. It then displays the distributions
+of these variables. Note that all variables are at the player-level.
+
+\code{treatment_date} and must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 }
 \author{
 Riccardo Di Francesco

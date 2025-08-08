@@ -15,8 +15,8 @@ Constructs the LoL player data set.
 \details{
 \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 
-First, it keeps only players that played at least 50 matches in our data. This is because, due to our data construction, some players
-might appear only once or twice, and thus information on their behavior is "weak."
+First, it keeps only players that played at least 10 matches both before and after the coming-out event. This is because, due to our data construction, some players
+might appear only once or twice, and thus information on their behavior is not meaningful.
 
 Second, it generates the variables of interest.
 \describe{

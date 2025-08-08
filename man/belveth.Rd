@@ -4,12 +4,12 @@
 \alias{belveth}
 \title{LoL Belveth}
 \usage{
-belveth(n_pre_matches, save_here = getwd())
+belveth(save_here = getwd())
 }
 \arguments{
-\item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
-
 \item{save_here}{String denoting the path where to save the figures.}
+
+\item{n_pre_matches}{How many matches before \code{treatment_date} players must have played to be kept in the data set.}
 }
 \value{
 None. It produces nice plots.
@@ -18,7 +18,7 @@ None. It produces nice plots.
 Check whether Graves' prior and non-prior users switched to Belveth.
 }
 \details{
-
+We consider only prior-users. We classify them as detailed in the paper.\cr
 }
 \author{
 Riccardo Di Francesco

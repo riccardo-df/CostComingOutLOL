@@ -29,7 +29,7 @@ bandwidth_regional <- 3
 donor_pools <- c("all", "support_adc")
 estimators <- c("sc", "sc_reg")
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
-inference <- FALSE
+inference <- TRUE
 n_boot <- 200
 backdate <- 10
 

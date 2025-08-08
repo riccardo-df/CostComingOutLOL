@@ -16,10 +16,9 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Plots -------------------------------------------------------------------
 ## Settings.
-champions <- c("Graves")
+champions <- c("Belveth")
 
 bandwidth_champions <- 5
-
 treatment_date <- NULL
 
 save_here_champions <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
@@ -31,7 +30,7 @@ champions_descriptive_plots_lol(champions,
                                 bandwidth = bandwidth_champions,
                                 ylims_rates = c(0, 40),
                                 save_here = save_here_champions,
-                                dataset = "above")
+                                dataset = "main")
 
 ## Produce plots for player activity.
 players_descriptive_plots_lol(save_here = save_here_players)

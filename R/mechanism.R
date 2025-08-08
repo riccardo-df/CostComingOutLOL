@@ -1,10 +1,8 @@
 #' LoL Players' Performance Plots
 #'
 #' Divides players into Graves prior and non-prior users and produces plots showing the average performance of players
-#' in each group before and after the treatment. It also produces a plot to investigate which positions are the most played in each group before and after the treatment. The same
-#' plot is then repeated only for those prior users that are "treated" as discussed in the documentation of the \code{\link{did_players_performance}}.
+#' in each group before and after the treatment. It also produces a plot to investigate which positions are the most played in each group before and after the treatment.
 #'
-#' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param treatment_date Object of class \code{POSIXct}. When the treatment took place.
 #' @param save_here String denoting the path where to save the figures.
 #'
@@ -14,17 +12,13 @@
 #' @details
 #' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
 #'
-#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
-#'
 #' @import dplyr reshape2 ggplot2 patchwork
 #' @importFrom stats sd
 #'
 #' @author Riccardo Di Francesco
 #'
 #' @export
-players_performance_plots_lol <- function(n_pre_matches,
-                                 treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"),
-                                 save_here = getwd()) {
+players_performance_plots_lol <- function(treatment_date = as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d"), save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   n_matches <- NULL
   disclosure <- NULL
@@ -54,20 +48,14 @@ players_performance_plots_lol <- function(n_pre_matches,
   lol_player_dta <- lol_player_dta %>%
     dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0))
 
-  keep_these_players <- lol_player_dta %>%
+  lol_player_dta <- lol_player_dta %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
                   n_matches_post = sum(n_matches * disclosure)) %>%
-    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0) %>%
-    dplyr::distinct(id, .keep_all = TRUE) %>%
-    dplyr::select(id, n_matches_pre, n_matches_post) %>%
-    dplyr::ungroup()
-
-  lol_player_dta <- lol_player_dta %>%
-    dplyr::filter(id %in% keep_these_players$id) %>%
-    dplyr::left_join(keep_these_players, by = "id") %>%
-    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0)) %>%
-    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate, top, jungle, mid, bottom, support, lgb, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::ungroup() %>%
+    dplyr::select(day, disclosure, id, graves_rate, graves_ban_rate,
+                  top_rate, jungle_rate, mid_rate, bottom_rate, support_rate, lgb_rate,
+                  n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 1.) Define prior users.
   treated_controls <- lol_player_dta %>%
@@ -84,7 +72,9 @@ players_performance_plots_lol <- function(n_pre_matches,
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::left_join(treated_controls, by = "id") %>%
-    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate, top, jungle, mid, bottom, support, lgb, n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
+    dplyr::select(day, id, disclosure, prior_user, graves_rate, graves_ban_rate,
+                  top_rate, jungle_rate, mid_rate, bottom_rate, support_rate, lgb_rate,
+                  n_matches, n_matches_pre, n_matches_post, win_rate, gold_avg, kills_avg, assists_avg, deaths_avg)
 
   ## 2.) Average players' pick rates for Graves in each group.
   plot_avg_rates_buckets_dta <- lol_player_dta %>%
@@ -204,13 +194,7 @@ players_performance_plots_lol <- function(n_pre_matches,
   plot_positions_buckets_dta_pre <- lol_player_dta %>%
     dplyr::filter(disclosure == 0) %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
+    dplyr::mutate(avg_top_rate_pre = mean(top_rate),
                   avg_jungle_rate_pre = mean(jungle_rate),
                   avg_mid_rate_pre = mean(mid_rate),
                   avg_bottom_rate_pre = mean(bottom_rate),
@@ -232,13 +216,7 @@ players_performance_plots_lol <- function(n_pre_matches,
   plot_positions_buckets_dta_post <- lol_player_dta %>%
     dplyr::filter(disclosure == 1) %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_post = mean(top_rate),
+    dplyr::mutate(avg_top_rate_post = mean(top_rate),
                   avg_jungle_rate_post = mean(jungle_rate),
                   avg_mid_rate_post = mean(mid_rate),
                   avg_bottom_rate_post = mean(bottom_rate),
@@ -263,13 +241,7 @@ players_performance_plots_lol <- function(n_pre_matches,
   plot_positions_se_buckets_dta_pre <- lol_player_dta %>%
     dplyr::filter(disclosure == 0) %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_pre = mean(top_rate),
+    dplyr::mutate(avg_top_rate_pre = mean(top_rate),
                   avg_jungle_rate_pre = mean(jungle_rate),
                   avg_mid_rate_pre = mean(mid_rate),
                   avg_bottom_rate_pre = mean(bottom_rate),
@@ -291,13 +263,7 @@ players_performance_plots_lol <- function(n_pre_matches,
   plot_positions_se_buckets_dta_post <- lol_player_dta %>%
     dplyr::filter(disclosure == 1) %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(top_rate = top / n_matches * 100,
-                  jungle_rate = jungle / n_matches * 100,
-                  mid_rate = mid / n_matches * 100,
-                  bottom_rate = bottom / n_matches * 100,
-                  support_rate = support / n_matches * 100,
-                  lgb_rate = lgb / n_matches * 100,
-                  avg_top_rate_post = mean(top_rate),
+    dplyr::mutate(avg_top_rate_post = mean(top_rate),
                   avg_jungle_rate_post = mean(jungle_rate),
                   avg_mid_rate_post = mean(mid_rate),
                   avg_bottom_rate_post = mean(bottom_rate),
@@ -345,7 +311,6 @@ players_performance_plots_lol <- function(n_pre_matches,
 #'
 #' Uses a diff-in-diff strategy to investigate the impact of the coming-out event on players' performance.
 #'
-#' @param n_pre_matches How many matches before \code{treatment_date} players must have played to be kept in the data set.
 #' @param filter Which players to retain for the analysis.
 #' @param treatment_date Object of class \code{POSIXct}. The date of the treatment.
 #'
@@ -353,17 +318,14 @@ players_performance_plots_lol <- function(n_pre_matches,
 #' Returns a list with \code{treatment_date} and all the diff-in-diff results. The user can post-process the output using the \code{\link{plot_did}} function.
 #'
 #' @details
-#' We define three versions of the treatment, as described in the paper. We keep the control group fixed as it is always composed of those prior-users that do not reduce their pick rates for Graves at all.\cr
+#' We consider only "prior" users.
+#' We define two versions of the treatment, as described in the paper. We keep the control group fixed as it is always composed of those prior-users that do not reduce their pick rates for Graves at all.\cr
 #'
 #' The estimators of Callaway and Sant’Anna (2021) are employed to estimate the impact of the coming-out event on the performance of treated players. This is implemented using the \code{\link[did]{att_gt}} function.
 #' Technical details are given in the associated documentation. To summarize, we identify and estimate the average treatment effect on the treated for all time t > \code{treatment_date}. "Effects" before that date are
-#' also estimated and are useful to check the plausibility of the parallel trend assumption. We consider both the unconditional estimator and the doubly-robust estimator that conditions on pre-treatment covariates
-#' (average kills, assists, deaths, gold earned, and matches played each day).\cr
+#' also estimated and are useful to check the plausibility of the parallel trend assumption.\cr
 #'
 #' \code{treatment_date} must be created by \code{as.POSIXct("YYYY-MM-DD", tryFormats = "\%Y-\%m-\%d")}.\cr
-#'
-#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
-#' Among these, only "prior_users" players are considered.
 #'
 #' @import dplyr fixest did
 #' @importFrom lubridate month
@@ -401,12 +363,10 @@ did_players_performance <- function(n_pre_matches,
 
   keep_these_players <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
-                  n_matches_post = sum(n_matches * disclosure),
-                  avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
+    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
                   prior_user = avg_graves_rate_pre >= 5) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0 & prior_user) %>%
+    dplyr::filter(prior_user) %>%
     dplyr::distinct(id, .keep_all = TRUE)
 
   lol_player_dta <- lol_player_dta %>%
@@ -464,10 +424,6 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
                                                xformla = ~ 1,
                                                data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
 
-  dr_results_moderate_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "moderate_reduction_no",
-                                                          xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-                                                          data = estimation_dta_moderate_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
-
   # Substantial reduction.
   estimation_dta_substantial_reduction <- estimation_dta %>%
     dplyr::filter(no_reduction == 1 | substantial_reduction == 1)
@@ -476,17 +432,10 @@ N. players is ", length(unique(lol_player_dta$id)), " of which:
                                                   xformla = ~ 1,
                                                   data = estimation_dta_substantial_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
 
-  dr_results_substantial_reduction_covariates <- did::att_gt(yname = "win_rate", tname = "day_no", idname = "id_no", gname = "substantial_reduction_no",
-                                                             xformla = ~ mean_n_matches_pre + mean_gold_pre + mean_kills_pre + mean_assists_pre + mean_deaths_pre,
-                                                             data = estimation_dta_substantial_reduction, panel = TRUE, allow_unbalanced_panel = TRUE)
-
-
   ## 5.) Output.
   return(list("treatment_date" = treatment_date,
               "dr_moderate_reduction" = dr_results_moderate_reduction,
-              "dr_moderate_reduction_covariates" = dr_results_moderate_reduction_covariates,
-              "dr_substantial_reduction" = dr_results_substantial_reduction,
-              "dr_substantial_reduction_covariates" = dr_results_substantial_reduction_covariates))
+              "dr_substantial_reduction" = dr_results_substantial_reduction))
 }
 
 
@@ -513,34 +462,24 @@ latex_did <- function(did_results, seed = 1986) {
   set.seed(seed)
 
   dr_moderate_reduction_agg <- did::aggte(did_results$dr_moderate_reduction, type = "simple")
-  dr_moderate_reduction_covariates_agg <- did::aggte(did_results$dr_moderate_reduction_covariates, type = "simple")
   dr_substantial_reduction_agg <- did::aggte(did_results$dr_substantial_reduction, type = "simple")
-  dr_substantial_reduction_covariates_agg <- did::aggte(did_results$dr_substantial_reduction_covariates, type = "simple")
 
   dr_moderate_reduction_point <- dr_moderate_reduction_agg$overall.att
-  dr_moderate_reduction_covariates_point <- dr_moderate_reduction_covariates_agg$overall.att
   dr_substantial_reduction_point <- dr_substantial_reduction_agg$overall.att
-  dr_substantial_reduction_covariates_point <- dr_substantial_reduction_covariates_agg$overall.att
 
   dr_moderate_reduction_se <- dr_moderate_reduction_agg$overall.se
-  dr_moderate_reduction_covariates_se <- dr_moderate_reduction_covariates_agg$overall.se
   dr_substantial_reduction_se <- dr_substantial_reduction_agg$overall.se
-  dr_substantial_reduction_covariates_se <- dr_substantial_reduction_covariates_agg$overall.se
 
   dr_moderate_reduction_cil <- dr_moderate_reduction_point - 1.96 * dr_moderate_reduction_se
-  dr_moderate_reduction_covariates_cil <- dr_moderate_reduction_covariates_point - 1.96 * dr_moderate_reduction_covariates_se
   dr_substantial_reduction_cil <- dr_substantial_reduction_point - 1.96 * dr_substantial_reduction_se
-  dr_substantial_reduction_covariates_cil <- dr_substantial_reduction_covariates_point - 1.96 * dr_substantial_reduction_covariates_se
 
   dr_moderate_reduction_ciu <- dr_moderate_reduction_point + 1.96 * dr_moderate_reduction_se
-  dr_moderate_reduction_covariates_ciu <- dr_moderate_reduction_covariates_point + 1.96 * dr_moderate_reduction_covariates_se
   dr_substantial_reduction_ciu <- dr_substantial_reduction_point + 1.96 * dr_substantial_reduction_se
-  dr_substantial_reduction_covariates_ciu <- dr_substantial_reduction_covariates_point + 1.96 * dr_substantial_reduction_covariates_se
 
   ## Extract information.
-  atts <- format(round(c(dr_moderate_reduction_point, dr_moderate_reduction_covariates_point, dr_substantial_reduction_point, dr_substantial_reduction_covariates_point), 3), nsmall = 3)
-  cils <- format(round(c(dr_moderate_reduction_cil, dr_moderate_reduction_covariates_cil, dr_substantial_reduction_cil, dr_substantial_reduction_covariates_cil), 3), nsmall = 3)
-  cius <- format(round(c(dr_moderate_reduction_ciu, dr_moderate_reduction_covariates_ciu, dr_substantial_reduction_ciu, dr_substantial_reduction_covariates_ciu), 3), nsmall = 3)
+  atts <- format(round(c(dr_moderate_reduction_point, dr_substantial_reduction_point), 3), nsmall = 3)
+  cils <- format(round(c(dr_moderate_reduction_cil, dr_substantial_reduction_cil), 3), nsmall = 3)
+  cius <- format(round(c(dr_moderate_reduction_ciu, dr_substantial_reduction_ciu), 3), nsmall = 3)
 
   n_players_moderate <- length(unique(did_results$dr_moderate_reduction$DIDparams$data$id_no))
   n_players_substantial <- length(unique(did_results$dr_substantial_reduction$DIDparams$data$id_no))
@@ -571,7 +510,7 @@ latex_did <- function(did_results, seed = 1986) {
   \\begin{table}[H]
     \\centering
     \\begin{adjustbox}{width = 1\\textwidth}
-    \\begin{tabular}{@{\\extracolsep{5pt}}l c c c c}
+    \\begin{tabular}{@{\\extracolsep{5pt}}l c c}
       \\\\[-1.8ex]\\hline
       \\hline \\\\[-1.8ex]
       & \\multicolumn{2}{c}{\\textit{Moderate Reduction}} & \\multicolumn{2}{c}{\\textit{Substantial Reduction}} \\\\ \\cmidrule{2-3} \\cmidrule{4-5}
@@ -584,7 +523,6 @@ latex_did <- function(did_results, seed = 1986) {
 
       \\midrule
 
-      Conditional PT & & \\checkmark & & \\checkmark \\\\
       Players & ", stringr::str_sub(paste(paste0(rep(n_players_moderate, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_players_substantial, 2), " &"), collapse = " "), end = -3), " \\\\
       Treated & ", paste0(rep(n_treated_moderate_reduction, 2), " & "), stringr::str_sub(paste(paste0(rep(n_treated_substantial_reduction, 2), " &"), collapse = " "), end = -3), " \\\\
       Observations & ", stringr::str_sub(paste(paste0(rep(n_observations_moderate, 2), " &"), collapse = " "), end = -3), " & ", stringr::str_sub(paste(paste0(rep(n_observations_substantial, 2), " &"), collapse = " "), end = -3), " \\\\
@@ -594,7 +532,7 @@ latex_did <- function(did_results, seed = 1986) {
 
       \\end{tabular}
       \\end{adjustbox}
-      \\caption{Point estimates and $95\\%$ confidence intervals for $\\overline{ATT \\left( t \\right)}$. Standard errors are clustered at the player level and computed using the multiplier bootstrap. Columns marked with checkmarks under 'Conditional PT' display the results obtained with the doubly-robust approach. The remaining columns display the results obtained with the unconditional estimator.}
+      \\caption{Point estimates and $95\\%$ confidence intervals for $\\overline{ATT \\left( t \\right)}$. Standard errors are clustered at the player level and computed using the multiplier bootstrap.}
       \\label{table_did_performance_measures}
     \\end{table}
 \\endgroup \n", sep = "")
@@ -648,7 +586,6 @@ plot_did <- function(did_results, save_here = getwd()) {
   results_substantial_reduction$treatment_type <- "Substantial reduction"
   results_substantial_reduction$parallel_type <- "Unconditional"
   results_substantial_reduction$plot_post <- as.factor(1 * (results_substantial_reduction$year >= (as.Date(treatment_date) - 10)))
-
 
   ## 1.) Produce and save plot.
   plot_pre <- results_moderate_reduction %>%
@@ -704,15 +641,12 @@ plot_did <- function(did_results, save_here = getwd()) {
 #' @details
 #' We consider only prior-users. We classify them as detailed in the paper.\cr
 #'
-#' Players that have played less than \code{n_pre_matches} before \code{treatment_date} or that never played after are dropped. The number of players remaining in the data set is printed in the console.
-#'
 #' @import dplyr ggplot2 patchwork
 #'
 #' @author Riccardo Di Francesco
 #'
 #' @export
-belveth <- function(n_pre_matches,
-                    save_here = getwd()) {
+belveth <- function(save_here = getwd()) {
   ## 0.) Handling inputs and checks.
   n_matches <- NULL
   n_matches_pre <- NULL
@@ -745,16 +679,16 @@ belveth <- function(n_pre_matches,
 
   keep_these_players <- lol_player_dta %>%
     dplyr::group_by(id) %>%
-    dplyr::mutate(n_matches_pre = sum(n_matches * (1 - disclosure)),
-                  n_matches_post = sum(n_matches * disclosure),
-                  avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
+    dplyr::mutate(avg_graves_rate_pre = sum(graves_rate * (1 - disclosure)) / sum(1 - disclosure),
                   prior_user = avg_graves_rate_pre >= 5) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(n_matches_pre >= n_pre_matches & n_matches_post > 0 & prior_user) %>%
+    dplyr::filter(prior_user) %>%
     dplyr::distinct(id, .keep_all = TRUE)
 
   lol_player_dta <- lol_player_dta %>%
     dplyr::filter(id %in% keep_these_players$id) %>%
+    dplyr::group_by(id) %>%
+    dplyr::mutate(disclosure = ifelse(day > treatment_date, 1, 0)) %>%
     dplyr::select(day, belveth_released, disclosure, id, graves_rate, belveth_rate) %>%
     dplyr::ungroup()
 

@@ -22,9 +22,6 @@ champions <- "LGB"
 outcome_colname <- "pick_rate_pooled"
 bandwidth <- 3
 
-min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
-max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")
-
 ## Set SC estimator.
 donors <- "non_lgb"
 estimator <- "sc"
@@ -36,7 +33,7 @@ backdate <- 10
 covariates <- c()
 
 # Estimation --------------------------------------------------------------
-pooled_result <- run_main_pooled(champions, outcome_colname, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
+pooled_result <- run_main_pooled(champions, outcome_colname, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates)
 
 # Plots -------------------------------------------------------------------
 unique_actives <- sort(rownames(summary(pooled_result$LGB$tau_hat)$controls))
@@ -44,8 +41,7 @@ unique_actives <- sort(rownames(summary(pooled_result$LGB$tau_hat)$controls))
 palette <- pal_jco()(length(unique_actives))
 names(palette) <- unique_actives
 
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
-
+save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
 produce_plots_pooled(pooled_result, ylims = c(0, 40), palette, save_here)
 
 # Point estimate and confidence intervals ---------------------------------

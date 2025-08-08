@@ -36,7 +36,7 @@ backdate <- 10
 covariates <- c()
 
 # Estimation --------------------------------------------------------------
-pooled_result <- run_main_pooled(champions, outcome_colnames, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates, max_date = max_date)
+pooled_result <- run_main_pooled(champions, outcome_colnames, donors, estimator, treatment_date, backdate, inference = inference, n_boot = n_boot, bandwidth = bandwidth, covariate_colnames = covariates)
 
 # Plots -------------------------------------------------------------------
 unique_actives <- sort(rownames(summary(pooled_result$Graves$tau_hat)$controls))
@@ -44,8 +44,7 @@ unique_actives <- sort(rownames(summary(pooled_result$Graves$tau_hat)$controls))
 palette <- pal_jco()(length(unique_actives))
 names(palette) <- unique_actives
 
-save_here <- "C:/Users/riccardo-df/Dropbox/University/Research/Projects/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Strength"
-
+save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Graves_Strength"
 produce_plots_pooled(pooled_result, ylims = c(20, 80), palette, save_here)
 
 # Point estimate and confidence intervals ---------------------------------

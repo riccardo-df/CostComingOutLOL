@@ -237,11 +237,11 @@ clean_lol_data <- function(dta) {
   dta_noduplicate$ban[dta_noduplicate$ban == 143] = "Zyra"
   dta_noduplicate$ban[dta_noduplicate$ban == -1] = "None"
 
-  ## Format dates by dropping hours, minutes and seconds.
+  ## Format dates by dropping hours, minutes, and seconds.
   cat("Formatting time variable. \n")
   dta_noduplicate$day <- as.POSIXct(strftime(dta_noduplicate$day, format = "%Y-%m-%d"))
 
-  ## To each champion, assign most-played positions.
+  ## To each champion, assign most-played positions. Then drop "weird" roles.
   cat("Identifying main and auxiliary positions. \n")
   champs_positions1 <- apply(table(dta_noduplicate$champion, dta_noduplicate$position), MARGIN = 1, function(x) {
     if (which.max(x) == 1) {"BOTTOM"}
@@ -589,8 +589,8 @@ construct_lol_champion_pooled_data <- function(dta, filename = "lol_champ_pool_d
 #' @details
 #' \code{\link{construct_lol_player_data}} performs the following operations on \code{dta}.\cr
 #'
-#' First, it keeps only players that played at least 50 matches in our data. This is because, due to our data construction, some players
-#' might appear only once or twice, and thus information on their behavior is "weak."
+#' First, it keeps only players that played at least 10 matches both before and after the coming-out event. This is because, due to our data construction, some players
+#' might appear only once or twice, and thus information on their behavior is not meaningful.
 #'
 #' Second, it generates the variables of interest.
 #' \describe{
@@ -651,14 +651,19 @@ construct_lol_player_data <- function(dta) {
   deaths_avg <- NULL
   day_no <- NULL
 
-  ## Keep players with at least 50 matches.
-  cat("Keep players with at least 50 matches. \n")
-  dta <- dta %>%
+  ## Keep players with at least 10 matches before and after the event.
+  cat("Keep players with at least 10 matches both before and after the event. \n")
+  treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")
+
+  eligible_players  <- dta %>%
     dplyr::group_by(player_puiid) %>%
-    dplyr::mutate(n_matches = n_distinct(match_id)) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(n_matches >= 50) %>%
-    dplyr::select(-n_matches)
+    dplyr::summarise(n_matches_before = n_distinct(match_id[day < treatment_date]),
+                     n_matches_after = n_distinct(match_id[day >= treatment_date]),
+                     .groups = "drop") %>%
+    dplyr::filter(n_matches_before >= 10, n_matches_after >= 10)
+
+  dta <- dta %>%
+    dplyr::semi_join(eligible_players, by = "player_puiid")
 
   ## Generate variables.
   cat("Generating variables. \n")
