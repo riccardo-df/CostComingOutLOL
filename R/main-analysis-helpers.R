@@ -788,8 +788,10 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   ses_pooled <- sapply(pooled_result_list, function(x) { x[[my_champion]]$se_tau_hat })
 
   if (is.list(ses_pooled)) {
+    pvalues_pooled <- rep(NA, n_col-1)
     cils_pooled <- cius_pooled <- rep(NA, n_col-1)
   } else {
+    pvalues_pooled <- trimws(format(round(2 * pnorm(-abs(tau_hats_pooled / ses_pooled)), 3), nsmall = 3))
     cils_pooled <- trimws(format(round(tau_hats_pooled - 1.96 * ses_pooled, 3), nsmall = 3))
     cius_pooled <- trimws(format(round(tau_hats_pooled + 1.96 * ses_pooled, 3), nsmall = 3))
   }
@@ -801,8 +803,10 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
   ses_regional <- lapply(regional_result_list, function(x) { x[[my_champion]]$ses %>% unlist() })
 
   if (is.null(ses_regional[[1]])) {
+    pvalues_regional <- matrix(NA, nrow = 4, ncol = length(donor_pools))
     cils_regional <- cius_regional <- matrix(NA, nrow = 4, ncol = length(donor_pools))
   } else {
+    pvalues_regional <- format(round(mapply(function(x, y) { 2 * pnorm(-abs(x / y)) }, x = tau_hats_regional, y = ses_regional), 3), nsmall = 3)
     cils_regional <- format(round(mapply(function(x, y) { x - 1.96 * y }, x = tau_hats_regional, y = ses_regional), 3), nsmall = 3)
     cius_regional <- format(round(mapply(function(x, y) { x + 1.96 * y }, x = tau_hats_regional, y = ses_regional), 3), nsmall = 3)
   }
@@ -812,24 +816,28 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
     x %>% left_join(regional_dta, by = c("region", "day")) %>% dplyr::group_by(region) %>% dplyr::mutate(rmse = Metrics::rmse(smooth_outcome, synth_outcome)) %>% dplyr::pull(rmse) %>% unique() })
 
   tau_hats_europe <- sapply(tau_hats_regional, function(x) { x["Europe"] })
+  pvalues_europe <- pvalues_regional[1, ]
   cils_europe <- cils_regional[1, ]
   cius_europe <- cius_regional[1, ]
   n_donors_europe <- sapply(n_donors_regional, function(x) { x["Europe"] })
   rmses_europe <- trimws(format(round(sapply(rmses_regional, function(x) { x[1] }), 3), nsmall = 3))
 
   tau_hats_korea <- sapply(tau_hats_regional, function(x) { x["Korea"] })
+  pvalues_korea <- pvalues_regional[2, ]
   cils_korea <- cils_regional[2, ]
   cius_korea <- cius_regional[2, ]
   n_donors_korea <- sapply(n_donors_regional, function(x) { x["Korea"] })
   rmses_korea <- trimws(format(round(sapply(rmses_regional, function(x) { x[2] }), 3), nsmall = 3))
 
   tau_hats_latin_am <- sapply(tau_hats_regional, function(x) { x["Latin_America"] })
+  pvalues_latin_am <- pvalues_regional[3, ]
   cils_latin_am <- cils_regional[3, ]
   cius_latin_am <- cius_regional[3, ]
   n_donors_latin_am <- sapply(n_donors_regional, function(x) { x["Latin_America"] })
   rmses_latin_am <- trimws(format(round(sapply(rmses_regional, function(x) { x[3] }), 3), nsmall = 3))
 
   tau_hats_north_am <- sapply(tau_hats_regional, function(x) { x["North_America"] })
+  pvalues_north_am <- pvalues_regional[4, ]
   cils_north_am <- cils_regional[4, ]
   cius_north_am <- cius_regional[4, ]
   n_donors_north_am <- sapply(n_donors_regional, function(x) { x["North_America"] })
@@ -852,6 +860,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 1: \\textit{All}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_pooled, " &"), collapse = " "), end = -4), " \\\\
+      $p\\text{-value}$ & ", stringr::str_sub(paste(paste0(pvalues_pooled, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_pooled, ", ", cius_pooled, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_pooled, " &"), collapse = " "), end = -3), " \\\\
       RMSE & ", stringr::str_sub(paste(paste0(rmses_pooled, " &"), collapse = " "), end = -3), " \\\\
@@ -859,6 +868,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 2: \\textit{Europe}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_europe, " &"), collapse = " "), end = -4), " \\\\
+      $p\\text{-value}$ & ", stringr::str_sub(paste(paste0(pvalues_europe, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_europe, ", ", cius_europe, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_europe, " &"), collapse = " "), end = -3), " \\\\
       RMSE & ", stringr::str_sub(paste(paste0(rmses_europe, " &"), collapse = " "), end = -3), " \\\\
@@ -866,6 +876,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 3: \\textit{Korea}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_korea, " &"), collapse = " "), end = -4), " \\\\
+      $p\\text{-value}$ & ", stringr::str_sub(paste(paste0(pvalues_korea, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_korea, ", ", cius_korea, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_korea, " &"), collapse = " "), end = -3), " \\\\
       RMSE & ", stringr::str_sub(paste(paste0(rmses_korea, " &"), collapse = " "), end = -3), " \\\\
@@ -873,6 +884,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 4: \\textit{Latin America}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_latin_am, " &"), collapse = " "), end = -4), " \\\\
+      $p\\text{-value}$ & ", stringr::str_sub(paste(paste0(pvalues_latin_am, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_latin_am, ", ", cius_latin_am, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_latin_am, " &"), collapse = " "), end = -3), " \\\\
       RMSE & ", stringr::str_sub(paste(paste0(rmses_latin_am, " &"), collapse = " "), end = -3), " \\\\
@@ -880,6 +892,7 @@ produce_latex <- function(pooled_result_list, regional_result_list) {
 
   cat("      \\multicolumn{", n_col, "}{l}{\\textbf{\\small Panel 5: \\textit{North America}}} \\\\
       $\\hat{\\tau}$ & ", stringr::str_sub(paste(paste0(tau_hats_north_am, " &"), collapse = " "), end = -4), " \\\\
+      $p\\text{-value}$ & ", stringr::str_sub(paste(paste0(pvalues_north_am, " &"), collapse = " "), end = -4), " \\\\
       $95\\%$ CI & ", stringr::str_sub(paste(paste0("[", cils_north_am, ", ", cius_north_am, "] &"), collapse = " "), end = -3), " \\\\
       N. Donors & ", stringr::str_sub(paste(paste0(n_donors_north_am, " &"), collapse = " "), end = -3), " \\\\
       RMSE & ", stringr::str_sub(paste(paste0(rmses_north_am, " &"), collapse = " "), end = -3), " \\\\

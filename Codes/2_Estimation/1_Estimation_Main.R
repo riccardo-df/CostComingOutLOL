@@ -11,8 +11,8 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL")
-inst <- lapply(pkgs, library, character.only = TRUE)
+# pkgs <- c("CostComingOutLOL")
+# inst <- lapply(pkgs, library, character.only = TRUE)
 
 # Settings --------------------------------------------
 ## Select champions.
