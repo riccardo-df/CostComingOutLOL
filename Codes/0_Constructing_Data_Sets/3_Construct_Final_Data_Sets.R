@@ -11,8 +11,9 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL", "data.table", "dplyr", "ggplot2", "tidyr")
+pkgs <- c("devtools", "data.table", "dplyr", "ggplot2", "tidyr")
 inst <- lapply(pkgs, library, character.only = TRUE)
+load_all()
 
 ## Loading data.
 clean_dta <- fread("C:/Users/rdif/Dropbox/University/Research/Data_Sets/LoL/Clean/lol_cleaned.csv")

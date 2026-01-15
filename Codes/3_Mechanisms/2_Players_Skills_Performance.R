@@ -11,8 +11,10 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL")
-inst <- lapply(pkgs, library, character.only = TRUE)
+# pkgs <- c("CostComingOutLOL")
+# inst <- lapply(pkgs, library, character.only = TRUE)
+library(devtools)
+load_all()
 
 # Settings ----------------------------------------------------------------
 treatment_date <- as.POSIXct("2022-06-01", tryFormats = "%Y-%m-%d")

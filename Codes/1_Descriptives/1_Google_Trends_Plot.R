@@ -54,8 +54,17 @@ plot_graves <- plot_dta %>%
   scale_color_brewer(palette = "Set2") +
   xlab("") + ylab("Search interest") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 15, face = "italic"),
-        legend.position = "none")
+  theme(plot.title = element_text(hjust = 0.5, face = "italic"),
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16),
+        axis.text.x = element_text(size = 13, angle = 45, hjust = 1),
+        axis.text.y  = element_text(size = 13),
+        strip.text = element_text(size = 16, face = "bold"),
+        legend.position = "none",
+        legend.title = element_blank(),
+        legend.direction = "vertical",
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(2, "lines"))
 
 plot_graves_twisted <- plot_dta %>%
   ggplot(aes(x = week, y = hits, color = champion)) +
@@ -67,8 +76,17 @@ plot_graves_twisted <- plot_dta %>%
   facet_wrap(vars(gay_query), nrow = 2) +
   xlab("") + ylab("Search interest") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, face = "italic"), axis.text.x = element_text(angle = 45, hjust = 1), strip.text = element_text(size = 15, face = "italic"),
-        legend.position = c(0.12, 0.92), legend.title = element_blank())
+  theme(plot.title = element_text(hjust = 0.5, face = "italic"),
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16),
+        axis.text.x = element_text(size = 13, angle = 45, hjust = 1),
+        axis.text.y  = element_text(size = 13),
+        strip.text = element_text(size = 16, face = "bold"),
+        legend.position = c(0.12, 0.92),
+        legend.title = element_blank(),
+        legend.direction = "vertical",
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(2, "lines"))
 
 ## Export.
 ggsave(paste0(save_here, "/", "google_trends_time_grid_graves.pdf"), plot = plot_graves, width = 10, height = 7)

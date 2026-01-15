@@ -11,8 +11,10 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL")
-inst <- lapply(pkgs, library, character.only = TRUE)
+# pkgs <- c("CostComingOutLOL")
+# inst <- lapply(pkgs, library, character.only = TRUE)
+library(devtools)
+load_all()
 
 # Settings --------------------------------------------
 ## Select champions.
@@ -20,7 +22,7 @@ champions <- "Graves"
 
 ## Select outcome series.
 outcome_colnames <- "win_rate_pooled"
-bandwidth <- 3
+bandwidth <- 0.00000001
 
 min_date <- as.POSIXct("2022-01-01", tryFormats = "%Y-%m-%d")
 max_date <- as.POSIXct("2022-07-15", tryFormats = "%Y-%m-%d")

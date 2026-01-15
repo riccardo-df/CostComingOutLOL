@@ -11,14 +11,16 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL")
-inst <- lapply(pkgs, library, character.only = TRUE)
+# pkgs <- c("CostComingOutLOL")
+# inst <- lapply(pkgs, library, character.only = TRUE)
+library(devtools)
+load_all()
 
 # Plots -------------------------------------------------------------------
 ## Settings.
-champions <- c("Belveth")
+champions <- c("Ezreal", "Nautilus", "Ahri", "Jinx")
 
-bandwidth_champions <- 5
+bandwidth_champions <- 0.00000001
 treatment_date <- NULL
 
 save_here_champions <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/1_Descriptives/Champions"
@@ -28,7 +30,7 @@ save_here_players <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing
 champions_descriptive_plots_lol(champions,
                                 treatment_date,
                                 bandwidth = bandwidth_champions,
-                                ylims_rates = c(0, 40),
+                                ylims_rates = c(0, 50),
                                 save_here = save_here_champions,
                                 dataset = "main")
 

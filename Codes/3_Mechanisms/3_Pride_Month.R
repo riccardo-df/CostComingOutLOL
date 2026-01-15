@@ -11,8 +11,10 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL", "dplyr")
-inst <- lapply(pkgs, library, character.only = TRUE)
+# pkgs <- c("CostComingOutLOL")
+# inst <- lapply(pkgs, library, character.only = TRUE)
+library(devtools)
+load_all()
 
 # Settings --------------------------------------------
 ## Select champions.
@@ -20,7 +22,7 @@ champions <- "LGB"
 
 ## Select outcome series.
 outcome_colname <- "pick_rate_pooled"
-bandwidth <- 3
+bandwidth <- 0.00000001
 
 ## Set SC estimator.
 donors <- "non_lgb"
@@ -42,7 +44,7 @@ palette <- pal_jco()(length(unique_actives))
 names(palette) <- unique_actives
 
 save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/3_Mechanisms/Pride_Month"
-produce_plots_pooled(pooled_result, ylims = c(0, 40), palette, save_here)
+produce_plots_pooled(pooled_result, ylims = c(0, 20), palette, save_here)
 
 # Point estimate and confidence intervals ---------------------------------
 tau_hat <-  summary(pooled_result$LGB$tau_hat)$estimate

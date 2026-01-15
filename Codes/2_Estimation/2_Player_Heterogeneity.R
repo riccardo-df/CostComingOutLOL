@@ -11,8 +11,10 @@ rm(list = ls())
 set.seed(1986)
 
 ## Loading packages.
-pkgs <- c("CostComingOutLOL")
-inst <- lapply(pkgs, library, character.only = TRUE)
+# pkgs <- c("CostComingOutLOL")
+# inst <- lapply(pkgs, library, character.only = TRUE)
+library(devtools)
+load_all()
 
 # Settings --------------------------------------------
 ## Select champions.
@@ -21,7 +23,7 @@ champions <- "Graves"
 ## Select outcome series.
 outcome_colname_pool <- "pick_rate_pooled"
 
-bandwidth_pool <- 3
+bandwidth_pool <- 0.00000001
 
 ## Set SC estimator.
 pool <- "all"
@@ -47,5 +49,5 @@ pooled_result_top <- run_main_pooled(champions, outcome_colname_pool, pool, esti
 save_here <- "C:/Users/rdif/Dropbox/University/Research/Projects/Ongoing/Cost_Coming_Out/2_Data_Collection/CostComingOutLOL/Figures/2_Estimation/2022"
 
 ## Produce plots. Be careful, as plots are saved under the same filename and thus replaced at each call.
-produce_plots_pooled(pooled_result_bottom, ylims = c(0, 40), palette = NULL, save_here)
-produce_plots_pooled(pooled_result_top, ylims = c(0, 40), palette = NULL, save_here)
+produce_plots_pooled(pooled_result_bottom, ylims = c(0, 15), palette = NULL, save_here)
+produce_plots_pooled(pooled_result_top, ylims = c(0, 15), palette = NULL, save_here)

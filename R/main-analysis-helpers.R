@@ -48,7 +48,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
 
   if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) {
     y_label <- "Pick rate"
-  } else if (outcome_colname %in% c("pick_rate_pooled", "pick_rate_mean")) {
+  } else if (outcome_colname %in% c("pick_sum_pooled", "pick_sum_mean")) {
     y_label <- "Pick level"
   } else if (outcome_colname == "win_rate_pooled") {
     y_label <- "Win rate"
@@ -103,16 +103,26 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
       ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
       ggplot2::geom_line(linewidth = 1) +
-      ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
+      ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1, linetype = "dashed") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(vars(wrap)) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) +
       ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linetype = c("solid", "dashed"), linewidth = c(1, 1)))) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
-                     legend.position = c(0.11, 0.9), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.x = ggplot2::element_text(size = 16),
+                     axis.title.y = ggplot2::element_text(size = 16),
+                     axis.text.x = ggplot2::element_text(size = 13, angle = 45, hjust = 1),
+                     axis.text.y  = ggplot2::element_text(size = 13),
+                     strip.text = ggplot2::element_text(size = 16, face = "bold"),
+                     legend.position = c(0.11, 0.9),
+                     legend.title = ggplot2::element_blank(),
+                     legend.direction = "vertical",
+                     legend.text = element_text(size = 13),
+                     legend.key.width = grid::unit(2, "lines"))
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_main", year, ".pdf"), plot_main, width = 13, height = 7)
 
     # 2b.) Weights for the main fit.
@@ -126,8 +136,17 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
         ggplot2::facet_wrap(vars(wrap)) +
         ggplot2::xlab("") + ggplot2::ylab("Weight") +
         ggplot2::theme_bw() +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
-                       legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       axis.title.x = ggplot2::element_text(size = 16),
+                       axis.title.y = ggplot2::element_text(size = 16),
+                       axis.text.x = ggplot2::element_text(size = 13, angle = 45, hjust = 1),
+                       axis.text.y  = ggplot2::element_text(size = 13),
+                       strip.text = ggplot2::element_text(size = 16, face = "bold"),
+                       legend.position = "none",
+                       legend.title = ggplot2::element_blank(),
+                       legend.direction = "vertical",
+                       legend.text = element_text(size = 13),
+                       legend.key.width = grid::unit(2, "lines"))
       ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_pooled_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
     }
 
@@ -137,7 +156,7 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
       ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
       ggplot2::geom_line(linewidth = 1) +
-      ggplot2::geom_line(data = synth_outcomes_back[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
+      ggplot2::geom_line(data = synth_outcomes_back[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1, linetype = "dashed") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
       ggplot2::facet_wrap(vars(wrap)) +
@@ -145,9 +164,19 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
       ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linetype = c("solid", "dashed"), linewidth = c(1, 1)))) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
-                     legend.position = c(0.13, 0.82), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.x = ggplot2::element_text(size = 16),
+                     axis.title.y = ggplot2::element_text(size = 16),
+                     axis.text.x = ggplot2::element_text(size = 13, angle = 45, hjust = 1),
+                     axis.text.y  = ggplot2::element_text(size = 13),
+                     strip.text = ggplot2::element_text(size = 16, face = "bold"),
+                     legend.position = c(0.13, 0.82),
+                     legend.title = ggplot2::element_blank(),
+                     legend.direction = "vertical",
+                     legend.text = element_text(size = 13),
+                     legend.key.width = grid::unit(2, "lines"))
 
     # 2e.) Leave-one-out exercise.
     if (length(pooled_results[[my_champion]]$tau_hat_drop) != 0) {
@@ -161,8 +190,8 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
         ggplot2::annotation_raster(if (plot_2022_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
         ggplot2::annotation_raster(if (plot_2023_rainbow) rainbow else "white", xmin = as.POSIXct(pride_month_2023_begin), xmax = as.POSIXct(pride_month_2023_end), ymin = -Inf, ymax = Inf) +
         ggplot2::geom_line(linewidth = 1) +
-        ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1) +
-        ggplot2::geom_line(data = temp_drop, ggplot2::aes(y = synth_outcome, group = champion, col = "Synthetic LOO"), linetype = "dashed", linewidth = 0.5) +
+        ggplot2::geom_line(data = synth_outcomes[[my_champion]]$synth_outcome, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 1, linetype = "dashed") +
+        ggplot2::geom_line(data = temp_drop, ggplot2::aes(y = synth_outcome, group = champion, col = "Synthetic LOO"), linewidth = 1, linetype = "dotted") +
         ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
         ggplot2::facet_wrap(vars(wrap)) +
         ggplot2::xlab("") + ggplot2::ylab(y_label) +
@@ -170,8 +199,18 @@ produce_plots_pooled <- function(pooled_results, ylims = c(0, 100), palette = NU
         ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
         ggplot2::theme_bw() +
         ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Synthetic LOO" = "gray", "Actual" = "tomato")) +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
-                       legend.position = c(0.15, 0.78), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
+        ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linetype = c("solid", "dashed", "dotted"), linewidth = c(1, 1, 1)))) +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       axis.title.x = ggplot2::element_text(size = 16),
+                       axis.title.y = ggplot2::element_text(size = 16),
+                       axis.text.x = ggplot2::element_text(size = 13, angle = 45, hjust = 1),
+                       axis.text.y  = ggplot2::element_text(size = 13),
+                       strip.text = ggplot2::element_text(size = 16, face = "bold"),
+                       legend.position = c(0.15, 0.78),
+                       legend.title = ggplot2::element_blank(),
+                       legend.direction = "vertical",
+                       legend.text = element_text(size = 13),
+                       legend.key.width = grid::unit(2, "lines"))
 
       plot_robustness <- gridExtra::arrangeGrob(plot_back, plot_drop, ncol = 1)
     } else {
@@ -302,16 +341,26 @@ produce_plots_regional <- function(regional_results, ylims = c(0, 100), palette,
       ggplot2::ggplot(ggplot2::aes(x = day, y = smooth_outcome, color = "Actual")) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
       ggplot2::geom_line(linewidth = 0.6) +
-      ggplot2::geom_line(data = plot_synth_outcomes, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 0.6) +
+      ggplot2::geom_line(data = plot_synth_outcomes, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 0.6, linetype = "dashed") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::facet_wrap(~region, ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab(y_label) +
       ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linetype = c("solid", "dashed"), linewidth = c(1, 1)))) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 15, face = "bold"),
-                     legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 12))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.x = ggplot2::element_text(size = 16),
+                     axis.title.y = ggplot2::element_text(size = 16),
+                     axis.text.x = ggplot2::element_text(size = 13, angle = 45, hjust = 1),
+                     axis.text.y  = ggplot2::element_text(size = 13),
+                     strip.text = ggplot2::element_text(size = 16, face = "bold"),
+                     legend.position = c(0.11, 0.38),
+                     legend.title = ggplot2::element_blank(),
+                     legend.direction = "vertical",
+                     legend.text = element_text(size = 13),
+                     legend.key.width = grid::unit(2, "lines"))
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_main", year, ".pdf"), plot_main, width = 13, height = 7)
 
     plot_weights <- plot_weights_dta %>%
@@ -323,8 +372,17 @@ produce_plots_regional <- function(regional_results, ylims = c(0, 100), palette,
       ggplot2::facet_wrap(~region, ncol = 2) +
       ggplot2::xlab("") + ggplot2::ylab("Weight") +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), , axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text = ggplot2::element_text(size = 15, face = "bold"),
-                     legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical")
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.x = ggplot2::element_text(size = 16),
+                     axis.title.y = ggplot2::element_text(size = 16),
+                     axis.text.x = ggplot2::element_text(size = 13, angle = 45, hjust = 1),
+                     axis.text.y  = ggplot2::element_text(size = 13),
+                     strip.text = ggplot2::element_text(size = 16, face = "bold"),
+                     legend.position = "none",
+                     legend.title = ggplot2::element_blank(),
+                     legend.direction = "vertical",
+                     legend.text = element_text(size = 13),
+                     legend.key.width = grid::unit(2, "lines"))
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_weights", year, ".pdf"), plot_weights, width = 7, height = 7)
 
     plot_back <- plot_dta %>%
@@ -332,7 +390,7 @@ produce_plots_regional <- function(regional_results, ylims = c(0, 100), palette,
       ggplot2::ggplot(ggplot2::aes(x = day, y = smooth_outcome, color = "Actual")) +
       ggplot2::annotation_raster(rainbow, xmin = as.POSIXct(pride_month_2022_begin), xmax = as.POSIXct(pride_month_2022_end), ymin = -Inf, ymax = Inf) +
       ggplot2::geom_line(linewidth = 0.6) +
-      ggplot2::geom_line(data = plot_synth_outcome_back, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 0.6) +
+      ggplot2::geom_line(data = plot_synth_outcome_back, ggplot2::aes(y = synth_outcome, col = "Synthetic"), linewidth = 0.6, linetype = "dashed") +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date), linetype = 4) +
       ggplot2::geom_vline(xintercept = as.POSIXct(treatment_date_back), linetype = 4, col = "gray", linewidth = 1) +
       ggplot2::facet_wrap(~region, ncol = 2) +
@@ -340,9 +398,19 @@ produce_plots_regional <- function(regional_results, ylims = c(0, 100), palette,
       ggplot2::ylim(ylims[1], ylims[2]) +
       ggplot2::scale_x_datetime(date_breaks = "1 month", date_labels = "%m-%Y") +
       ggplot2::scale_color_manual(name = "Colors", values = c("Synthetic" = "#00BFC4", "Actual" = "tomato")) +
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linetype = c("solid", "dashed"), linewidth = c(1, 1)))) +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5), axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"),
-                     legend.position = c(0.11, 0.38), legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.x = ggplot2::element_text(size = 16),
+                     axis.title.y = ggplot2::element_text(size = 16),
+                     axis.text.x = ggplot2::element_text(size = 13, angle = 45, hjust = 1),
+                     axis.text.y  = ggplot2::element_text(size = 13),
+                     strip.text = ggplot2::element_text(size = 16, face = "bold"),
+                     legend.position = c(0.11, 0.38),
+                     legend.title = ggplot2::element_blank(),
+                     legend.direction = "vertical",
+                     legend.text = element_text(size = 13),
+                     legend.key.width = grid::unit(2, "lines"))
     ggplot2::ggsave(paste0(save_here, "/", tolower(my_champion), "_", outcome_colname, "_regional_", estimator, "_", donors, "_back", year, ".pdf"), plot_back, width = 13, height = 7)
   }
 

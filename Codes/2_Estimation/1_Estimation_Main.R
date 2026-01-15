@@ -13,6 +13,8 @@ set.seed(1986)
 ## Loading packages.
 # pkgs <- c("CostComingOutLOL")
 # inst <- lapply(pkgs, library, character.only = TRUE)
+library(devtools)
+load_all()
 
 # Settings --------------------------------------------
 ## Select champions.
@@ -22,8 +24,8 @@ champions <- "Graves"
 outcome_colname_pool <- "pick_rate_pooled"
 outcome_colname_regional <- "pick_rate"
 
-bandwidth_pool <- 3
-bandwidth_regional <- 3
+bandwidth_pool <- 0.00000001
+bandwidth_regional <- 0.00000001
 
 ## Set SC estimator.
 donor_pools <- c("all", "support_adc")

@@ -616,7 +616,7 @@ plot_did <- function(did_results, save_here = getwd()) {
     ggplot2::facet_grid(rows = vars(treatment_factor)) +
     ggplot2::scale_x_datetime(date_breaks = "1 week", date_labels = "%d-%m-%Y") +
     ggplot2::scale_color_manual(drop = FALSE, values = c("#e87d72", "#56bcc2"), breaks = c(0, 1), labels = c("Pre", "Post")) +
-    ggplot2::xlab("") + ggplot2::ylab(expression(italic("ATT ( t )"))) +
+    ggplot2::xlab("") + ggplot2::ylab(bquote(italic("ATT")(t) ~ "(win rate)")) +
     ggplot2::theme_bw() +
     theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), strip.text.x = ggplot2::element_text(size = 10, face = "bold"), strip.text.y = ggplot2::element_text(size = 10, face = "italic"),
           legend.position = "none", legend.title = ggplot2::element_blank(), legend.direction = "vertical", legend.text = element_text(size = 7))
